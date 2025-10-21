@@ -33,6 +33,11 @@ CSRF_TRUSTED_ORIGINS = [
     'https://w2stm1r4.up.railway.app',
 ]
 
+# Additional CSRF settings for production
+CSRF_COOKIE_SECURE = False  # Set to False for development/testing
+CSRF_COOKIE_HTTPONLY = False
+CSRF_USE_SESSIONS = False
+
 
 # Application definition
 
