@@ -13,7 +13,7 @@ class Project(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects')
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    summary = models.TextField(blank=True, help_text="Detailed project summary")
+    # summary = models.TextField(blank=True, help_text="Detailed project summary")  # Temporarily disabled
     
     # LLM Selection (JSON array of selected LLMs)
     selected_llms = models.JSONField(default=list, help_text="List of LLM names: gemini, deepseek, openai, claude, grok, huggingface")
