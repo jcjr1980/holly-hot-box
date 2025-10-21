@@ -117,7 +117,7 @@ def login_2fa_view(request):
             
             # Log the user in
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            return redirect('chat_home')
+            return redirect('home')
         else:
             return render(request, 'brain_chat/login_2fa.html', {
                 'error': 'Invalid 2FA code'
@@ -131,6 +131,23 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
+
+@login_required
+def home(request):
+    """Home page showing projects and quick actions"""
+    # Get user's projects
+    projects = Project.objects.filter(user=request.user).order_by('-priority', '-updated_at')
+    
+    context = {
+        'projects': projects,
+    }
+    
+    return render(request, 'brain_chat/home.html', context)
+
+@login_required
+def new_chat(request):
+    """New chat strategy selection page"""
+    return render(request, 'brain_chat/new_chat.html')
 
 @login_required
 def chat_home(request):

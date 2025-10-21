@@ -5,7 +5,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.chat_home, name='chat_home'),
+    path('', views.home, name='home'),
+    path('new-chat/', views.new_chat, name='new_chat'),
+    path('chat/', views.chat_home, name='chat_home'),
     path('login/', views.login_view, name='login'),
     path('login/2fa/', views.login_2fa_view, name='login_2fa'),
     path('logout/', views.logout_view, name='logout'),

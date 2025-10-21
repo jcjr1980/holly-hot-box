@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holly Hot Box - New Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0d1b2a;
+            color: #e0e1dd;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        /* Chat Header */
+        .chat-header {
+            background: #1b263b;
+            color: #e0e1dd;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid #415a77;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .back-btn {
+            background: transparent;
+            border: 1px solid #415a77;
+            color: #e0e1dd;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        
+        .back-btn:hover {
+            background: #415a77;
+            border-color: #a8dadc;
+        }
+        
+        .chat-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #a8dadc;
+        }
+        
+        .header-center {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .search-btn {
+            background: transparent;
+            border: 1px solid #415a77;
+            color: #e0e1dd;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .search-btn:hover {
+            background: #415a77;
+            border-color: #a8dadc;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .settings-btn {
+            background: transparent;
+            border: 1px solid #415a77;
+            color: #e0e1dd;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        
+        .settings-btn:hover {
+            background: #415a77;
+            border-color: #a8dadc;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            scroll-behavior: smooth;
+        }
+        
+        .strategy-selection {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            color: #a8dadc;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .section-subtitle {
+            color: #778da9;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .strategy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .strategy-card {
+            background: #1b263b;
+            border: 1px solid #415a77;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .strategy-card:hover {
+            border-color: #a8dadc;
+            background: #415a77;
+        }
+        
+        .strategy-card.selected {
+            border-color: #a8dadc;
+            background: #415a77;
+        }
+        
+        .strategy-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .strategy-icon {
+            font-size: 24px;
+        }
+        
+        .strategy-title {
+            font-size: 18px;
+            color: #a8dadc;
+            font-weight: 600;
+        }
+        
+        .strategy-desc {
+            color: #778da9;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .strategy-llms {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .llm-tag {
+            background: #415a77;
+            color: #a8dadc;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .llm-tag.premium {
+            background: #f59e0b;
+            color: #0d1b2a;
+        }
+        
+        .custom-options {
+            background: #1b263b;
+            border: 1px solid #415a77;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #e0e1dd;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #415a77;
+            border-radius: 6px;
+            background: #0d1b2a;
+            color: #e0e1dd;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #a8dadc;
+        }
+        
+        .llm-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        
+        .llm-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: #415a77;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .llm-option:hover {
+            background: #778da9;
+        }
+        
+        .llm-option input[type="checkbox"] {
+            width: auto;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #a8dadc 0%, #457b9d 100%);
+            color: #0d1b2a;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #415a77;
+            color: #e0e1dd;
+        }
+        
+        .btn-secondary:hover {
+            background: #415a77;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .chat-header {
+                padding: 10px 12px;
+            }
+            
+            .main-content {
+                padding: 15px;
+            }
+            
+            .strategy-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .llm-selector {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Chat Header -->
+        <div class="chat-header">
+            <div class="header-left">
+                <button class="back-btn" onclick="goBack()">←</button>
+                <div class="chat-title">New Chat</div>
+            </div>
+            <div class="header-center">
+                <button class="search-btn" onclick="openSearch()">🔍 Search</button>
+            </div>
+            <div class="header-right">
+                <button class="settings-btn" onclick="openSettings()">⚙️</button>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="strategy-selection">
+                <h2 class="section-title">Choose Your AI Strategy</h2>
+                <p class="section-subtitle">Select how you want the LLMs to work together</p>
+                
+                <div class="strategy-grid">
+                    <div class="strategy-card" onclick="selectStrategy('power-duo')">
+                        <div class="strategy-header">
+                            <div class="strategy-icon">⚡</div>
+                            <div class="strategy-title">Power Duo</div>
+                        </div>
+                        <div class="strategy-desc">Gemini Tier 3 + DeepSeek Reasoner working together for premium intelligence and deep reasoning</div>
+                        <div class="strategy-llms">
+                            <span class="llm-tag premium">⭐ Gemini Tier 3</span>
+                            <span class="llm-tag premium">💎 DeepSeek</span>
+                        </div>
+                    </div>
+                    
+                    <div class="strategy-card" onclick="selectStrategy('consensus')">
+                        <div class="strategy-header">
+                            <div class="strategy-icon">🤝</div>
+                            <div class="strategy-title">Consensus</div>
+                        </div>
+                        <div class="strategy-desc">All available LLMs collaborate and reach a consensus on the best response</div>
+                        <div class="strategy-llms">
+                            <span class="llm-tag">Gemini</span>
+                            <span class="llm-tag">DeepSeek</span>
+                            <span class="llm-tag">OpenAI</span>
+                            <span class="llm-tag">Claude</span>
+                            <span class="llm-tag">Grok</span>
+                            <span class="llm-tag">HuggingFace</span>
+                        </div>
+                    </div>
+                    
+                    <div class="strategy-card" onclick="selectStrategy('gemini')">
+                        <div class="strategy-header">
+                            <div class="strategy-icon">⭐</div>
+                            <div class="strategy-title">Gemini Tier 3</div>
+                        </div>
+                        <div class="strategy-desc">Google's most advanced AI with premium features and deep reasoning</div>
+                        <div class="strategy-llms">
+                            <span class="llm-tag premium">⭐ Gemini Tier 3</span>
+                        </div>
+                    </div>
+                    
+                    <div class="strategy-card" onclick="selectStrategy('deepseek')">
+                        <div class="strategy-header">
+                            <div class="strategy-icon">💎</div>
+                            <div class="strategy-title">DeepSeek Reasoner</div>
+                        </div>
+                        <div class="strategy-desc">Deep thinking and analytical reasoning at ultra-low cost</div>
+                        <div class="strategy-llms">
+                            <span class="llm-tag premium">💎 DeepSeek</span>
+                        </div>
+                    </div>
+                    
+                    <div class="strategy-card" onclick="selectStrategy('custom')">
+                        <div class="strategy-header">
+                            <div class="strategy-icon">🔧</div>
+                            <div class="strategy-title">Custom</div>
+                        </div>
+                        <div class="strategy-desc">Choose your own combination of LLMs</div>
+                        <div class="strategy-llms">
+                            <span class="llm-tag">Custom Selection</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Custom Options -->
+                <div class="custom-options" id="custom-options" style="display: none;">
+                    <h3 style="color: #a8dadc; margin-bottom: 15px;">Custom LLM Selection</h3>
+                    
+                    <div class="form-group">
+                        <label for="chat-title">Chat Title (optional)</label>
+                        <input type="text" id="chat-title" placeholder="e.g., Research Project Discussion">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="chat-description">Description (optional)</label>
+                        <textarea id="chat-description" rows="3" placeholder="Describe what this chat is about..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Select LLMs</label>
+                        <div class="llm-selector">
+                            <div class="llm-option">
+                                <input type="checkbox" id="custom-gemini" value="gemini" checked>
+                                <label for="custom-gemini">⭐ Gemini Tier 3</label>
+                            </div>
+                            <div class="llm-option">
+                                <input type="checkbox" id="custom-deepseek" value="deepseek" checked>
+                                <label for="custom-deepseek">💎 DeepSeek</label>
+                            </div>
+                            <div class="llm-option">
+                                <input type="checkbox" id="custom-openai" value="openai">
+                                <label for="custom-openai">OpenAI GPT-4o</label>
+                            </div>
+                            <div class="llm-option">
+                                <input type="checkbox" id="custom-claude" value="claude">
+                                <label for="custom-claude">Claude</label>
+                            </div>
+                            <div class="llm-option">
+                                <input type="checkbox" id="custom-grok" value="grok">
+                                <label for="custom-grok">Grok</label>
+                            </div>
+                            <div class="llm-option">
+                                <input type="checkbox" id="custom-huggingface" value="huggingface">
+                                <label for="custom-huggingface">HuggingFace</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="goBack()">Cancel</button>
+                    <button class="btn btn-primary" onclick="startChat()">Start Chat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedStrategy = null;
+        
+        function selectStrategy(strategy) {
+            // Remove previous selection
+            document.querySelectorAll('.strategy-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selection to clicked card
+            event.currentTarget.classList.add('selected');
+            selectedStrategy = strategy;
+            
+            // Show/hide custom options
+            const customOptions = document.getElementById('custom-options');
+            if (strategy === 'custom') {
+                customOptions.style.display = 'block';
+            } else {
+                customOptions.style.display = 'none';
+            }
+        }
+        
+        function startChat() {
+            if (!selectedStrategy) {
+                alert('Please select a strategy first');
+                return;
+            }
+            
+            // TODO: Create chat with selected strategy
+            alert(`Starting chat with ${selectedStrategy} strategy!`);
+            // window.location.href = `/chat/?strategy=${selectedStrategy}`;
+        }
+        
+        function goBack() {
+            window.location.href = '/';
+        }
+        
+        function openSearch() {
+            alert('🔍 Search feature coming soon!');
+        }
+        
+        function openSettings() {
+            alert('⚙️ Settings coming soon!');
+        }
+    </script>
+</body>
+</html>

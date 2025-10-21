@@ -86,36 +86,21 @@ WSGI_APPLICATION = 'hbb_core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Hybrid Database Configuration
 if os.getenv('DATABASE_URL'):
-    # HBB Local Database
     DATABASES = {
         'default': dj_database_url.config(
             default=os.getenv('DATABASE_URL'),
             conn_max_age=600,
             conn_health_checks=True,
-        ),
-        # Shared Postgres-OEMK Database
-        'shared': dj_database_url.config(
-            default='postgresql://postgres:IYblOgGeEuVcGtDvevcobxyriuqkGNeQ@postgres-oemk.railway.internal:5432/railway',
-            conn_max_age=600,
-            conn_health_checks=True,
         )
     }
 else:
-    # Local development fallback
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
-        },
-        'shared': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'shared.db',
         }
     }
-
-# Database routing for hybrid approach
 
 
 # Password validation
@@ -163,7 +148,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Login/Logout URLs
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'chat_home'
+LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
 
 # Session settings
