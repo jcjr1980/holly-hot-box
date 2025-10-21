@@ -135,6 +135,7 @@ def logout_view(request):
 
 
 @login_required
+@login_required
 def home(request):
     """Home page showing projects and quick actions"""
     # Get user's projects
