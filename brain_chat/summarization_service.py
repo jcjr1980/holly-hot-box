@@ -25,6 +25,36 @@ class FileSummarizer:
                 'reason': 'Gemini Tier 3 best at conversation summarization and context retention',
                 'secondary': 'deepseek'
             },
+            'email': {
+                'primary': 'gemini',
+                'reason': 'Gemini Tier 3 excellent at email content analysis and summarization',
+                'secondary': 'claude'
+            },
+            'business_email': {
+                'primary': 'gemini',
+                'reason': 'Gemini Tier 3 best for business email analysis and action item extraction',
+                'secondary': 'claude'
+            },
+            'customer_support': {
+                'primary': 'claude',
+                'reason': 'Claude excellent at understanding customer issues and support context',
+                'secondary': 'gemini'
+            },
+            'meeting_notes': {
+                'primary': 'gemini',
+                'reason': 'Gemini Tier 3 best at extracting key points and action items from meetings',
+                'secondary': 'claude'
+            },
+            'proposal': {
+                'primary': 'gemini',
+                'reason': 'Gemini Tier 3 excellent at analyzing proposals and business pitches',
+                'secondary': 'claude'
+            },
+            'financial': {
+                'primary': 'claude',
+                'reason': 'Claude best at financial document analysis and data extraction',
+                'secondary': 'gemini'
+            },
             'technical': {
                 'primary': 'deepseek',
                 'reason': 'DeepSeek superior for technical content and code analysis',
@@ -70,6 +100,48 @@ class FileSummarizer:
 - Action items identified
 - Important insights
 - Unresolved questions""",
+            
+            'email': """Analyze this email and extract:
+- Main subject and purpose
+- Key points and information
+- Action items or requests
+- Important dates or deadlines
+- Follow-up needed""",
+            
+            'business_email': """Analyze this business email and extract:
+- Business context and purpose
+- Key decisions or agreements
+- Action items and responsibilities
+- Timeline and deadlines
+- Stakeholders involved""",
+            
+            'customer_support': """Analyze this customer support communication and extract:
+- Customer issue or request
+- Resolution steps taken
+- Status and next actions
+- Escalation points
+- Customer satisfaction indicators""",
+            
+            'meeting_notes': """Analyze these meeting notes and extract:
+- Main topics discussed
+- Key decisions made
+- Action items with owners
+- Important deadlines
+- Next steps and follow-ups""",
+            
+            'proposal': """Analyze this proposal and extract:
+- Main proposal objectives
+- Key features or benefits
+- Timeline and milestones
+- Budget or cost information
+- Success metrics""",
+            
+            'financial': """Analyze this financial document and extract:
+- Financial metrics and data
+- Key financial insights
+- Trends and patterns
+- Important numbers and calculations
+- Financial recommendations""",
             
             'technical': """Analyze this technical content:
 - Main concepts
@@ -141,6 +213,10 @@ class FileSummarizer:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     return json.dumps(data, indent=2)
+            
+            elif file_type in ['message/rfc822', 'application/vnd.ms-outlook']:  # .eml, .msg files
+                # TODO: Add email parsing with email library
+                return "[Email content extraction coming soon]"
             
             elif file_type == 'application/pdf':
                 # TODO: Add PDF extraction with PyPDF2

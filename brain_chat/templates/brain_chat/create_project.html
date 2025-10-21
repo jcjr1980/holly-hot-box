@@ -463,8 +463,8 @@
                     <div class="file-upload-area" id="file-upload-area">
                         <div class="upload-icon">📁</div>
                         <div class="upload-text">Drop files here or click to upload</div>
-                        <div class="upload-subtext">Supports: .txt, .json, .md, .pdf, .docx, .png, .jpg (max 10MB each)</div>
-                        <input type="file" id="file-input" multiple accept=".txt,.json,.md,.pdf,.docx,.png,.jpg" style="display: none;">
+                        <div class="upload-subtext">Supports: .txt, .json, .md, .pdf, .docx, .png, .jpg, .eml, .msg, .mbox (max 10MB each)</div>
+                        <input type="file" id="file-input" multiple accept=".txt,.json,.md,.pdf,.docx,.png,.jpg,.eml,.msg,.mbox" style="display: none;">
                     </div>
                     
                     <div class="file-list" id="file-list"></div>
@@ -558,9 +558,15 @@
                             <option value="general">General Text</option>
                             <option value="contract">Contract/Legal</option>
                             <option value="chat_history">Chat History</option>
+                            <option value="email">Email/Correspondence</option>
+                            <option value="business_email">Business Email</option>
+                            <option value="customer_support">Customer Support</option>
                             <option value="technical">Technical Document</option>
                             <option value="business">Business Document</option>
                             <option value="research">Research/Academic</option>
+                            <option value="meeting_notes">Meeting Notes</option>
+                            <option value="proposal">Proposal/Pitch</option>
+                            <option value="financial">Financial Document</option>
                         </select>
                     </div>
                     <button class="btn btn-remove" onclick="removeFile('${fileItem.id}')">Remove</button>
