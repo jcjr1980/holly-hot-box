@@ -377,6 +377,7 @@
         </div>
         
         <form id="project-form" enctype="multipart/form-data">
+            {% csrf_token %}
             <div class="form-container">
                 <!-- Basic Information -->
                 <div class="form-section">
@@ -656,8 +657,27 @@
                 formData.append(`file_${index}_content_type`, fileItem.contentType);
             });
             
-            // TODO: Submit to backend
-            alert('🚀 Project creation coming soon!');
+            // Submit to backend
+            fetch('/project/create/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(`✅ Project created successfully! ${data.message}`);
+                    window.location.href = '/';
+                } else {
+                    alert(`❌ Error: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error creating project. Please try again.');
+            });
         });
     </script>
 </body>
