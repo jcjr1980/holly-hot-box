@@ -615,9 +615,8 @@
                 padding-bottom: 20px;
             }
             
-            /* Mobile message styling - smaller font, 10% opacity background */
+            /* Mobile message styling - 10% opacity background */
             .message-content {
-                font-size: 7px;
                 max-width: 85%;
                 background: rgba(255, 255, 255, 0.1) !important;
                 border: 1px solid rgba(255, 255, 255, 0.2);
@@ -710,7 +709,7 @@
             max-width: 70%;
             padding: 15px 20px;
             border-radius: 12px;
-            font-size: 32px;
+            font-size: 14px;
             line-height: 1.4;
         }
         
@@ -778,13 +777,13 @@
         
         .send-btn {
             padding: 12px 24px;
-            background: linear-gradient(135deg, #a8dadc 0%, #457b9d 100%);
-            color: #0d1b2a;
+            background: transparent;
+            color: #e0e1dd;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 24px;
             transition: transform 0.2s;
         }
         
@@ -800,12 +799,12 @@
         .attach-btn {
             width: 48px;
             height: 48px;
-            background: #415a77;
-            border: 1px solid #778da9;
+            background: transparent;
+            border: none;
             border-radius: 8px;
             cursor: pointer;
             font-size: 24px;
-            color: #a8dadc;
+            color: #e0e1dd;
             font-weight: 300;
             transition: all 0.2s;
             display: flex;
@@ -814,9 +813,7 @@
         }
         
         .attach-btn:hover {
-            background: #a8dadc;
-            color: #0d1b2a;
-            border-color: #a8dadc;
+            transform: scale(1.1);
         }
         
         .keyboard-minimize {
