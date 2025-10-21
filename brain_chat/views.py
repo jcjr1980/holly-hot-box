@@ -913,7 +913,7 @@ def delete_project(request, project_id):
 @login_required
 @require_http_methods(["POST"])
 def update_project(request, project_id):
-    """Update project description or summary"""
+    """Update project description, summary, or selected LLMs"""
     try:
         project = get_object_or_404(Project, id=project_id, user=request.user)
         data = json.loads(request.body)
@@ -922,6 +922,8 @@ def update_project(request, project_id):
             project.description = data['description']
         if 'summary' in data:
             project.summary = data['summary']
+        if 'selected_llms' in data:
+            project.selected_llms = data['selected_llms']
         
         project.save()
         
@@ -997,4 +999,36 @@ def upload_project_files(request, project_id):
         
     except Exception as e:
         logger.error(f"File upload error: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def delete_project_file(request, project_id, file_id):
+    """Delete a file from a project"""
+    try:
+        project = get_object_or_404(Project, id=project_id, user=request.user)
+        project_file = get_object_or_404(ProjectFile, id=file_id, project=project)
+        
+        file_name = project_file.file_name
+        
+        # Delete the physical file from storage
+        if project_file.file_path:
+            try:
+                project_file.file_path.delete(save=False)
+            except Exception as e:
+                logger.warning(f"Could not delete physical file: {e}")
+        
+        # Delete the database record
+        project_file.delete()
+        
+        logger.info(f"File deleted: {file_name} (ID: {file_id}) from project {project.name}")
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'File "{file_name}" deleted successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"File deletion error: {e}")
         return JsonResponse({'error': str(e)}, status=500)

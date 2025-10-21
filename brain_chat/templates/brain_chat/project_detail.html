@@ -306,6 +306,62 @@
             background: #415a77;
         }
         
+        .delete-file-btn {
+            background: #e76f51;
+            border: none;
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .delete-file-btn:hover {
+            background: #c85a42;
+            transform: scale(1.1);
+        }
+        
+        .llm-selection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .llm-option {
+            background: #1b263b;
+            border: 2px solid #415a77;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .llm-option:hover {
+            border-color: #a8dadc;
+            background: #283845;
+        }
+        
+        .llm-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .llm-option input[type="checkbox"]:checked + span {
+            font-weight: 700;
+            color: #a8dadc;
+        }
+        
+        .llm-option span {
+            font-size: 14px;
+            color: #e0e1dd;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -374,25 +430,64 @@
             </div>
         </div>
         
-        {% if project.selected_llms %}
         <div class="content-section">
-            <h2>🤖 Selected LLMs</h2>
-            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                {% for llm in project.selected_llms %}
-                <span class="tag">
-                    {% if llm == 'gemini' %}⭐ Gemini Tier 3
-                    {% elif llm == 'deepseek' %}💎 DeepSeek
-                    {% elif llm == 'openai' %}OpenAI GPT-4o
-                    {% elif llm == 'claude' %}Claude
-                    {% elif llm == 'grok' %}Grok
-                    {% elif llm == 'huggingface' %}HuggingFace
-                    {% else %}{{ llm|title }}
-                    {% endif %}
-                </span>
-                {% endfor %}
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>🤖 Selected LLMs</h2>
+                <button class="edit-btn" onclick="toggleEdit('llms')">✏️ Edit</button>
+            </div>
+            <div id="llms-display">
+                {% if project.selected_llms %}
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    {% for llm in project.selected_llms %}
+                    <span class="tag">
+                        {% if llm == 'gemini' %}⭐ Gemini Tier 3
+                        {% elif llm == 'deepseek' %}💎 DeepSeek
+                        {% elif llm == 'openai' %}🤖 OpenAI GPT-4o
+                        {% elif llm == 'claude' %}🧠 Claude
+                        {% elif llm == 'grok' %}⚡ Grok
+                        {% elif llm == 'huggingface' %}🤗 HuggingFace
+                        {% else %}{{ llm|title }}
+                        {% endif %}
+                    </span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="color: #778da9;">No LLMs selected yet. Click Edit to choose.</p>
+                {% endif %}
+            </div>
+            <div id="llms-edit" style="display: none;">
+                <div class="llm-selection-grid">
+                    <label class="llm-option">
+                        <input type="checkbox" name="llms" value="gemini" {% if 'gemini' in project.selected_llms %}checked{% endif %}>
+                        <span>⭐ Gemini Tier 3</span>
+                    </label>
+                    <label class="llm-option">
+                        <input type="checkbox" name="llms" value="deepseek" {% if 'deepseek' in project.selected_llms %}checked{% endif %}>
+                        <span>💎 DeepSeek</span>
+                    </label>
+                    <label class="llm-option">
+                        <input type="checkbox" name="llms" value="openai" {% if 'openai' in project.selected_llms %}checked{% endif %}>
+                        <span>🤖 OpenAI GPT-4o</span>
+                    </label>
+                    <label class="llm-option">
+                        <input type="checkbox" name="llms" value="claude" {% if 'claude' in project.selected_llms %}checked{% endif %}>
+                        <span>🧠 Claude</span>
+                    </label>
+                    <label class="llm-option">
+                        <input type="checkbox" name="llms" value="grok" {% if 'grok' in project.selected_llms %}checked{% endif %}>
+                        <span>⚡ Grok</span>
+                    </label>
+                    <label class="llm-option">
+                        <input type="checkbox" name="llms" value="huggingface" {% if 'huggingface' in project.selected_llms %}checked{% endif %}>
+                        <span>🤗 HuggingFace</span>
+                    </label>
+                </div>
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button class="save-btn" onclick="saveLLMs()">💾 Save</button>
+                    <button class="cancel-btn" onclick="cancelEdit('llms')">❌ Cancel</button>
+                </div>
             </div>
         </div>
-        {% endif %}
         
         {% if project.tags %}
         <div class="content-section">
@@ -461,7 +556,7 @@
             
             {% if files %}
                 {% for file in files %}
-                <div class="file-item">
+                <div class="file-item" id="file-{{ file.id }}">
                     <div class="file-info">
                         <h4>📄 {{ file.file_name }}</h4>
                         <p>{{ file.file_size|filesizeformat }} • {{ file.content_type|title }}</p>
@@ -469,7 +564,10 @@
                         <p style="margin-top: 8px; font-size: 11px; color: #a8dadc;">{{ file.summary|truncatewords:20 }}</p>
                         {% endif %}
                     </div>
-                    <span class="file-type-badge">{{ file.content_type|title }}</span>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="file-type-badge">{{ file.content_type|title }}</span>
+                        <button class="delete-file-btn" onclick="deleteFile({{ file.id }}, '{{ file.file_name }}')">🗑️</button>
+                    </div>
                 </div>
                 {% endfor %}
             {% else %}
@@ -606,6 +704,41 @@
             });
         }
         
+        function saveLLMs() {
+            // Get all checked LLMs
+            const selectedLLMs = [];
+            document.querySelectorAll('input[name="llms"]:checked').forEach(checkbox => {
+                selectedLLMs.push(checkbox.value);
+            });
+            
+            if (selectedLLMs.length === 0) {
+                alert('⚠️ Please select at least one LLM');
+                return;
+            }
+            
+            fetch('/project/{{ project.id }}/update/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ selected_llms: selectedLLMs })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Reload page to show updated LLMs
+                    window.location.reload();
+                } else {
+                    alert('❌ Error saving LLMs');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error saving LLMs');
+            });
+        }
+        
         function uploadAdditionalFiles() {
             const files = document.getElementById('additional-files').files;
             
@@ -640,6 +773,43 @@
             .catch(error => {
                 console.error('Error:', error);
                 alert('❌ Error uploading files');
+            });
+        }
+        
+        function deleteFile(fileId, fileName) {
+            // Confirm deletion
+            if (!confirm(`🗑️ Delete "${fileName}"?\n\nThis action cannot be undone.`)) {
+                return;
+            }
+            
+            fetch(`/project/{{ project.id }}/file/${fileId}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Remove the file item from the DOM
+                    const fileElement = document.getElementById(`file-${fileId}`);
+                    if (fileElement) {
+                        fileElement.style.opacity = '0';
+                        setTimeout(() => {
+                            fileElement.remove();
+                            // Update file count in header
+                            const fileCount = document.querySelectorAll('.file-item').length;
+                            document.querySelector('.files-section h2').textContent = `📁 Files (${fileCount})`;
+                        }, 300);
+                    }
+                } else {
+                    alert('❌ Error deleting file: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error deleting file');
             });
         }
     </script>
