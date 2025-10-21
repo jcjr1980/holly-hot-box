@@ -31,9 +31,9 @@ class LLMOrchestrator:
         try:
             # Google Gemini Tier 3 - PRIMARY STRATEGIST (Premium Access!)
             genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-            # Use latest Gemini 2.5 Pro - Most advanced model available!
+            # Use stable Gemini model - gemini-1.5-pro is reliable
             self.gemini_model = genai.GenerativeModel(
-                'gemini-2.5-pro',
+                'gemini-1.5-pro',
                 generation_config={
                     'temperature': 0.7,
                     'top_p': 0.95,
