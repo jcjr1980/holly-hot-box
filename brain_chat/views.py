@@ -6,32 +6,101 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
 import pyotp
 import os
+import requests
 from .models import ChatSession, ChatMessage, LLMResponse, UserProfile
 from .llm_orchestrator import LLMOrchestrator
 
 
+def get_client_country(request):
+    """Get client country from IP address"""
+    try:
+        # Try to get IP from various headers
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        
+        # Use a free IP geolocation service
+        response = requests.get(f'http://ip-api.com/json/{ip}', timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            return data.get('country', '').upper()
+    except:
+        pass
+    
+    return 'UNKNOWN'
+
+def is_blocked_country(country):
+    """Check if country is in blocked list"""
+    blocked_countries = [
+        'INDIA', 'RUSSIA', 'CHINA', 'NORTH KOREA', 'IRAN', 'IRAQ', 'SYRIA',
+        'AFGHANISTAN', 'PAKISTAN', 'BANGLADESH', 'SRI LANKA', 'NEPAL',
+        'MYANMAR', 'THAILAND', 'VIETNAM', 'CAMBODIA', 'LAOS', 'MALAYSIA',
+        'INDONESIA', 'PHILIPPINES', 'SINGAPORE', 'TAIWAN', 'HONG KONG',
+        'MONGOLIA', 'KAZAKHSTAN', 'UZBEKISTAN', 'TURKMENISTAN', 'KYRGYZSTAN',
+        'TAJIKISTAN', 'BELARUS', 'UKRAINE', 'MOLDOVA', 'GEORGIA', 'ARMENIA',
+        'AZERBAIJAN', 'TURKEY', 'LEBANON', 'JORDAN', 'SAUDI ARABIA',
+        'YEMEN', 'OMAN', 'UAE', 'KUWAIT', 'QATAR', 'BAHRAIN'
+    ]
+    return country in blocked_countries
+
 def login_view(request):
-    """Custom login with 2FA"""
+    """Step 1: Username and Password only"""
     if request.user.is_authenticated:
         return redirect('chat_home')
     
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        code = request.POST.get('code')
         
         # Check credentials
         expected_username = os.getenv('HBB_USERNAME', 'jcjr1980')
         expected_password = os.getenv('HBB_PASSWORD', '@cc0r-D69_8123$!')
+        
+        if username == expected_username and password == expected_password:
+            # Store credentials in session for 2FA step
+            request.session['temp_username'] = username
+            request.session['temp_password'] = password
+            return redirect('login_2fa')
+        else:
+            return render(request, 'brain_chat/login.html', {
+                'error': 'Invalid username or password'
+            })
+    
+    return render(request, 'brain_chat/login.html')
+
+def login_2fa_view(request):
+    """Step 2: 2FA Code with geo-blocking"""
+    if request.user.is_authenticated:
+        return redirect('chat_home')
+    
+    # Check if user has valid session from step 1
+    if not request.session.get('temp_username'):
+        return redirect('login')
+    
+    # Geo-blocking check
+    country = get_client_country(request)
+    if is_blocked_country(country):
+        return HttpResponseForbidden(
+            f"<h1>Access Denied</h1><p>Access from {country} is not permitted.</p>",
+            content_type="text/html"
+        )
+    
+    if request.method == 'POST':
+        code = request.POST.get('code')
         expected_code = os.getenv('HBB_2FA_CODE', '267769')
         
-        if username == expected_username and password == expected_password and code == expected_code:
+        if code == expected_code:
+            username = request.session['temp_username']
+            password = request.session['temp_password']
+            
             # Get or create user
             user, created = User.objects.get_or_create(username=username)
             if created:
@@ -39,15 +108,22 @@ def login_view(request):
                 user.save()
                 UserProfile.objects.create(user=user)
             
+            # Clear temporary session data
+            request.session.pop('temp_username', None)
+            request.session.pop('temp_password', None)
+            
             # Log the user in
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return redirect('chat_home')
         else:
-            return render(request, 'brain_chat/login.html', {
-                'error': 'Invalid credentials or 2FA code'
+            return render(request, 'brain_chat/login_2fa.html', {
+                'error': 'Invalid 2FA code',
+                'country': country
             })
     
-    return render(request, 'brain_chat/login.html')
+    return render(request, 'brain_chat/login_2fa.html', {
+        'country': get_client_country(request)
+    })
 
 
 def logout_view(request):
