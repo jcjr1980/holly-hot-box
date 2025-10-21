@@ -378,26 +378,31 @@
             padding: 20px;
             background: #0d1b2a;
             background-image: 
+                linear-gradient(rgba(13, 27, 42, 0.7), rgba(13, 27, 42, 0.7)),
+                url('https://i.imgur.com/0bZ7N9Q.png'),
                 radial-gradient(circle at 20% 80%, rgba(147, 51, 234, 0.18) 0%, transparent 50%),
                 radial-gradient(circle at 80% 20%, rgba(255, 20, 147, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(59, 130, 246, 0.12) 0%, transparent 50%),
-                radial-gradient(circle at 60% 70%, rgba(147, 51, 234, 0.08) 0%, transparent 50%),
-                linear-gradient(45deg, transparent 30%, rgba(255, 20, 147, 0.06) 50%, transparent 70%),
-                linear-gradient(135deg, transparent 20%, rgba(59, 130, 246, 0.04) 40%, transparent 60%),
-                url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxkZWZzPgo8cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHBhdGggZD0iTSAyMCAwIEwgMCAwIDAgMjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsIDIwLCAxNDcsIDAuMDgpIiBzdHJva2Utd2lkdGg9IjEiLz4KPC9wYXR0ZXJuPgo8L2RlZnM+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSJ1cmwoI2dyaWQpIi8+Cjwvc3ZnPg==');
-            background-size: cover, cover, cover, cover, cover, cover, cover;
-            background-position: center, center, center, center, center, center, center;
-            background-attachment: fixed, scroll, scroll, scroll, scroll, scroll, scroll;
+                radial-gradient(circle at 40% 40%, rgba(59, 130, 246, 0.12) 0%, transparent 50%);
+            background-size: cover, cover, cover, cover, cover;
+            background-position: center, center, center, center, center;
+            background-attachment: fixed, fixed, scroll, scroll, scroll;
+            background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+            position: relative;
         }
         
         /* Mobile responsive background */
         @media (max-width: 768px) {
             .messages-container {
-                background-attachment: scroll, scroll, scroll, scroll, scroll, scroll, scroll;
-                background-size: cover, cover, cover, cover, cover, cover, cover;
-                background-position: center, center, center, center, center, center, center;
-            scroll-behavior: smooth;
-            position: relative;
+                background-image: 
+                    linear-gradient(rgba(13, 27, 42, 0.75), rgba(13, 27, 42, 0.75)),
+                    url('https://i.imgur.com/0bZ7N9Q.png'),
+                    radial-gradient(circle at 20% 80%, rgba(147, 51, 234, 0.15) 0%, transparent 50%);
+                background-attachment: scroll, scroll, scroll;
+                background-size: cover, cover, cover;
+                background-position: center, center, center;
+                scroll-behavior: smooth;
+                position: relative;
+            }
         }
         
         .messages-container::before {
