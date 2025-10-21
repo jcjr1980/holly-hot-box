@@ -379,7 +379,6 @@
             padding: 20px;
             background: #0d1b2a;
             background-image: 
-                linear-gradient(rgba(13, 27, 42, 0.2), rgba(13, 27, 42, 0.2)),
                 url('{% static "brain_chat/images/hollyhotbox.jpg" %}'),
                 radial-gradient(circle at 20% 80%, rgba(147, 51, 234, 0.18) 0%, transparent 50%),
                 radial-gradient(circle at 80% 20%, rgba(255, 20, 147, 0.15) 0%, transparent 50%),
@@ -395,7 +394,6 @@
         @media (max-width: 768px) {
             .messages-container {
                 background-image: 
-                    linear-gradient(rgba(13, 27, 42, 0.2), rgba(13, 27, 42, 0.2)),
                     url('{% static "brain_chat/images/hollyhotbox.jpg" %}'),
                     radial-gradient(circle at 20% 80%, rgba(147, 51, 234, 0.15) 0%, transparent 50%);
                 background-attachment: scroll, scroll, scroll;
@@ -553,6 +551,12 @@
             .messages-container {
                 padding-bottom: 80px;
             }
+            
+            /* Mobile message styling - larger font, more transparent */
+            .message-content {
+                font-size: 28px;
+                max-width: 85%;
+            }
         }
         
         /* Desktop: Hide mobile menu toggle */
@@ -641,17 +645,20 @@
             max-width: 70%;
             padding: 15px 20px;
             border-radius: 12px;
+            font-size: 32px;
+            line-height: 1.4;
         }
         
         .message.user .message-content {
-            background: linear-gradient(135deg, #a8dadc 0%, #457b9d 100%);
-            color: #0d1b2a;
+            background: rgba(168, 218, 220, 0.1);
+            color: #e0e1dd;
+            border: 1px solid rgba(168, 218, 220, 0.3);
         }
         
         .message.assistant .message-content {
-            background: #1b263b;
+            background: rgba(27, 38, 59, 0.1);
             color: #e0e1dd;
-            border: 1px solid #415a77;
+            border: 1px solid rgba(65, 90, 119, 0.3);
         }
         
         .message-meta {
