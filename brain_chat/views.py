@@ -16,6 +16,7 @@ import requests
 import logging
 from .models import Project, ChatSession, ChatMessage, LLMResponse, DiaryNote, UserProfile, ProjectFile
 from .llm_orchestrator import LLMOrchestrator
+from .query_conductor import QueryConductor
 from .summarization_service import FileSummarizer
 
 logger = logging.getLogger(__name__)
@@ -344,9 +345,18 @@ def send_message(request):
                 "content": msg.content
             })
         
-        # Orchestrate LLM response
+        # Orchestrate LLM response using the intelligent Conductor
         orchestrator = LLMOrchestrator()
-        result = orchestrator.orchestrate_response(prompt, history[:-1], mode=mode)
+        conductor = QueryConductor(orchestrator)
+        
+        # Use conductor for intelligent orchestration (auto-detects complexity)
+        # Unless user explicitly chose a mode
+        if mode == 'consensus':
+            # Let the conductor analyze and decide the best approach
+            result = conductor.conduct_query(prompt, history[:-1])
+        else:
+            # User selected specific mode, honor it
+            result = conductor.conduct_query(prompt, history[:-1], force_mode=mode)
         
         # Save assistant response (skip for privacy mode)
         if mode == 'parallel':
@@ -374,28 +384,46 @@ def send_message(request):
                         metadata=llm_data['metadata']
                     )
         
-        elif mode == 'consensus':
+        elif mode == 'consensus' or result.get('mode') == 'orchestrated_breakdown':
+            # Handle both consensus and orchestrated breakdown modes
             if not is_private:
                 assistant_message = ChatMessage.objects.create(
                     session=session,
                     role='assistant',
                     content=result['final_response'],
-                    llm_provider='multi',
+                    llm_provider='conductor' if result.get('conductor_used') else 'multi',
                     metadata=result,
                     tokens_used=result['metadata'].get('tokens', 0),
                     response_time_ms=result['metadata'].get('response_time_ms', 0)
                 )
                 
                 # Save individual responses
-                for llm_name, llm_data in result['individual_responses'].items():
-                    LLMResponse.objects.create(
-                        message=assistant_message,
-                        llm_provider=llm_name,
-                        response_text=llm_data['response'],
-                        tokens_used=llm_data['metadata'].get('tokens', 0),
-                        response_time_ms=llm_data['metadata'].get('response_time_ms', 0),
-                        metadata=llm_data['metadata']
-                    )
+                if result.get('individual_responses'):
+                    # Consensus mode
+                    for llm_name, llm_data in result['individual_responses'].items():
+                        LLMResponse.objects.create(
+                            message=assistant_message,
+                            llm_provider=llm_name,
+                            response_text=llm_data['response'],
+                            tokens_used=llm_data['metadata'].get('tokens', 0),
+                            response_time_ms=llm_data['metadata'].get('response_time_ms', 0),
+                            metadata=llm_data['metadata']
+                        )
+                elif result.get('sub_task_results'):
+                    # Orchestrated breakdown mode
+                    for task_result in result['sub_task_results']:
+                        LLMResponse.objects.create(
+                            message=assistant_message,
+                            llm_provider=task_result['llm_used'],
+                            response_text=task_result['response'],
+                            tokens_used=task_result['metadata'].get('tokens', 0),
+                            response_time_ms=task_result['metadata'].get('response_time_ms', 0),
+                            metadata={
+                                **task_result['metadata'],
+                                'task': task_result['task'],
+                                'priority': task_result['priority']
+                            }
+                        )
             else:
                 assistant_message = None
         
