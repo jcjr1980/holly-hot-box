@@ -432,7 +432,7 @@ def health_check(request):
         }, status=500)
 
 def setup_database(request):
-    """Temporary endpoint to setup database - REMOVE AFTER USE"""
+    """Temporary endpoint to setup database - REMOVE AFTER USE - v2"""
     try:
         from django.core.management import execute_from_command_line
         from django.db import connection
