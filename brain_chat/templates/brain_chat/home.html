@@ -49,7 +49,11 @@
         .nav-brand h1 {
             font-size: 18px;
             font-weight: 600;
-            color: #a8dadc;
+            color: #457b9d;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
         }
         
         .nav-user {
@@ -97,14 +101,16 @@
         }
         
         .nav-btn.primary {
-            background: #a8dadc;
-            color: #0d1b2a;
-            border-color: #a8dadc;
+            background: #457b9d;
+            color: white;
+            border-color: rgba(255, 255, 255, 0.3);
+            border-width: 2px;
         }
         
         .nav-btn.primary:hover {
-            background: #457b9d;
-            color: #e0e1dd;
+            background: #1d4ed8;
+            color: white;
+            border-color: rgba(255, 255, 255, 0.5);
         }
         
         /* Main Content Area */
@@ -122,7 +128,7 @@
         
         .welcome-section h2 {
             font-size: 24px;
-            color: #a8dadc;
+            color: #457b9d;
             margin-bottom: 10px;
         }
         
@@ -169,7 +175,7 @@
         }
         
         .project-card h3 {
-            color: #a8dadc;
+            color: #457b9d;
             font-size: 16px;
             margin-bottom: 8px;
         }
@@ -247,7 +253,7 @@
         }
         
         .empty-state h3 {
-            color: #a8dadc;
+            color: #457b9d;
             font-size: 20px;
             margin-bottom: 10px;
         }
@@ -282,7 +288,7 @@
         <!-- Top Navigation -->
         <div class="top-nav">
             <div class="nav-brand">
-                <h1>🔥 Holly Hot Box</h1>
+                <h1>Holly Hot Box</h1>
                 <span class="nav-user">{{ request.user.username }}</span>
             </div>
             <div class="nav-actions">
