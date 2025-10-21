@@ -26,6 +26,13 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,hbb.johnnycollins.io').split(',')
 
+# CSRF settings for production
+CSRF_TRUSTED_ORIGINS = [
+    'https://hbb.johnnycollins.io',
+    'https://tranquil-enthusiasm-production.up.railway.app',
+    'https://w2stm1r4.up.railway.app',
+]
+
 
 # Application definition
 
