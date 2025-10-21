@@ -447,9 +447,43 @@ def setup_database(request):
         # Run migrations
         execute_from_command_line(['manage.py', 'migrate', '--noinput'])
         
+        # Manual column additions for new fields (in case migrations didn't create them)
+        messages = []
+        with connection.cursor() as cursor:
+            # Add project_id column to ChatSession if missing
+            try:
+                cursor.execute("""
+                    ALTER TABLE brain_chat_chatsession 
+                    ADD COLUMN IF NOT EXISTS project_id INTEGER REFERENCES brain_chat_project(id) ON DELETE SET NULL
+                """)
+                messages.append("Added project_id column")
+            except Exception as e:
+                messages.append(f"project_id: {str(e)}")
+            
+            # Add is_quickie column
+            try:
+                cursor.execute("""
+                    ALTER TABLE brain_chat_chatsession 
+                    ADD COLUMN IF NOT EXISTS is_quickie BOOLEAN DEFAULT FALSE
+                """)
+                messages.append("Added is_quickie column")
+            except Exception as e:
+                messages.append(f"is_quickie: {str(e)}")
+            
+            # Add is_private column
+            try:
+                cursor.execute("""
+                    ALTER TABLE brain_chat_chatsession 
+                    ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT FALSE
+                """)
+                messages.append("Added is_private column")
+            except Exception as e:
+                messages.append(f"is_private: {str(e)}")
+        
         return JsonResponse({
             'status': 'success', 
-            'message': 'Database setup completed successfully! Tables created.'
+            'message': 'Database setup completed successfully! Tables created.',
+            'details': messages
         })
     except Exception as e:
         return JsonResponse({
