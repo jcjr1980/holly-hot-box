@@ -21,27 +21,48 @@ class LLMOrchestrator:
     
     def __init__(self):
         """Initialize all LLM clients"""
-        # OpenAI GPT-4o - The Conductor
-        self.openai_client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        try:
+            # OpenAI GPT-4o - The Conductor
+            self.openai_client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        except Exception as e:
+            logger.error(f"OpenAI init error: {e}")
+            self.openai_client = None
         
-        # Google Gemini Tier 3 - PRIMARY STRATEGIST (Premium Access!)
-        genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-        # Using Gemini 2.0 Flash Thinking Experimental - MOST POWERFUL
-        self.gemini_model = genai.GenerativeModel(
-            'gemini-2.0-flash-thinking-exp-1219',
-            generation_config={
-                'temperature': 0.7,
-                'top_p': 0.95,
-                'top_k': 40,
-                'max_output_tokens': 8192,  # Tier 3 allows more tokens
-            }
-        )
+        try:
+            # Google Gemini Tier 3 - PRIMARY STRATEGIST (Premium Access!)
+            genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
+            # Using Gemini 2.0 Flash Thinking Experimental - MOST POWERFUL
+            self.gemini_model = genai.GenerativeModel(
+                'gemini-2.0-flash-thinking-exp-1219',
+                generation_config={
+                    'temperature': 0.7,
+                    'top_p': 0.95,
+                    'top_k': 40,
+                    'max_output_tokens': 8192,  # Tier 3 allows more tokens
+                }
+            )
+        except Exception as e:
+            logger.error(f"Gemini init error: {e}")
+            self.gemini_model = None
         
-        # Anthropic Claude - Creative Director
-        self.claude_client = anthropic.Anthropic(api_key=os.getenv('CLAUDE_API_KEY'))
+        try:
+            # Anthropic Claude - Creative Director
+            self.claude_client = anthropic.Anthropic(api_key=os.getenv('CLAUDE_API_KEY'))
+        except Exception as e:
+            logger.error(f"Claude init error: {e}")
+            self.claude_client = None
         
-        # Hugging Face - Johnny's Digital Clone
-        self.hf_client = InferenceClient(token=os.getenv('HUGGINGFACE_API_KEY'))
+        try:
+            # Hugging Face - Johnny's Digital Clone
+            # Note: InferenceClient API may have changed, using basic initialization
+            self.hf_client = InferenceClient(token=os.getenv('HUGGINGFACE_API_KEY'))
+        except Exception as e:
+            logger.error(f"HuggingFace init error: {e}")
+            # Try without any arguments if token fails
+            try:
+                self.hf_client = InferenceClient()
+            except:
+                self.hf_client = None
         
         # DeepSeek Reasoner - DEEP THINKING at ultra-low cost! 
         # DeepSeek-V3.2 Reasoner is incredibly cost-effective
