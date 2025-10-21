@@ -52,17 +52,14 @@ class LLMOrchestrator:
             logger.error(f"Claude init error: {e}")
             self.claude_client = None
         
-        try:
-            # Hugging Face - Johnny's Digital Clone
-            # Note: InferenceClient API may have changed, using basic initialization
-            self.hf_client = InferenceClient(token=os.getenv('HUGGINGFACE_API_KEY'))
-        except Exception as e:
-            logger.error(f"HuggingFace init error: {e}")
-            # Try without any arguments if token fails
-            try:
-                self.hf_client = InferenceClient()
-            except:
-                self.hf_client = None
+        # Hugging Face - Johnny's Digital Clone
+        # Temporarily disabled due to API compatibility issues
+        self.hf_client = None
+        # try:
+        #     self.hf_client = InferenceClient(token=os.getenv('HUGGINGFACE_API_KEY'))
+        # except Exception as e:
+        #     logger.error(f"HuggingFace init error: {e}")
+        #     self.hf_client = None
         
         # DeepSeek Reasoner - DEEP THINKING at ultra-low cost! 
         # DeepSeek-V3.2 Reasoner is incredibly cost-effective
@@ -74,6 +71,9 @@ class LLMOrchestrator:
     
     def query_openai(self, prompt: str, conversation_history: List[Dict] = None) -> Tuple[str, Dict]:
         """Query OpenAI GPT-4o"""
+        if not self.openai_client:
+            return "OpenAI is temporarily unavailable", {"error": "Client not initialized"}
+        
         try:
             start_time = time.time()
             
@@ -100,6 +100,9 @@ class LLMOrchestrator:
     
     def query_gemini(self, prompt: str, conversation_history: List[Dict] = None) -> Tuple[str, Dict]:
         """Query Google Gemini Tier 3 - PREMIUM ACCESS with Advanced Thinking"""
+        if not self.gemini_model:
+            return "Gemini is temporarily unavailable", {"error": "Client not initialized"}
+        
         try:
             start_time = time.time()
             
@@ -136,6 +139,9 @@ Please provide a comprehensive, well-reasoned response leveraging your advanced 
     
     def query_claude(self, prompt: str, conversation_history: List[Dict] = None) -> Tuple[str, Dict]:
         """Query Anthropic Claude"""
+        if not self.claude_client:
+            return "Claude is temporarily unavailable", {"error": "Client not initialized"}
+        
         try:
             start_time = time.time()
             
@@ -257,6 +263,9 @@ Please think deeply and provide a well-reasoned, analytical response."""
     
     def query_huggingface(self, prompt: str, conversation_history: List[Dict] = None) -> Tuple[str, Dict]:
         """Query Hugging Face (Johnny's Digital Clone)"""
+        if not self.hf_client:
+            return "Hugging Face is temporarily unavailable", {"error": "Client not initialized"}
+        
         try:
             start_time = time.time()
             
