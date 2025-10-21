@@ -24,10 +24,7 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def test_llms(request):
-    """Test all LLMs individually"""
-    if request.method != 'GET':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-    
+    """Test all LLMs individually - Web page format"""
     try:
         orchestrator = LLMOrchestrator()
         test_prompt = "Hello! Please respond with just 'LLM_NAME is working' to confirm you're functioning."
@@ -48,10 +45,11 @@ def test_llms(request):
             try:
                 response, metadata = query_func(test_prompt)
                 
-                if response and not response.startswith('Error:'):
+                # Check if it's actually working (not just returning without error)
+                if response and not response.startswith('Error:') and not response.startswith(f"{llm_name} is temporarily unavailable") and "LLM_NAME is working" in response:
                     results[llm_name] = {
                         "status": "WORKING",
-                        "response": response[:200] + "..." if len(response) > 200 else response,
+                        "response": response,
                         "metadata": metadata
                     }
                 else:
@@ -71,21 +69,24 @@ def test_llms(request):
         # Count working LLMs
         working_count = sum(1 for r in results.values() if r["status"] == "WORKING")
         
-        return JsonResponse({
-            "results": results,
-            "summary": {
-                "total_llms": len(results),
-                "working_llms": working_count,
-                "all_working": working_count == len(results)
+        context = {
+            'results': results,
+            'summary': {
+                'total_llms': len(results),
+                'working_llms': working_count,
+                'all_working': working_count == len(results)
             }
-        })
+        }
+        
+        return render(request, 'brain_chat/test_llms.html', context)
         
     except Exception as e:
-        return JsonResponse({
-            "error": f"Test failed: {str(e)}",
-            "results": {},
-            "summary": {"total_llms": 0, "working_llms": 0, "all_working": False}
-        })
+        context = {
+            'error': f"Test failed: {str(e)}",
+            'results': {},
+            'summary': {'total_llms': 0, 'working_llms': 0, 'all_working': False}
+        }
+        return render(request, 'brain_chat/test_llms.html', context)
 
 
 def get_client_country(request):
