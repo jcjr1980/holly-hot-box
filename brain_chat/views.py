@@ -626,6 +626,16 @@ def setup_database(request):
                 messages.append("Added is_private column")
             except Exception as e:
                 messages.append(f"is_private: {str(e)}")
+            
+            # Add summary column to project table
+            try:
+                cursor.execute("""
+                    ALTER TABLE brain_chat_project 
+                    ADD COLUMN IF NOT EXISTS summary TEXT
+                """)
+                messages.append("Added summary column to project")
+            except Exception as e:
+                messages.append(f"summary column: {str(e)}")
         
         return JsonResponse({
             'status': 'success', 
