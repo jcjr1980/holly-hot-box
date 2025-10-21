@@ -137,8 +137,8 @@ Please provide a comprehensive, well-reasoned response leveraging your advanced 
             logger.error(f"Gemini error: {e}")
             return f"Gemini Error: {str(e)}", {"error": str(e)}
     
-    def query_claude(self, prompt: str, conversation_history: List[Dict] = None) -> Tuple[str, Dict]:
-        """Query Anthropic Claude"""
+    def query_claude(self, prompt: str, conversation_history: List[Dict] = None, preferred_model: str = "haiku") -> Tuple[str, Dict]:
+        """Query Anthropic Claude - Haiku 4.5 default with Sonnet 4.5 and Opus 4.1 available"""
         if not self.claude_client:
             return "Claude is temporarily unavailable", {"error": "Client not initialized"}
         
@@ -148,19 +148,48 @@ Please provide a comprehensive, well-reasoned response leveraging your advanced 
             messages = conversation_history or []
             messages.append({"role": "user", "content": prompt})
             
-            response = self.claude_client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=2000,
-                messages=messages
-            )
-            
-            response_time = int((time.time() - start_time) * 1000)
-            
-            return response.content[0].text, {
-                "tokens": response.usage.input_tokens + response.usage.output_tokens,
-                "response_time_ms": response_time,
-                "model": "claude-sonnet-4"
+            # Model selection based on preference or intelligent fallback
+            model_map = {
+                "haiku": "claude-haiku-4.5-20250514",      # Default: Fast & cost-effective
+                "sonnet": "claude-sonnet-4.5-20250514",    # Balanced: Higher intelligence
+                "opus": "claude-opus-4.1-20250514"          # Premium: Maximum power
             }
+            
+            # Try preferred model first, then fallback
+            models_to_try = [model_map.get(preferred_model, model_map["haiku"])]
+            
+            # Add fallbacks if primary fails
+            if preferred_model != "haiku":
+                models_to_try.append(model_map["haiku"])
+            
+            for model in models_to_try:
+                try:
+                    response = self.claude_client.messages.create(
+                        model=model,
+                        max_tokens=4000,
+                        messages=messages
+                    )
+                    
+                    response_time = int((time.time() - start_time) * 1000)
+                    
+                    # Determine friendly name
+                    model_name = "Claude Haiku 4.5" if "haiku" in model else \
+                                "Claude Sonnet 4.5" if "sonnet" in model else \
+                                "Claude Opus 4.1"
+                    
+                    return response.content[0].text, {
+                        "tokens": response.usage.input_tokens + response.usage.output_tokens,
+                        "response_time_ms": response_time,
+                        "model": model_name,
+                        "model_tier": "fast" if "haiku" in model else "balanced" if "sonnet" in model else "premium"
+                    }
+                except Exception as model_error:
+                    logger.debug(f"Claude model {model} failed, trying next: {model_error}")
+                    continue
+            
+            # If all models failed
+            return "Claude Error: All model variants unavailable", {"error": "All Claude models failed"}
+            
         except Exception as e:
             logger.error(f"Claude error: {e}")
             return f"Claude Error: {str(e)}", {"error": str(e)}

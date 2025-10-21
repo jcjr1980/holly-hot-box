@@ -443,7 +443,7 @@
                         {% if llm == 'gemini' %}⭐ Gemini Tier 3
                         {% elif llm == 'deepseek' %}💎 DeepSeek
                         {% elif llm == 'openai' %}🚀 GPT-5 Nano
-                        {% elif llm == 'claude' %}🧠 Claude
+                        {% elif llm == 'claude' %}🧠 Claude Haiku 4.5
                         {% elif llm == 'grok' %}⚡ SuperGrok
                         {% elif llm == 'huggingface' %}🤗 HuggingFace
                         {% else %}{{ llm|title }}
@@ -471,7 +471,7 @@
                     </label>
                     <label class="llm-option">
                         <input type="checkbox" name="llms" value="claude" {% if 'claude' in project.selected_llms %}checked{% endif %}>
-                        <span>🧠 Claude</span>
+                        <span>🧠 Claude Haiku 4.5</span>
                     </label>
                     <label class="llm-option">
                         <input type="checkbox" name="llms" value="grok" {% if 'grok' in project.selected_llms %}checked{% endif %}>
