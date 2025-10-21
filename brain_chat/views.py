@@ -22,6 +22,72 @@ from .summarization_service import FileSummarizer
 logger = logging.getLogger(__name__)
 
 
+@login_required
+def test_llms(request):
+    """Test all LLMs individually"""
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        orchestrator = LLMOrchestrator()
+        test_prompt = "Hello! Please respond with just 'LLM_NAME is working' to confirm you're functioning."
+        
+        results = {}
+        
+        # Test each LLM
+        llms_to_test = [
+            ("Gemini", orchestrator.query_gemini),
+            ("DeepSeek", orchestrator.query_deepseek),
+            ("Claude", orchestrator.query_claude),
+            ("OpenAI", orchestrator.query_openai),
+            ("Grok", orchestrator.query_grok),
+            ("HuggingFace", orchestrator.query_huggingface)
+        ]
+        
+        for llm_name, query_func in llms_to_test:
+            try:
+                response, metadata = query_func(test_prompt)
+                
+                if response and not response.startswith('Error:'):
+                    results[llm_name] = {
+                        "status": "WORKING",
+                        "response": response[:200] + "..." if len(response) > 200 else response,
+                        "metadata": metadata
+                    }
+                else:
+                    results[llm_name] = {
+                        "status": "FAILED",
+                        "error": response,
+                        "metadata": metadata
+                    }
+                    
+            except Exception as e:
+                results[llm_name] = {
+                    "status": "EXCEPTION",
+                    "error": str(e),
+                    "metadata": {}
+                }
+        
+        # Count working LLMs
+        working_count = sum(1 for r in results.values() if r["status"] == "WORKING")
+        
+        return JsonResponse({
+            "results": results,
+            "summary": {
+                "total_llms": len(results),
+                "working_llms": working_count,
+                "all_working": working_count == len(results)
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            "error": f"Test failed: {str(e)}",
+            "results": {},
+            "summary": {"total_llms": 0, "working_llms": 0, "all_working": False}
+        })
+
+
 def get_client_country(request):
     """Get client country from IP address"""
     try:
