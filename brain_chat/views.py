@@ -13,8 +13,11 @@ import json
 import pyotp
 import os
 import requests
-from .models import ChatSession, ChatMessage, LLMResponse, UserProfile
+import logging
+from .models import Project, ChatSession, ChatMessage, LLMResponse, DiaryNote, UserProfile
 from .llm_orchestrator import LLMOrchestrator
+
+logger = logging.getLogger(__name__)
 
 
 def get_client_country(request):
@@ -170,21 +173,44 @@ def send_message(request):
         if not prompt:
             return JsonResponse({'error': 'Message cannot be empty'}, status=400)
         
+        # Determine session type based on mode
+        is_quickie = (mode == 'quickie')
+        is_private = (mode == 'privacy')
+        
         # Get or create session
         if session_id:
             session = get_object_or_404(ChatSession, id=session_id, user=request.user)
         else:
-            session = ChatSession.objects.create(
-                user=request.user,
-                title=prompt[:50]  # Use first 50 chars as title
-            )
+            # For privacy mode, don't save to database (use in-memory only)
+            if is_private:
+                # Create a temporary session (won't be persisted after response)
+                session = ChatSession(
+                    user=request.user,
+                    title=f"Private: {prompt[:40]}",
+                    is_private=True
+                )
+                # Don't save it - keep it in memory only
+            else:
+                session = ChatSession.objects.create(
+                    user=request.user,
+                    title=prompt[:50],  # Use first 50 chars as title
+                    is_quickie=is_quickie
+                )
         
-        # Save user message
-        user_message = ChatMessage.objects.create(
-            session=session,
-            role='user',
-            content=prompt
-        )
+        # Save user message (skip for privacy mode)
+        if not is_private:
+            user_message = ChatMessage.objects.create(
+                session=session,
+                role='user',
+                content=prompt
+            )
+        else:
+            # Create in-memory message for privacy mode
+            user_message = ChatMessage(
+                session=session,
+                role='user',
+                content=prompt
+            )
         
         # Get conversation history
         history = []
@@ -198,72 +224,99 @@ def send_message(request):
         orchestrator = LLMOrchestrator()
         result = orchestrator.orchestrate_response(prompt, history[:-1], mode=mode)
         
-        # Save assistant response
+        # Save assistant response (skip for privacy mode)
         if mode == 'parallel':
             # Save all responses
-            assistant_message = ChatMessage.objects.create(
-                session=session,
-                role='assistant',
-                content=json.dumps(result['results'], indent=2),
-                llm_provider='multi',
-                metadata=result
-            )
-            
-            # Save individual LLM responses
-            for llm_name, llm_data in result['results'].items():
-                LLMResponse.objects.create(
-                    message=assistant_message,
-                    llm_provider=llm_name,
-                    response_text=llm_data['response'],
-                    tokens_used=llm_data['metadata'].get('tokens', 0),
-                    response_time_ms=llm_data['metadata'].get('response_time_ms', 0),
-                    metadata=llm_data['metadata']
+            if not is_private:
+                assistant_message = ChatMessage.objects.create(
+                    session=session,
+                    role='assistant',
+                    content=json.dumps(result['results'], indent=2),
+                    llm_provider='multi',
+                    metadata=result
                 )
+            else:
+                assistant_message = None
+            
+            # Save individual LLM responses (only if not privacy mode)
+            if assistant_message:
+                for llm_name, llm_data in result['results'].items():
+                    LLMResponse.objects.create(
+                        message=assistant_message,
+                        llm_provider=llm_name,
+                        response_text=llm_data['response'],
+                        tokens_used=llm_data['metadata'].get('tokens', 0),
+                        response_time_ms=llm_data['metadata'].get('response_time_ms', 0),
+                        metadata=llm_data['metadata']
+                    )
         
         elif mode == 'consensus':
-            assistant_message = ChatMessage.objects.create(
-                session=session,
-                role='assistant',
-                content=result['final_response'],
-                llm_provider='multi',
-                metadata=result,
-                tokens_used=result['metadata'].get('tokens', 0),
-                response_time_ms=result['metadata'].get('response_time_ms', 0)
-            )
-            
-            # Save individual responses
-            for llm_name, llm_data in result['individual_responses'].items():
-                LLMResponse.objects.create(
-                    message=assistant_message,
-                    llm_provider=llm_name,
-                    response_text=llm_data['response'],
-                    tokens_used=llm_data['metadata'].get('tokens', 0),
-                    response_time_ms=llm_data['metadata'].get('response_time_ms', 0),
-                    metadata=llm_data['metadata']
+            if not is_private:
+                assistant_message = ChatMessage.objects.create(
+                    session=session,
+                    role='assistant',
+                    content=result['final_response'],
+                    llm_provider='multi',
+                    metadata=result,
+                    tokens_used=result['metadata'].get('tokens', 0),
+                    response_time_ms=result['metadata'].get('response_time_ms', 0)
                 )
+                
+                # Save individual responses
+                for llm_name, llm_data in result['individual_responses'].items():
+                    LLMResponse.objects.create(
+                        message=assistant_message,
+                        llm_provider=llm_name,
+                        response_text=llm_data['response'],
+                        tokens_used=llm_data['metadata'].get('tokens', 0),
+                        response_time_ms=llm_data['metadata'].get('response_time_ms', 0),
+                        metadata=llm_data['metadata']
+                    )
+            else:
+                assistant_message = None
         
-        else:  # fastest or best
-            assistant_message = ChatMessage.objects.create(
-                session=session,
-                role='assistant',
-                content=result['response'],
-                llm_provider=result['provider'],
-                metadata=result,
-                tokens_used=result['metadata'].get('tokens', 0),
-                response_time_ms=result['metadata'].get('response_time_ms', 0)
-            )
+        else:  # fastest, best, gemini_only, deepseek_only, power_duo, quickie, privacy
+            if not is_private:
+                assistant_message = ChatMessage.objects.create(
+                    session=session,
+                    role='assistant',
+                    content=result['response'],
+                    llm_provider=result['provider'],
+                    metadata=result,
+                    tokens_used=result['metadata'].get('tokens', 0),
+                    response_time_ms=result['metadata'].get('response_time_ms', 0)
+                )
+            else:
+                assistant_message = None
         
-        # Update session timestamp
-        session.save()
+        # Update session timestamp (skip for privacy mode)
+        if not is_private:
+            session.save()
         
-        return JsonResponse({
-            'success': True,
-            'message_id': assistant_message.id,
-            'response': assistant_message.content,
-            'mode': mode,
-            'session_id': session.id,
-            'metadata': result
-        })
+        # Return response
+        if assistant_message:
+            return JsonResponse({
+                'success': True,
+                'message_id': assistant_message.id,
+                'response': assistant_message.content,
+                'mode': mode,
+                'session_id': session.id if not is_private else None,
+                'metadata': result,
+                'is_private': is_private,
+                'is_quickie': is_quickie
+            })
+        else:
+            # Privacy mode - return response without database IDs
+            return JsonResponse({
+                'success': True,
+                'message_id': None,
+                'response': result.get('response') or result.get('final_response'),
+                'mode': mode,
+                'session_id': None,
+                'metadata': result,
+                'is_private': True,
+                'is_quickie': False
+            })
     
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
@@ -403,3 +456,139 @@ def setup_database(request):
             'status': 'error', 
             'message': f'Database setup failed: {str(e)}'
         }, status=500)
+
+
+@login_required
+def create_project(request):
+    """Create a new project"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        name = data.get('name', '').strip()
+        description = data.get('description', '').strip()
+        selected_llms = data.get('selected_llms', [])
+        priority = data.get('priority', 3)
+        tags = data.get('tags', '')
+        
+        if not name:
+            return JsonResponse({'error': 'Project name is required'}, status=400)
+        
+        # Create project
+        project = Project.objects.create(
+            user=request.user,
+            name=name,
+            description=description,
+            selected_llms=selected_llms,
+            priority=priority,
+            tags=tags
+        )
+        
+        # If auto-suggest is requested, use Gemini to analyze and suggest LLMs
+        if data.get('auto_suggest') and description:
+            try:
+                orchestrator = LLMOrchestrator()
+                suggestion_prompt = f"""Analyze this project and suggest which LLMs would be best suited:
+
+Project: {name}
+Description: {description}
+
+Available LLMs:
+- gemini: Google Gemini Tier 3 (best for synthesis, analysis, strategic thinking)
+- deepseek: DeepSeek Reasoner (best for deep analytical reasoning, cost-effective)
+- openai: GPT-4o (versatile, good for creative tasks)
+- claude: Anthropic Claude (creative writing, nuanced responses)
+- grok: xAI Grok (real-time data, current events)
+- huggingface: Meta-Llama (specialized tasks)
+
+Respond with ONLY a JSON array of recommended LLM names. Example: ["gemini", "deepseek"]"""
+                
+                response, _ = orchestrator.query_gemini(suggestion_prompt)
+                # Extract JSON from response
+                try:
+                    suggested_llms = json.loads(response)
+                    project.selected_llms = suggested_llms
+                    project.ai_summary = f"AI-suggested LLMs based on project analysis"
+                    project.save()
+                except:
+                    # If JSON parsing fails, use the response as summary
+                    project.ai_summary = response
+                    project.save()
+            except Exception as e:
+                logger.error(f"Auto-suggest error: {e}")
+        
+        return JsonResponse({
+            'status': 'success',
+            'project': {
+                'id': project.id,
+                'name': project.name,
+                'selected_llms': project.selected_llms,
+                'priority': project.priority
+            }
+        })
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+@login_required
+def get_projects(request):
+    """Get all projects for current user"""
+    projects = Project.objects.filter(user=request.user)
+    return JsonResponse({
+        'projects': [{
+            'id': p.id,
+            'name': p.name,
+            'description': p.description,
+            'selected_llms': p.selected_llms,
+            'priority': p.priority,
+            'status': p.status,
+            'tags': p.get_tags_list(),
+            'created_at': p.created_at.isoformat()
+        } for p in projects]
+    })
+
+
+@login_required
+def create_diary_note(request):
+    """Create a new diary note"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        content = data.get('content', '').strip()
+        tags = data.get('tags', '')
+        mood = data.get('mood', '')
+        
+        if not content:
+            return JsonResponse({'error': 'Content is required'}, status=400)
+        
+        note = DiaryNote.objects.create(
+            user=request.user,
+            content=content,
+            tags=tags,
+            mood=mood
+        )
+        
+        return JsonResponse({
+            'status': 'success',
+            'note': {
+                'id': note.id,
+                'content': note.content,
+                'created_at': note.created_at.isoformat()
+            }
+        })
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+@login_required
+def get_diary_notes(request):
+    """Get diary notes for current user"""
+    limit = int(request.GET.get('limit', 50))
+    notes = DiaryNote.objects.filter(user=request.user)[:limit]
+    
+    return JsonResponse({
+        'notes': [{
+            'id': n.id,
+            'content': n.content,
+            'tags': n.get_tags_list(),
+            'mood': n.mood,
+            'created_at': n.created_at.isoformat()
+        } for n in notes]
+    })

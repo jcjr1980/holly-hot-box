@@ -211,6 +211,28 @@
             color: white;
         }
         
+        .mode-btn.quickie-btn {
+            border-color: #10b981;
+            color: #10b981;
+            font-weight: 700;
+        }
+        
+        .mode-btn.quickie-btn:hover {
+            background: #10b981;
+            color: white;
+        }
+        
+        .mode-btn.privacy-btn {
+            border-color: #ef4444;
+            color: #ef4444;
+            font-weight: 700;
+        }
+        
+        .mode-btn.privacy-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+        
         .mode-btn.power-duo-btn.active {
             background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
             border-color: #f59e0b;
@@ -353,6 +375,170 @@
             font-size: 16px;
             margin-bottom: 10px;
         }
+        
+        /* Floating Action Buttons */
+        .fab-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+        }
+        
+        .fab {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+        
+        .fab-project {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .fab-diary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            font-size: 24px;
+            color: #333;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .modal-close:hover {
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input[type="text"],
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+        
+        .btn-secondary {
+            background: #e1e8ed;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
     </style>
 </head>
 <body>
@@ -405,6 +591,12 @@
                     <button class="mode-btn" data-mode="parallel" onclick="setMode('parallel')">
                         All 6
                     </button>
+                    <button class="mode-btn quickie-btn" data-mode="quickie" onclick="setMode('quickie')" title="Quick one-off question - Saved for future reference">
+                        ⚡ Quickie!
+                    </button>
+                    <button class="mode-btn privacy-btn" data-mode="privacy" onclick="setMode('privacy')" title="Private mode - Not saved to database">
+                        🔒 Privacy Please
+                    </button>
                 </div>
             </div>
             
@@ -454,6 +646,112 @@
                         Send
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Floating Action Buttons -->
+    <div class="fab-container">
+        <button class="fab fab-project" onclick="openProjectModal()" title="New Project">
+            📁
+        </button>
+        <button class="fab fab-diary" onclick="openDiaryModal()" title="Diary Note">
+            📝
+        </button>
+    </div>
+    
+    <!-- New Project Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🚀 Create New Project</h2>
+                <button class="modal-close" onclick="closeProjectModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="project-name">Project Name *</label>
+                <input type="text" id="project-name" placeholder="e.g., SearchAI Market Research" required>
+            </div>
+            <div class="form-group">
+                <label for="project-description">Description</label>
+                <textarea id="project-description" placeholder="Describe your project..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="project-priority">Priority</label>
+                <select id="project-priority">
+                    <option value="1">1 - Low</option>
+                    <option value="2">2</option>
+                    <option value="3" selected>3 - Medium</option>
+                    <option value="4">4</option>
+                    <option value="5">5 - Urgent</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="project-tags">Tags (comma-separated)</label>
+                <input type="text" id="project-tags" placeholder="research, business, strategy">
+            </div>
+            <div class="form-group">
+                <label>Select LLMs</label>
+                <div style="margin-bottom: 15px;">
+                    <button type="button" class="btn btn-secondary" onclick="autoSuggestLLMs()">
+                        🤖 Auto-Suggest LLMs
+                    </button>
+                </div>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="llm-gemini" value="gemini" checked>
+                        <label for="llm-gemini">⭐ Gemini Tier 3</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="llm-deepseek" value="deepseek" checked>
+                        <label for="llm-deepseek">💎 DeepSeek</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="llm-openai" value="openai">
+                        <label for="llm-openai">OpenAI GPT-4o</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="llm-claude" value="claude">
+                        <label for="llm-claude">Claude</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="llm-grok" value="grok">
+                        <label for="llm-grok">Grok</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="llm-huggingface" value="huggingface">
+                        <label for="llm-huggingface">HuggingFace</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeProjectModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createProject()">Create Project</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Diary Note Modal -->
+    <div id="diaryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📝 Quick Diary Note</h2>
+                <button class="modal-close" onclick="closeDiaryModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="diary-content">What's on your mind? *</label>
+                <textarea id="diary-content" placeholder="e.g., Stop being nice to people that waste my time..." required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="diary-mood">Mood (optional)</label>
+                <input type="text" id="diary-mood" placeholder="e.g., frustrated, inspired, focused">
+            </div>
+            <div class="form-group">
+                <label for="diary-tags">Tags (optional)</label>
+                <input type="text" id="diary-tags" placeholder="reminder, business, personal">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeDiaryModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createDiaryNote()">Save Note</button>
             </div>
         </div>
     </div>
@@ -592,6 +890,129 @@
             container.scrollTop = container.scrollHeight;
             document.getElementById('message-input').focus();
         });
+        
+        // Project Modal Functions
+        function openProjectModal() {
+            document.getElementById('projectModal').classList.add('active');
+        }
+        
+        function closeProjectModal() {
+            document.getElementById('projectModal').classList.remove('active');
+        }
+        
+        function autoSuggestLLMs() {
+            const description = document.getElementById('project-description').value;
+            if (!description) {
+                alert('Please enter a project description first');
+                return;
+            }
+            
+            // Show loading state
+            const btn = event.target;
+            btn.textContent = '🤖 Analyzing...';
+            btn.disabled = true;
+            
+            // This will be handled by the create project endpoint
+            // For now, suggest Gemini + DeepSeek by default
+            document.getElementById('llm-gemini').checked = true;
+            document.getElementById('llm-deepseek').checked = true;
+            
+            btn.textContent = '🤖 Auto-Suggest LLMs';
+            btn.disabled = false;
+        }
+        
+        async function createProject() {
+            const name = document.getElementById('project-name').value.trim();
+            const description = document.getElementById('project-description').value.trim();
+            const priority = document.getElementById('project-priority').value;
+            const tags = document.getElementById('project-tags').value.trim();
+            
+            if (!name) {
+                alert('Project name is required');
+                return;
+            }
+            
+            const selected_llms = [];
+            document.querySelectorAll('#projectModal input[type="checkbox"]:checked').forEach(cb => {
+                selected_llms.push(cb.value);
+            });
+            
+            try {
+                const response = await fetch('/projects/create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        name,
+                        description,
+                        priority: parseInt(priority),
+                        tags,
+                        selected_llms
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert('Project created successfully!');
+                    closeProjectModal();
+                    location.reload(); // Reload to show new project
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error creating project: ' + error);
+            }
+        }
+        
+        // Diary Modal Functions
+        function openDiaryModal() {
+            document.getElementById('diaryModal').classList.add('active');
+        }
+        
+        function closeDiaryModal() {
+            document.getElementById('diaryModal').classList.remove('active');
+            document.getElementById('diary-content').value = '';
+            document.getElementById('diary-mood').value = '';
+            document.getElementById('diary-tags').value = '';
+        }
+        
+        async function createDiaryNote() {
+            const content = document.getElementById('diary-content').value.trim();
+            const mood = document.getElementById('diary-mood').value.trim();
+            const tags = document.getElementById('diary-tags').value.trim();
+            
+            if (!content) {
+                alert('Please enter some content');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/diary/create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        content,
+                        mood,
+                        tags
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert('Diary note saved! 📝');
+                    closeDiaryModal();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error saving note: ' + error);
+            }
+        }
     </script>
 </body>
 </html>
