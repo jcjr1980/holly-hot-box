@@ -31,9 +31,9 @@ class LLMOrchestrator:
         try:
             # Google Gemini Tier 3 - PRIMARY STRATEGIST (Premium Access!)
             genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-            # Using Gemini 2.0 Flash Thinking Experimental - MOST POWERFUL
+            # Use stable Gemini model instead of experimental to prevent hanging
             self.gemini_model = genai.GenerativeModel(
-                'gemini-2.0-flash-thinking-exp-1219',
+                'gemini-1.5-flash',
                 generation_config={
                     'temperature': 0.7,
                     'top_p': 0.95,
@@ -122,17 +122,34 @@ Please provide a comprehensive, well-reasoned response leveraging your advanced 
                         'parts': [msg['content']]
                     })
             
-            chat = self.gemini_model.start_chat(history=history)
-            response = chat.send_message(enhanced_prompt)
+            # Add timeout to prevent hanging
+            import signal
             
-            response_time = int((time.time() - start_time) * 1000)
+            def timeout_handler(signum, frame):
+                raise TimeoutError("Gemini API call timed out")
             
-            return response.text, {
-                "tokens": len(prompt.split()) + len(response.text.split()),
-                "response_time_ms": response_time,
-                "model": "gemini-2.0-flash-thinking-exp (Tier 3 Premium)",
-                "tier": "premium_tier_3"
-            }
+            # Set 30 second timeout
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(30)
+            
+            try:
+                chat = self.gemini_model.start_chat(history=history)
+                response = chat.send_message(enhanced_prompt)
+                signal.alarm(0)  # Cancel timeout
+                
+                response_time = int((time.time() - start_time) * 1000)
+                
+                return response.text, {
+                    "tokens": len(prompt.split()) + len(response.text.split()),
+                    "response_time_ms": response_time,
+                    "model": "gemini-1.5-flash (Tier 3 Premium)",
+                    "tier": "premium_tier_3"
+                }
+            except TimeoutError:
+                signal.alarm(0)  # Cancel timeout
+                logger.error("Gemini API call timed out after 30 seconds")
+                return "Gemini Error: API call timed out", {"error": "timeout"}
+                
         except Exception as e:
             logger.error(f"Gemini error: {e}")
             return f"Gemini Error: {str(e)}", {"error": str(e)}
@@ -223,7 +240,7 @@ Please think deeply and provide a well-reasoned, analytical response."""
                     "temperature": 1.0,  # Reasoning models work best at higher temp
                     "max_tokens": 8000  # More tokens for deep reasoning
                 },
-                timeout=60  # Reasoning takes longer
+                timeout=45  # Reduced timeout to prevent hanging
             )
             
             response_time = int((time.time() - start_time) * 1000)
@@ -413,7 +430,7 @@ Provide a final synthesized answer that combines the best of both analyses:"""
             "huggingface": self.query_huggingface
         }
         
-        # Execute all queries
+        # Execute all queries with individual timeouts
         for name, query_func in llm_queries.items():
             try:
                 response, metadata = query_func(prompt, conversation_history)
@@ -427,6 +444,16 @@ Provide a final synthesized answer that combines the best of both analyses:"""
                     "response": f"Error: {str(e)}",
                     "metadata": {"error": str(e)}
                 }
+        
+        # If all LLMs failed, return a simple fallback
+        successful_responses = [r for r in results.values() if not r['response'].startswith('Error:')]
+        if not successful_responses:
+            return {
+                "mode": mode,
+                "response": "All AI models are currently unavailable. Please try again later.",
+                "metadata": {"error": "all_models_failed"},
+                "provider": "fallback"
+            }
         
         # Process based on mode
         if mode == "consensus":
@@ -474,7 +501,16 @@ INSTRUCTIONS:
 Final synthesized response:"""
         
         # Use Gemini to synthesize (instead of OpenAI)
-        final_response, metadata = self.query_gemini(synthesis_prompt)
+        try:
+            final_response, metadata = self.query_gemini(synthesis_prompt)
+        except Exception as e:
+            logger.error(f"Gemini synthesis failed: {e}")
+            # Fallback to simple concatenation if Gemini fails
+            final_response = "Consensus from multiple AI models:\n\n"
+            for name, data in results.items():
+                if data['response'] and not data['response'].startswith('Error:'):
+                    final_response += f"**{name.upper()}:** {data['response'][:500]}...\n\n"
+            metadata = {"error": "gemini_synthesis_failed", "fallback": "simple_concat"}
         
         return {
             "mode": "consensus",
