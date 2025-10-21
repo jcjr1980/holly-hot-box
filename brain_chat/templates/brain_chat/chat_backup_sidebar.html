@@ -20,125 +20,22 @@
         
         .container {
             display: flex;
-            flex-direction: column;
             height: 100vh;
         }
         
-        /* Top Navigation */
-        .top-nav {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #2c3e50;
             color: white;
-            padding: 15px 20px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            flex-wrap: wrap;
-            gap: 10px;
+            flex-direction: column;
         }
         
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .nav-brand h1 {
-            font-size: 20px;
-            font-weight: 800;
-        }
-        
-        .nav-user {
-            font-size: 13px;
-            opacity: 0.9;
-        }
-        
-        .nav-actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        .nav-btn {
-            padding: 8px 16px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 13px;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-        
-        .nav-btn:hover {
-            background: rgba(255,255,255,0.3);
-            border-color: rgba(255,255,255,0.5);
-        }
-        
-        .nav-btn.logout {
-            background: #e74c3c;
-            border-color: #c0392b;
-        }
-        
-        .nav-btn.logout:hover {
-            background: #c0392b;
-        }
-        
-        /* Sessions Bar (horizontal) */
-        .sessions-bar {
-            background: #f8f9fa;
-            border-bottom: 2px solid #e1e8ed;
-            padding: 10px 20px;
-            overflow-x: auto;
-            white-space: nowrap;
-        }
-        
-        .sessions-tabs {
-            display: inline-flex;
-            gap: 10px;
-        }
-        
-        .session-tab {
-            display: inline-block;
-            padding: 10px 16px;
-            background: white;
-            border: 2px solid #e1e8ed;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 13px;
-        }
-        
-        .session-tab:hover {
-            border-color: #667eea;
-        }
-        
-        .session-tab.active {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-        }
-        
-        .session-tab-title {
-            font-weight: 600;
-        }
-        
-        .session-tab-date {
-            font-size: 11px;
-            opacity: 0.7;
-            margin-top: 2px;
-        }
-        
-        /* Remove all sidebar styles */
-        .sidebar,
-        .sidebar-header,
-        .sidebar-footer,
-        .sessions-list,
-        .session-item {
-            display: none !important;
+        .sidebar-header {
+            padding: 20px;
+            background: #34495e;
+            border-bottom: 1px solid #3a506b;
         }
         
         .sidebar-header h1 {
@@ -448,28 +345,6 @@
             cursor: not-allowed;
         }
         
-        .attach-btn {
-            width: 56px;
-            height: 56px;
-            background: #f8f9fa;
-            border: 2px solid #e1e8ed;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 28px;
-            color: #667eea;
-            font-weight: 300;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .attach-btn:hover {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-        }
-        
         .loading {
             display: inline-block;
             width: 20px;
@@ -667,30 +542,15 @@
         
         /* Mobile Responsive Styles */
         @media (max-width: 768px) {
-            .top-nav {
-                padding: 12px 15px;
+            .container {
+                flex-direction: column;
             }
             
-            .nav-brand h1 {
-                font-size: 16px;
-            }
-            
-            .nav-user {
-                font-size: 11px;
-            }
-            
-            .nav-btn {
-                padding: 6px 12px;
-                font-size: 11px;
-            }
-            
-            .sessions-bar {
-                padding: 8px 15px;
-            }
-            
-            .session-tab {
-                padding: 8px 12px;
-                font-size: 12px;
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 40vh;
+                position: relative;
             }
             
             .sidebar-header h1 {
@@ -861,31 +721,26 @@
 </head>
 <body>
     <div class="container">
-        <!-- Top Navigation -->
-        <div class="top-nav">
-            <div class="nav-brand">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
                 <h1>🔥 Holly Hot Box</h1>
-                <span class="nav-user">{{ request.user.username }}</span>
+                <p>Welcome, {{ request.user.username }}</p>
+                <button class="new-chat-btn" onclick="newChat()">+ New Chat</button>
             </div>
-            <div class="nav-actions">
-                <button class="nav-btn" onclick="newChat()">💬 New Chat</button>
-                <button class="nav-btn" onclick="openProjectModal()">📁 New Project</button>
-                <button class="nav-btn" onclick="openDiaryModal()">📝 Diary</button>
-                <button class="nav-btn" onclick="openSearchModal()">🔍 Search</button>
-                <button class="nav-btn logout" onclick="window.location.href='{% url 'logout' %}'">Logout</button>
-            </div>
-        </div>
-        
-        <!-- Sessions Bar (horizontal scroll) -->
-        <div class="sessions-bar">
-            <div class="sessions-tabs">
+            
+            <div class="sessions-list">
                 {% for session in sessions %}
-                <div class="session-tab {% if session.id == active_session.id %}active{% endif %}" 
+                <div class="session-item {% if session.id == active_session.id %}active{% endif %}" 
                      onclick="loadSession({{ session.id }})">
-                    <div class="session-tab-title">{{ session.title|truncatewords:4 }}</div>
-                    <div class="session-tab-date">{{ session.updated_at|date:"M d, H:i" }}</div>
+                    <div class="session-title">{{ session.title }}</div>
+                    <div class="session-date">{{ session.updated_at|date:"M d, Y H:i" }}</div>
                 </div>
                 {% endfor %}
+            </div>
+            
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="window.location.href='{% url 'logout' %}'">Logout</button>
             </div>
         </div>
         
@@ -960,9 +815,6 @@
             
             <div class="input-area">
                 <div class="input-wrapper">
-                    <button class="attach-btn" onclick="openAttachmentMenu()" title="Add images, files, etc.">
-                        +
-                    </button>
                     <textarea 
                         id="message-input" 
                         placeholder="Ask anything... All 6 LLMs are listening 👂"
@@ -1216,15 +1068,6 @@
             container.scrollTop = container.scrollHeight;
             document.getElementById('message-input').focus();
         });
-        
-        // Attachment and Search functions (placeholders for Phase 2)
-        function openAttachmentMenu() {
-            alert('📎 Attachment feature coming in Phase 2! You\'ll be able to add:\n• Images\n• Files\n• Screenshots\n• Voice recordings');
-        }
-        
-        function openSearchModal() {
-            alert('🔍 Advanced search coming soon! Features:\n• Search titles\n• Search full content\n• Exact text match\n• Filter by project\n• Filter by date');
-        }
         
         // Project Modal Functions
         function openProjectModal() {
