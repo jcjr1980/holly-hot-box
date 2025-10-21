@@ -38,9 +38,9 @@ class LLMOrchestrator:
             gemini_key = os.getenv('GEMINI_API_KEY')
             if gemini_key:
                 genai.configure(api_key=gemini_key)
-                # Use working Gemini model - gemini-2.0-flash from cURL example
+                # Use working Gemini model - gemini-2.5-flash (latest)
                 self.gemini_model = genai.GenerativeModel(
-                    'gemini-2.0-flash',
+                    'gemini-2.5-flash',
                     generation_config={
                         'temperature': 0.7,
                         'top_p': 0.95,
