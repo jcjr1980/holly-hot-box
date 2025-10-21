@@ -150,6 +150,68 @@ def new_chat(request):
     return render(request, 'brain_chat/new_chat.html')
 
 @login_required
+def create_project_view(request):
+    """Create new project with file uploads"""
+    if request.method == 'GET':
+        return render(request, 'brain_chat/create_project.html')
+    
+    if request.method == 'POST':
+        try:
+            # Get form data
+            name = request.POST.get('name', '').strip()
+            description = request.POST.get('description', '').strip()
+            summary = request.POST.get('summary', '').strip()
+            priority = int(request.POST.get('priority', 3))
+            tags = request.POST.get('tags', '').strip()
+            selected_llms = json.loads(request.POST.get('selected_llms', '[]'))
+            
+            if not name:
+                return JsonResponse({'error': 'Project name is required'}, status=400)
+            
+            # Create project
+            project = Project.objects.create(
+                user=request.user,
+                name=name,
+                description=description,
+                summary=summary,
+                priority=priority,
+                tags=tags,
+                selected_llms=selected_llms
+            )
+            
+            # Process uploaded files
+            file_count = 0
+            for key, value in request.FILES.items():
+                if key.startswith('file_'):
+                    file_index = key.split('_')[1]
+                    content_type = request.POST.get(f'file_{file_index}_content_type', 'general')
+                    
+                    # Create ProjectFile instance
+                    project_file = ProjectFile.objects.create(
+                        project=project,
+                        file_name=value.name,
+                        file_path=value,
+                        file_type=value.content_type or 'unknown',
+                        file_size=value.size,
+                        content_type=content_type
+                    )
+                    
+                    # TODO: Process file content and summarization
+                    file_count += 1
+            
+            return JsonResponse({
+                'status': 'success',
+                'project_id': project.id,
+                'message': f'Project created with {file_count} files'
+            })
+            
+        except Exception as e:
+            logger.error(f"Project creation error: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
 def chat_home(request):
     """Main chat interface"""
     # Get or create active session
