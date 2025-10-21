@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holly Hot Box - Create Project</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0d1b2a;
+            color: #e0e1dd;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .back-btn {
+            background: transparent;
+            border: 1px solid #415a77;
+            color: #e0e1dd;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        
+        .back-btn:hover {
+            background: #415a77;
+            border-color: #a8dadc;
+        }
+        
+        .header h1 {
+            color: #a8dadc;
+            font-size: 24px;
+        }
+        
+        .form-container {
+            background: #1b263b;
+            border: 1px solid #415a77;
+            border-radius: 12px;
+            padding: 30px;
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            color: #a8dadc;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #e0e1dd;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #415a77;
+            border-radius: 6px;
+            background: #0d1b2a;
+            color: #e0e1dd;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #a8dadc;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .form-group textarea.large {
+            min-height: 150px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .file-upload-area {
+            border: 2px dashed #415a77;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background: #0d1b2a;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .file-upload-area:hover {
+            border-color: #a8dadc;
+            background: #1b263b;
+        }
+        
+        .file-upload-area.dragover {
+            border-color: #a8dadc;
+            background: #1b263b;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: #778da9;
+            margin-bottom: 15px;
+        }
+        
+        .upload-text {
+            color: #e0e1dd;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .upload-subtext {
+            color: #778da9;
+            font-size: 14px;
+        }
+        
+        .file-list {
+            margin-top: 20px;
+        }
+        
+        .file-item {
+            background: #0d1b2a;
+            border: 1px solid #415a77;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .file-icon {
+            font-size: 20px;
+        }
+        
+        .file-details h4 {
+            color: #e0e1dd;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+        
+        .file-details p {
+            color: #778da9;
+            font-size: 12px;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-remove {
+            background: #e76f51;
+            color: #0d1b2a;
+        }
+        
+        .btn-remove:hover {
+            background: #d63031;
+        }
+        
+        .content-type-select {
+            margin-top: 10px;
+        }
+        
+        .content-type-select select {
+            width: 200px;
+        }
+        
+        .llm-recommendation {
+            background: #415a77;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        
+        .llm-recommendation .llm-name {
+            color: #a8dadc;
+            font-weight: 600;
+        }
+        
+        .llm-recommendation .llm-reason {
+            color: #778da9;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #415a77;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #a8dadc 0%, #457b9d 100%);
+            color: #0d1b2a;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #415a77;
+            color: #e0e1dd;
+            padding: 12px 24px;
+            font-size: 16px;
+        }
+        
+        .btn-secondary:hover {
+            background: #415a77;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #415a77;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #a8dadc;
+            transition: width 0.3s;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .file-upload-area {
+                padding: 20px;
+            }
+            
+            .file-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .file-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goBack()">←</button>
+            <h1>🚀 Create New Project</h1>
+        </div>
+        
+        <form id="project-form" enctype="multipart/form-data">
+            <div class="form-container">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h2 class="section-title">📋 Project Information</h2>
+                    
+                    <div class="form-group">
+                        <label for="project-name">Project Name *</label>
+                        <input type="text" id="project-name" name="name" required placeholder="e.g., SearchAI Market Research">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="project-description">Description</label>
+                        <textarea id="project-description" name="description" placeholder="Brief description of your project..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="project-summary">Detailed Summary</label>
+                        <textarea id="project-summary" name="summary" class="large" placeholder="Detailed summary with more context, goals, and background information..."></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="project-priority">Priority</label>
+                            <select id="project-priority" name="priority">
+                                <option value="1">1 - Low</option>
+                                <option value="2">2</option>
+                                <option value="3" selected>3 - Medium</option>
+                                <option value="4">4</option>
+                                <option value="5">5 - Urgent</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="project-tags">Tags (comma-separated)</label>
+                            <input type="text" id="project-tags" name="tags" placeholder="research, business, legal">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- LLM Selection -->
+                <div class="form-section">
+                    <h2 class="section-title">🤖 LLM Strategy</h2>
+                    
+                    <div class="form-group">
+                        <label>Select LLMs</label>
+                        <div style="margin-bottom: 15px;">
+                            <button type="button" class="btn btn-secondary" onclick="autoSuggestLLMs()">
+                                🤖 Auto-Suggest LLMs
+                            </button>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #415a77; border-radius: 6px;">
+                                <input type="checkbox" id="llm-gemini" name="selected_llms" value="gemini" checked>
+                                <label for="llm-gemini">⭐ Gemini Tier 3</label>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #415a77; border-radius: 6px;">
+                                <input type="checkbox" id="llm-deepseek" name="selected_llms" value="deepseek" checked>
+                                <label for="llm-deepseek">💎 DeepSeek</label>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #415a77; border-radius: 6px;">
+                                <input type="checkbox" id="llm-openai" name="selected_llms" value="openai">
+                                <label for="llm-openai">OpenAI GPT-4o</label>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #415a77; border-radius: 6px;">
+                                <input type="checkbox" id="llm-claude" name="selected_llms" value="claude">
+                                <label for="llm-claude">Claude</label>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #415a77; border-radius: 6px;">
+                                <input type="checkbox" id="llm-grok" name="selected_llms" value="grok">
+                                <label for="llm-grok">Grok</label>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #415a77; border-radius: 6px;">
+                                <input type="checkbox" id="llm-huggingface" name="selected_llms" value="huggingface">
+                                <label for="llm-huggingface">HuggingFace</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- File Upload -->
+                <div class="form-section">
+                    <h2 class="section-title">📁 Import Files</h2>
+                    
+                    <div class="file-upload-area" id="file-upload-area">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">Drop files here or click to upload</div>
+                        <div class="upload-subtext">Supports: .txt, .json, .md, .pdf, .docx, .png, .jpg (max 10MB each)</div>
+                        <input type="file" id="file-input" multiple accept=".txt,.json,.md,.pdf,.docx,.png,.jpg" style="display: none;">
+                    </div>
+                    
+                    <div class="file-list" id="file-list"></div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="goBack()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Project</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        let uploadedFiles = [];
+        
+        // File upload handling
+        const fileUploadArea = document.getElementById('file-upload-area');
+        const fileInput = document.getElementById('file-input');
+        const fileList = document.getElementById('file-list');
+        
+        fileUploadArea.addEventListener('click', () => fileInput.click());
+        fileUploadArea.addEventListener('dragover', handleDragOver);
+        fileUploadArea.addEventListener('dragleave', handleDragLeave);
+        fileUploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            fileUploadArea.classList.add('dragover');
+        }
+        
+        function handleDragLeave(e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files);
+            processFiles(files);
+        }
+        
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            processFiles(files);
+        }
+        
+        function processFiles(files) {
+            files.forEach(file => {
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`File ${file.name} is too large. Maximum size is 10MB.`);
+                    return;
+                }
+                
+                const fileItem = {
+                    id: Date.now() + Math.random(),
+                    file: file,
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    contentType: 'general' // default
+                };
+                
+                uploadedFiles.push(fileItem);
+                displayFileItem(fileItem);
+            });
+        }
+        
+        function displayFileItem(fileItem) {
+            const fileDiv = document.createElement('div');
+            fileDiv.className = 'file-item';
+            fileDiv.id = `file-${fileItem.id}`;
+            
+            const sizeKB = Math.round(fileItem.size / 1024);
+            const sizeText = sizeKB > 1024 ? `${Math.round(sizeKB / 1024)}MB` : `${sizeKB}KB`;
+            
+            fileDiv.innerHTML = `
+                <div class="file-info">
+                    <div class="file-icon">📄</div>
+                    <div class="file-details">
+                        <h4>${fileItem.name}</h4>
+                        <p>${sizeText} • ${fileItem.type || 'Unknown type'}</p>
+                    </div>
+                </div>
+                <div class="file-actions">
+                    <div class="content-type-select">
+                        <select onchange="updateContentType('${fileItem.id}', this.value)">
+                            <option value="general">General Text</option>
+                            <option value="contract">Contract/Legal</option>
+                            <option value="chat_history">Chat History</option>
+                            <option value="technical">Technical Document</option>
+                            <option value="business">Business Document</option>
+                            <option value="research">Research/Academic</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-remove" onclick="removeFile('${fileItem.id}')">Remove</button>
+                </div>
+            `;
+            
+            fileList.appendChild(fileDiv);
+        }
+        
+        function updateContentType(fileId, contentType) {
+            const fileItem = uploadedFiles.find(f => f.id == fileId);
+            if (fileItem) {
+                fileItem.contentType = contentType;
+                // Show LLM recommendation
+                showLLMRecommendation(fileId, contentType);
+            }
+        }
+        
+        function showLLMRecommendation(fileId, contentType) {
+            const recommendations = {
+                'contract': { llm: 'Claude', reason: 'Excels at legal document analysis' },
+                'chat_history': { llm: 'Gemini Tier 3', reason: 'Best at conversation summarization' },
+                'technical': { llm: 'DeepSeek', reason: 'Superior for technical content' },
+                'business': { llm: 'Gemini Tier 3', reason: 'Excellent at business analysis' },
+                'research': { llm: 'Gemini Tier 3', reason: 'Handles research papers well' },
+                'general': { llm: 'Gemini Tier 3', reason: 'Best all-around summarizer' }
+            };
+            
+            const rec = recommendations[contentType];
+            const fileDiv = document.getElementById(`file-${fileId}`);
+            let recDiv = fileDiv.querySelector('.llm-recommendation');
+            
+            if (!recDiv) {
+                recDiv = document.createElement('div');
+                recDiv.className = 'llm-recommendation';
+                fileDiv.querySelector('.file-actions').appendChild(recDiv);
+            }
+            
+            recDiv.innerHTML = `
+                <div class="llm-name">Recommended: ${rec.llm}</div>
+                <div class="llm-reason">${rec.reason}</div>
+            `;
+        }
+        
+        function removeFile(fileId) {
+            uploadedFiles = uploadedFiles.filter(f => f.id != fileId);
+            const fileDiv = document.getElementById(`file-${fileId}`);
+            if (fileDiv) {
+                fileDiv.remove();
+            }
+        }
+        
+        function autoSuggestLLMs() {
+            const description = document.getElementById('project-description').value;
+            if (!description.trim()) {
+                alert('Please enter a project description first');
+                return;
+            }
+            
+            // TODO: Call backend to get LLM suggestions
+            alert('🤖 Auto-suggest feature coming soon!');
+        }
+        
+        function goBack() {
+            window.location.href = '/';
+        }
+        
+        // Form submission
+        document.getElementById('project-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('name', document.getElementById('project-name').value);
+            formData.append('description', document.getElementById('project-description').value);
+            formData.append('summary', document.getElementById('project-summary').value);
+            formData.append('priority', document.getElementById('project-priority').value);
+            formData.append('tags', document.getElementById('project-tags').value);
+            
+            // Get selected LLMs
+            const selectedLLMs = Array.from(document.querySelectorAll('input[name="selected_llms"]:checked'))
+                .map(cb => cb.value);
+            formData.append('selected_llms', JSON.stringify(selectedLLMs));
+            
+            // Add files
+            uploadedFiles.forEach((fileItem, index) => {
+                formData.append(`file_${index}`, fileItem.file);
+                formData.append(`file_${index}_content_type`, fileItem.contentType);
+            });
+            
+            // TODO: Submit to backend
+            alert('🚀 Project creation coming soon!');
+        });
+    </script>
+</body>
+</html>

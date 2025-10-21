@@ -13,6 +13,7 @@ class Project(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects')
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    summary = models.TextField(blank=True, help_text="Detailed project summary")
     
     # LLM Selection (JSON array of selected LLMs)
     selected_llms = models.JSONField(default=list, help_text="List of LLM names: gemini, deepseek, openai, claude, grok, huggingface")
@@ -175,3 +176,25 @@ class UserProfile(models.Model):
     
     def __str__(self):
         return f"Profile - {self.user.username}"
+
+
+class ProjectFile(models.Model):
+    """Files uploaded to projects with AI summarization"""
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='files')
+    file_name = models.CharField(max_length=255)
+    file_path = models.FileField(upload_to='project_files/%Y/%m/%d/')
+    file_type = models.CharField(max_length=50)  # txt, json, pdf, docx, png, jpg
+    file_size = models.IntegerField()
+    original_content = models.TextField(blank=True, help_text="For text files")
+    summary = models.TextField(blank=True, help_text="AI-generated summary")
+    summarized_by = models.CharField(max_length=50, blank=True, help_text="Which LLM created summary")
+    is_summarized = models.BooleanField(default=False)
+    content_type = models.CharField(max_length=50, blank=True, help_text="contract, chat_history, technical, business, research, general")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    
+    class Meta:
+        ordering = ['-uploaded_at']
+    
+    def __str__(self):
+        return f"{self.file_name} ({self.project.name})"
