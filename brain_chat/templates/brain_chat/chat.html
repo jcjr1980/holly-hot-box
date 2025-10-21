@@ -26,7 +26,7 @@
             min-height: 100vh;
         }
         
-        /* Top Navigation - Minimalist & Sticky */
+        /* Top Navigation - Instagram Style Mobile */
         .top-nav {
             background: rgba(27, 38, 59, 0.95);
             color: #e0e1dd;
@@ -37,37 +37,61 @@
             box-shadow: 
                 0 2px 8px rgba(0,0,0,0.3),
                 0 0 20px rgba(147, 51, 234, 0.2);
-            position: sticky;
+            position: fixed;
             top: 0;
+            left: 0;
+            right: 0;
             z-index: 1000;
             border-bottom: 1px solid rgba(147, 51, 234, 0.3);
             backdrop-filter: blur(10px);
         }
         
-        .nav-brand {
+        .nav-left {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
         }
         
-        .nav-brand h1 {
-            font-size: 18px;
-            font-weight: 600;
+        .nav-center {
+            flex: 1;
+            text-align: center;
+            padding: 0 15px;
+        }
+        
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .nav-icon {
+            background: none;
+            border: none;
+            color: #e0e1dd;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        
+        .nav-icon:hover {
+            background: rgba(147, 51, 234, 0.2);
             color: #9333ea;
-            text-shadow: 0 0 10px rgba(147, 51, 234, 0.5);
         }
         
-        .nav-user {
-            font-size: 12px;
-            opacity: 0.7;
-            color: #778da9;
-        }
-        
-        .nav-actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
+        .project-title {
+            color: #e0e1dd;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            word-wrap: break-word;
+            line-height: 1.2;
+            max-height: 40px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
         
         .nav-btn {
@@ -103,18 +127,7 @@
         
         /* Chat title at top */
         .chat-title-top {
-            background: rgba(27, 38, 59, 0.95);
-            padding: 15px 20px;
-            border-bottom: 1px solid rgba(147, 51, 234, 0.3);
-            text-align: center;
-        }
-        
-        .chat-title-top h2 {
-            color: #9333ea;
-            font-size: 20px;
-            font-weight: 600;
-            margin: 0;
-            text-shadow: 0 0 10px rgba(147, 51, 234, 0.5);
+            display: none;
         }
         
         .nav-btn.logout {
@@ -427,9 +440,18 @@
                 display: none;
             }
             
-            /* Hide all top navigation buttons on mobile */
-            .nav-actions .nav-btn {
+            /* Instagram-style mobile layout */
+            .nav-brand {
                 display: none;
+            }
+            
+            .nav-actions {
+                display: none;
+            }
+            
+            /* Add padding for fixed top nav */
+            .messages-container {
+                padding-top: 80px;
             }
             
             /* Mobile hamburger menu */
@@ -1242,20 +1264,18 @@
 </head>
 <body>
     <div class="container">
-        <!-- Top Navigation -->
+        <!-- Top Navigation - Instagram Style -->
         <div class="top-nav">
-            <div class="nav-brand">
-                <h1>🔥 Holly Hot Box</h1>
-                <span class="nav-user">{{ request.user.username }}</span>
+            <div class="nav-left">
+                <button class="nav-icon" onclick="window.location.href='{% url 'home' %}'">＜</button>
             </div>
-            <div class="nav-actions">
-                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
-                <button class="nav-btn home-btn" onclick="window.location.href='{% url 'home' %}'">🏠 Home</button>
-                <button class="nav-btn" onclick="newChat()">💬 New Chat</button>
-                <button class="nav-btn" onclick="openProjectModal()">📁 New Project</button>
-                <button class="nav-btn" onclick="openDiaryModal()">📝 Diary</button>
-                <button class="nav-btn" onclick="openSearchModal()">🔍 Search</button>
-                <button class="nav-btn logout" onclick="window.location.href='{% url 'logout' %}'">Logout</button>
+            <div class="nav-center">
+                <div class="project-title">{{ active_session.title }}</div>
+            </div>
+            <div class="nav-right">
+                <button class="nav-icon" onclick="toggleMobileMenu()">💊</button>
+                <button class="nav-icon" onclick="openSearchModal()">🔍</button>
+                <button class="nav-icon" onclick="openSettings()">⚙️</button>
             </div>
         </div>
         
@@ -1265,10 +1285,9 @@
                 <h3>Navigation</h3>
                 <button class="nav-option" onclick="window.location.href='{% url 'home' %}'">🏠 Home</button>
                 <button class="nav-option" onclick="newChat()">💬 New Chat</button>
-                <button class="nav-option" onclick="openProjectModal()">📁 New Project</button>
                 <button class="nav-option" onclick="openDiaryModal()">📝 Diary</button>
-                <button class="nav-option" onclick="openSearchModal()">🔍 Search</button>
-                <button class="nav-option" onclick="window.location.href='{% url 'logout' %}'">Logout</button>
+                <button class="nav-option" onclick="setMode('privacy')">🔒 Privacy</button>
+                <button class="nav-option" onclick="setMode('quickie')">⚡ Quickie</button>
             </div>
             
             <div class="mode-selector">
@@ -1309,10 +1328,6 @@
             </div>
         </div>
         
-        <!-- Chat Title at Top -->
-        <div class="chat-title-top">
-            <h2>{{ active_session.title }}</h2>
-        </div>
         
         <!-- Main Chat Area -->
         <div class="chat-area">
@@ -1394,23 +1409,10 @@
                         Send
                     </button>
                 </div>
-                <!-- Mobile keyboard minimize button -->
-                <div class="keyboard-minimize" onclick="minimizeKeyboard()" style="display: none;">
-                    <button class="minimize-btn">⌨️ Hide Keyboard</button>
-                </div>
             </div>
         </div>
     </div>
     
-    <!-- Floating Action Buttons -->
-    <div class="fab-container">
-        <button class="fab fab-project" onclick="openProjectModal()" title="New Project">
-            📁
-        </button>
-        <button class="fab fab-diary" onclick="openDiaryModal()" title="Diary Note">
-            📝
-        </button>
-    </div>
     
     <!-- New Project Modal -->
     <div id="projectModal" class="modal">
