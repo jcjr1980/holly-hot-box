@@ -22,32 +22,47 @@ class LLMOrchestrator:
     def __init__(self):
         """Initialize all LLM clients"""
         try:
-            # OpenAI GPT-5 Nano - Cost-Effective GPT-5 Variant
-            self.openai_client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+            # OpenAI GPT-4o - Latest Stable Model
+            openai_key = os.getenv('OPENAI_API_KEY')
+            if openai_key:
+                self.openai_client = openai.OpenAI(api_key=openai_key)
+            else:
+                logger.warning("OpenAI API key not found")
+                self.openai_client = None
         except Exception as e:
             logger.error(f"OpenAI init error: {e}")
             self.openai_client = None
         
         try:
             # Google Gemini Tier 3 - PRIMARY STRATEGIST (Premium Access!)
-            genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-            # Use stable Gemini model - gemini-1.5-pro is reliable
-            self.gemini_model = genai.GenerativeModel(
-                'gemini-1.5-pro',
-                generation_config={
-                    'temperature': 0.7,
-                    'top_p': 0.95,
-                    'top_k': 40,
-                    'max_output_tokens': 8192,  # Tier 3 allows more tokens
-                }
-            )
+            gemini_key = os.getenv('GEMINI_API_KEY')
+            if gemini_key:
+                genai.configure(api_key=gemini_key)
+                # Use working Gemini model - gemini-1.5-flash is most stable
+                self.gemini_model = genai.GenerativeModel(
+                    'gemini-1.5-flash',
+                    generation_config={
+                        'temperature': 0.7,
+                        'top_p': 0.95,
+                        'top_k': 40,
+                        'max_output_tokens': 8192,  # Tier 3 allows more tokens
+                    }
+                )
+            else:
+                logger.warning("Gemini API key not found")
+                self.gemini_model = None
         except Exception as e:
             logger.error(f"Gemini init error: {e}")
             self.gemini_model = None
         
         try:
             # Anthropic Claude - Creative Director
-            self.claude_client = anthropic.Anthropic(api_key=os.getenv('CLAUDE_API_KEY'))
+            claude_key = os.getenv('CLAUDE_API_KEY')
+            if claude_key:
+                self.claude_client = anthropic.Anthropic(api_key=claude_key)
+            else:
+                logger.warning("Claude API key not found")
+                self.claude_client = None
         except Exception as e:
             logger.error(f"Claude init error: {e}")
             self.claude_client = None
