@@ -821,3 +821,61 @@ def get_diary_notes(request):
             'created_at': n.created_at.isoformat()
         } for n in notes]
     })
+
+
+@login_required
+def project_detail(request, project_id):
+    """Display project details with files and chats"""
+    project = get_object_or_404(Project, id=project_id, user=request.user)
+    files = project.files.all()
+    chats = project.chat_sessions.filter(is_active=True).order_by('-updated_at')
+    
+    return render(request, 'brain_chat/project_detail.html', {
+        'project': project,
+        'files': files,
+        'chats': chats
+    })
+
+
+@login_required
+@require_http_methods(["POST"])
+def create_chat(request):
+    """Create a new chat session"""
+    try:
+        data = json.loads(request.body)
+        project_id = data.get('project_id')
+        title = data.get('title', 'New Chat')
+        
+        project = None
+        if project_id:
+            project = get_object_or_404(Project, id=project_id, user=request.user)
+        
+        # Create new chat session
+        chat_session = ChatSession.objects.create(
+            user=request.user,
+            project=project,
+            title=title
+        )
+        
+        return JsonResponse({
+            'status': 'success',
+            'chat_id': chat_session.id,
+            'message': 'Chat created successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Chat creation error: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def chat_detail(request, chat_id):
+    """Display individual chat session"""
+    chat_session = get_object_or_404(ChatSession, id=chat_id, user=request.user)
+    messages = chat_session.messages.all().order_by('created_at')
+    
+    return render(request, 'brain_chat/chat.html', {
+        'active_session': chat_session,
+        'messages': messages,
+        'sessions': ChatSession.objects.filter(user=request.user, is_active=True)
+    })

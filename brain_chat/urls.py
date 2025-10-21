@@ -22,6 +22,10 @@ urlpatterns = [
     path('projects/create/', views.create_project, name='create_project'),
     path('project/<int:project_id>/', views.project_detail, name='project_detail'),
     
+    # Chats
+    path('chat/create/', views.create_chat, name='create_chat'),
+    path('chat/<int:chat_id>/', views.chat_detail, name='chat_detail'),
+    
     # Diary
     path('diary/', views.get_diary_notes, name='get_diary_notes'),
     path('diary/create/', views.create_diary_note, name='create_diary_note'),

@@ -165,6 +165,81 @@
             margin-bottom: 10px;
         }
         
+        .new-chat-btn {
+            background: #457b9d;
+            color: #e0e1dd;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .new-chat-btn:hover {
+            background: #a8dadc;
+            color: #0d1b2a;
+        }
+        
+        .chats-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .chat-item {
+            background: #0d1b2a;
+            border: 1px solid #415a77;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-item:hover {
+            background: #1b263b;
+            border-color: #457b9d;
+        }
+        
+        .chat-info h4 {
+            color: #a8dadc;
+            margin: 0 0 5px 0;
+            font-size: 16px;
+        }
+        
+        .chat-info p {
+            color: #778da9;
+            margin: 0;
+            font-size: 12px;
+        }
+        
+        .chat-type-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .chat-type-badge.quickie {
+            background: #f9a825;
+            color: #0d1b2a;
+        }
+        
+        .chat-type-badge.private {
+            background: #e76f51;
+            color: #0d1b2a;
+        }
+        
+        .chat-type-badge.normal {
+            background: #457b9d;
+            color: #e0e1dd;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -247,6 +322,41 @@
         </div>
         {% endif %}
         
+        <div class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>💬 Chats ({{ chats|length }})</h2>
+                <button onclick="createNewChat()" class="new-chat-btn">+ New Chat</button>
+            </div>
+            
+            {% if chats %}
+                <div class="chats-list">
+                    {% for chat in chats %}
+                    <div class="chat-item" onclick="openChat({{ chat.id }})">
+                        <div class="chat-info">
+                            <h4>{{ chat.title }}</h4>
+                            <p>{{ chat.messages.count }} messages • {{ chat.updated_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        <div class="chat-meta">
+                            {% if chat.is_quickie %}
+                            <span class="chat-type-badge quickie">Quickie</span>
+                            {% elif chat.is_private %}
+                            <span class="chat-type-badge private">Private</span>
+                            {% else %}
+                            <span class="chat-type-badge normal">Project Chat</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+            <div class="empty-state">
+                <h3>No chats yet</h3>
+                <p>Start a conversation with your selected LLMs for this project.</p>
+                <button onclick="createNewChat()" class="new-chat-btn" style="margin-top: 15px;">+ Create First Chat</button>
+            </div>
+            {% endif %}
+        </div>
+        
         <div class="files-section">
             <h2>📁 Files ({{ files|length }})</h2>
             
@@ -271,5 +381,40 @@
             {% endif %}
         </div>
     </div>
+    
+    <script>
+        function createNewChat() {
+            // Create a new chat session for this project
+            fetch('/chat/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    'project_id': {{ project.id }},
+                    'title': 'New Chat - {{ project.name }}'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Redirect to chat interface
+                    window.location.href = `/chat/${data.chat_id}/`;
+                } else {
+                    alert('Error creating chat: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error creating chat');
+            });
+        }
+        
+        function openChat(chatId) {
+            // Open existing chat
+            window.location.href = `/chat/${chatId}/`;
+        }
+    </script>
 </body>
 </html>
