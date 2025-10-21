@@ -81,7 +81,7 @@ class LLMOrchestrator:
             messages.append({"role": "user", "content": prompt})
             
             response = self.openai_client.chat.completions.create(
-                model="gpt-5-nano",  # Using GPT-5 Nano for cost efficiency
+                model="gpt-4o",  # Using GPT-4o - latest stable model
                 messages=messages,
                 temperature=0.7,
                 max_tokens=2000
@@ -235,7 +235,7 @@ Please think deeply and provide a well-reasoned, analytical response."""
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "deepseek-reasoner",  # Using reasoning mode!
+                    "model": "deepseek-chat",  # Using stable model
                     "messages": messages,
                     "temperature": 1.0,  # Reasoning models work best at higher temp
                     "max_tokens": 8000  # More tokens for deep reasoning
@@ -277,8 +277,8 @@ Please think deeply and provide a well-reasoned, analytical response."""
             messages = conversation_history or []
             messages.append({"role": "user", "content": prompt})
             
-            # Try SuperGrok first (premium tier)
-            models_to_try = ["grok-2-1212", "grok-2", "grok-beta"]  # SuperGrok variants, then fallback
+            # Try Grok models (use stable model names)
+            models_to_try = ["grok-beta", "grok-2"]  # Stable Grok models
             
             for model in models_to_try:
                 try:
