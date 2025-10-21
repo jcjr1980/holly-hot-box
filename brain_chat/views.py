@@ -388,12 +388,15 @@ def setup_database(request):
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
         
+        # Create migrations first
+        execute_from_command_line(['manage.py', 'makemigrations', 'brain_chat', '--noinput'])
+        
         # Run migrations
         execute_from_command_line(['manage.py', 'migrate', '--noinput'])
         
         return JsonResponse({
             'status': 'success', 
-            'message': 'Database setup completed successfully!'
+            'message': 'Database setup completed successfully! Tables created.'
         })
     except Exception as e:
         return JsonResponse({
