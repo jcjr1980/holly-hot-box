@@ -85,13 +85,13 @@ def login_2fa_view(request):
     if not request.session.get('temp_username'):
         return redirect('login')
     
-    # Geo-blocking check
-    country = get_client_country(request)
-    if is_blocked_country(country):
-        return HttpResponseForbidden(
-            f"<h1>Access Denied</h1><p>Access from {country} is not permitted.</p>",
-            content_type="text/html"
-        )
+    # Geo-blocking check - TEMPORARILY DISABLED
+    # country = get_client_country(request)
+    # if is_blocked_country(country):
+    #     return HttpResponseForbidden(
+    #         f"<h1>Access Denied</h1><p>Access from {country} is not permitted.</p>",
+    #         content_type="text/html"
+    #     )
     
     if request.method == 'POST':
         code = request.POST.get('code')
@@ -117,13 +117,10 @@ def login_2fa_view(request):
             return redirect('chat_home')
         else:
             return render(request, 'brain_chat/login_2fa.html', {
-                'error': 'Invalid 2FA code',
-                'country': country
+                'error': 'Invalid 2FA code'
             })
     
-    return render(request, 'brain_chat/login_2fa.html', {
-        'country': get_client_country(request)
-    })
+    return render(request, 'brain_chat/login_2fa.html')
 
 
 def logout_view(request):
