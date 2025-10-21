@@ -163,6 +163,60 @@
             border-color: #667eea;
         }
         
+        .mode-btn.gemini-premium {
+            border-color: #4285f4;
+            color: #4285f4;
+            font-weight: 700;
+        }
+        
+        .mode-btn.gemini-premium:hover {
+            border-color: #4285f4;
+            background: #4285f4;
+            color: white;
+        }
+        
+        .mode-btn.gemini-premium.active {
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            border-color: #4285f4;
+            color: white;
+        }
+        
+        .mode-btn.deepseek-premium {
+            border-color: #7c3aed;
+            color: #7c3aed;
+            font-weight: 700;
+        }
+        
+        .mode-btn.deepseek-premium:hover {
+            border-color: #7c3aed;
+            background: #7c3aed;
+            color: white;
+        }
+        
+        .mode-btn.deepseek-premium.active {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            border-color: #7c3aed;
+            color: white;
+        }
+        
+        .mode-btn.power-duo-btn {
+            border-color: #f59e0b;
+            color: #f59e0b;
+            font-weight: 800;
+        }
+        
+        .mode-btn.power-duo-btn:hover {
+            border-color: #f59e0b;
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .mode-btn.power-duo-btn.active {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            border-color: #f59e0b;
+            color: white;
+        }
+        
         .messages-container {
             flex: 1;
             overflow-y: auto;
@@ -333,17 +387,23 @@
                     <h2>{{ active_session.title }}</h2>
                 </div>
                 <div class="mode-selector">
-                    <button class="mode-btn active" data-mode="consensus" onclick="setMode('consensus')">
+                    <button class="mode-btn power-duo-btn" data-mode="power_duo" onclick="setMode('power_duo')" title="Gemini + DeepSeek Power Duo">
+                        ⚡ Power Duo
+                    </button>
+                    <button class="mode-btn active" data-mode="consensus" onclick="setMode('consensus')" title="All 6 LLMs - Gemini & DeepSeek lead">
                         Consensus
                     </button>
-                    <button class="mode-btn" data-mode="fastest" onclick="setMode('fastest')">
-                        Fastest
+                    <button class="mode-btn gemini-premium" data-mode="gemini_only" onclick="setMode('gemini_only')" title="Gemini Tier 3 Premium ONLY">
+                        ⭐ Gemini
                     </button>
-                    <button class="mode-btn" data-mode="best" onclick="setMode('best')">
+                    <button class="mode-btn deepseek-premium" data-mode="deepseek_only" onclick="setMode('deepseek_only')" title="DeepSeek Reasoner ONLY - Ultra Cost-Effective">
+                        💎 DeepSeek
+                    </button>
+                    <button class="mode-btn" data-mode="best" onclick="setMode('best')" title="Gemini evaluates best response">
                         Best
                     </button>
                     <button class="mode-btn" data-mode="parallel" onclick="setMode('parallel')">
-                        Parallel
+                        All 6
                     </button>
                 </div>
             </div>
@@ -372,9 +432,13 @@
                     <div class="empty-state">
                         <h3>🚀 Welcome to Holly Hot Box!</h3>
                         <p>Your Multi-LLM Brain Child is ready to help.</p>
-                        <p><strong>6 AI models working together:</strong></p>
-                        <p>OpenAI GPT-4o • Gemini • Claude • DeepSeek • Grok • Hugging Face</p>
-                        <p style="margin-top: 20px;">Start by typing a message below.</p>
+                        <p><strong>Power Duo Leadership:</strong></p>
+                        <p>⭐ <strong>Gemini Tier 3</strong> (Premium Synthesis) • 💎 <strong>DeepSeek Reasoner</strong> (Deep Thinking)</p>
+                        <p><strong>Supporting Team:</strong></p>
+                        <p>OpenAI GPT-4o • Claude • Grok • Hugging Face</p>
+                        <p style="margin-top: 20px; color: #4285f4;"><strong>🌟 Gemini Tier 3 Premium + 💎 DeepSeek Reasoner</strong></p>
+                        <p style="color: #10b981; font-weight: 600;">Premium Intelligence • Ultra Cost-Effective • Deep Reasoning</p>
+                        <p style="margin-top: 15px;">Try <strong>⚡ Power Duo</strong> mode for the ultimate combination!</p>
                     </div>
                 {% endif %}
             </div>

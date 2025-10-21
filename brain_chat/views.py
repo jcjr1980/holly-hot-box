@@ -91,7 +91,7 @@ def send_message(request):
     try:
         data = json.loads(request.body)
         prompt = data.get('message', '').strip()
-        mode = data.get('mode', 'consensus')  # consensus, fastest, best, parallel
+        mode = data.get('mode', 'consensus')  # consensus, fastest, best, parallel, gemini_only, deepseek_only, power_duo
         session_id = data.get('session_id')
         
         if not prompt:

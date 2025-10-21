@@ -24,9 +24,18 @@ class LLMOrchestrator:
         # OpenAI GPT-4o - The Conductor
         self.openai_client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
         
-        # Google Gemini - Platform Strategist
+        # Google Gemini Tier 3 - PRIMARY STRATEGIST (Premium Access!)
         genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-        self.gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        # Using Gemini 2.0 Flash Thinking Experimental - MOST POWERFUL
+        self.gemini_model = genai.GenerativeModel(
+            'gemini-2.0-flash-thinking-exp-1219',
+            generation_config={
+                'temperature': 0.7,
+                'top_p': 0.95,
+                'top_k': 40,
+                'max_output_tokens': 8192,  # Tier 3 allows more tokens
+            }
+        )
         
         # Anthropic Claude - Creative Director
         self.claude_client = anthropic.Anthropic(api_key=os.getenv('CLAUDE_API_KEY'))
@@ -34,8 +43,12 @@ class LLMOrchestrator:
         # Hugging Face - Johnny's Digital Clone
         self.hf_client = InferenceClient(token=os.getenv('HUGGINGFACE_API_KEY'))
         
-        # DeepSeek & Grok use REST APIs
+        # DeepSeek Reasoner - DEEP THINKING at ultra-low cost! 
+        # DeepSeek-V3.2 Reasoner is incredibly cost-effective
         self.deepseek_key = os.getenv('DEEPSEEK_API_KEY')
+        self.deepseek_base_url = "https://api.deepseek.com/v1"
+        
+        # Grok uses REST API
         self.grok_key = os.getenv('GROK_API_KEY')
     
     def query_openai(self, prompt: str, conversation_history: List[Dict] = None) -> Tuple[str, Dict]:
@@ -65,20 +78,36 @@ class LLMOrchestrator:
             return f"OpenAI Error: {str(e)}", {"error": str(e)}
     
     def query_gemini(self, prompt: str, conversation_history: List[Dict] = None) -> Tuple[str, Dict]:
-        """Query Google Gemini"""
+        """Query Google Gemini Tier 3 - PREMIUM ACCESS with Advanced Thinking"""
         try:
             start_time = time.time()
             
-            # Build conversation context
-            chat = self.gemini_model.start_chat(history=[])
-            response = chat.send_message(prompt)
+            # Enhanced prompt to leverage Gemini's thinking capabilities
+            enhanced_prompt = f"""You are Gemini 2.0 Flash Thinking - Google's most advanced AI with deep reasoning capabilities.
+
+{prompt}
+
+Please provide a comprehensive, well-reasoned response leveraging your advanced thinking and analysis capabilities."""
+            
+            # Build conversation context with history
+            history = []
+            if conversation_history:
+                for msg in conversation_history[-10:]:  # Last 10 messages for context
+                    history.append({
+                        'role': 'user' if msg['role'] == 'user' else 'model',
+                        'parts': [msg['content']]
+                    })
+            
+            chat = self.gemini_model.start_chat(history=history)
+            response = chat.send_message(enhanced_prompt)
             
             response_time = int((time.time() - start_time) * 1000)
             
             return response.text, {
                 "tokens": len(prompt.split()) + len(response.text.split()),
                 "response_time_ms": response_time,
-                "model": "gemini-2.0-flash-exp"
+                "model": "gemini-2.0-flash-thinking-exp (Tier 3 Premium)",
+                "tier": "premium_tier_3"
             }
         except Exception as e:
             logger.error(f"Gemini error: {e}")
@@ -110,36 +139,56 @@ class LLMOrchestrator:
             return f"Claude Error: {str(e)}", {"error": str(e)}
     
     def query_deepseek(self, prompt: str, conversation_history: List[Dict] = None) -> Tuple[str, Dict]:
-        """Query DeepSeek via API"""
+        """Query DeepSeek-Reasoner - DEEP THINKING MODE (Ultra Cost-Effective!)"""
         try:
             start_time = time.time()
             
+            # Enhanced prompt for reasoning mode
+            reasoning_prompt = f"""You are DeepSeek-Reasoner (DeepSeek-V3.2-Exp) - a world-class deep thinking AI.
+
+Your specialty is analytical reasoning, step-by-step problem solving, and cost-effective intelligence.
+
+Task: {prompt}
+
+Please think deeply and provide a well-reasoned, analytical response."""
+            
             messages = conversation_history or []
-            messages.append({"role": "user", "content": prompt})
+            messages.append({"role": "user", "content": reasoning_prompt})
             
             response = requests.post(
-                "https://api.deepseek.com/v1/chat/completions",
+                f"{self.deepseek_base_url}/chat/completions",
                 headers={
                     "Authorization": f"Bearer {self.deepseek_key}",
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "deepseek-chat",
+                    "model": "deepseek-reasoner",  # Using reasoning mode!
                     "messages": messages,
-                    "temperature": 0.7,
-                    "max_tokens": 2000
+                    "temperature": 1.0,  # Reasoning models work best at higher temp
+                    "max_tokens": 8000  # More tokens for deep reasoning
                 },
-                timeout=30
+                timeout=60  # Reasoning takes longer
             )
             
             response_time = int((time.time() - start_time) * 1000)
             
             if response.status_code == 200:
                 data = response.json()
-                return data['choices'][0]['message']['content'], {
-                    "tokens": data['usage']['total_tokens'],
+                
+                # DeepSeek-Reasoner returns reasoning_content and content
+                reasoning_tokens = data['usage'].get('reasoning_tokens', 0)
+                total_tokens = data['usage']['total_tokens']
+                
+                # Get the final answer (not the reasoning process)
+                content = data['choices'][0]['message']['content']
+                
+                return content, {
+                    "tokens": total_tokens,
+                    "reasoning_tokens": reasoning_tokens,
                     "response_time_ms": response_time,
-                    "model": "deepseek-chat"
+                    "model": "deepseek-reasoner (V3.2 Deep Think)",
+                    "cost_tier": "ultra_low",
+                    "thinking_mode": "active"
                 }
             else:
                 return f"DeepSeek Error: HTTP {response.status_code}", {"error": response.text}
@@ -216,25 +265,80 @@ class LLMOrchestrator:
         mode: str = "consensus"
     ) -> Dict:
         """
-        Orchestrate responses from all LLMs
+        Orchestrate responses from all LLMs - LED BY GEMINI TIER 3
         
         Modes:
-        - consensus: Get responses from all LLMs and synthesize
+        - consensus: Get responses from all LLMs and synthesize (Gemini-led)
         - fastest: Return the first response
-        - best: Use OpenAI to pick the best response
+        - best: Use Gemini Tier 3 to pick the best response
         - parallel: Show all responses side-by-side
+        - gemini_only: Use ONLY Gemini Tier 3 for premium response
+        - deepseek_only: Use ONLY DeepSeek Reasoner for cost-effective deep thinking
+        - power_duo: Use Gemini + DeepSeek together for ultimate reasoning
         """
         
         results = {}
         
-        # Query all LLMs in parallel (simulated)
+        # Single LLM modes for focused responses
+        if mode == "gemini_only":
+            logger.info(f"Using GEMINI TIER 3 ONLY for prompt: {prompt[:100]}...")
+            response, metadata = self.query_gemini(prompt, conversation_history)
+            return {
+                "mode": "gemini_only",
+                "response": response,
+                "metadata": metadata,
+                "provider": "gemini"
+            }
+        
+        if mode == "deepseek_only":
+            logger.info(f"Using DEEPSEEK REASONER ONLY for prompt: {prompt[:100]}...")
+            response, metadata = self.query_deepseek(prompt, conversation_history)
+            return {
+                "mode": "deepseek_only",
+                "response": response,
+                "metadata": metadata,
+                "provider": "deepseek"
+            }
+        
+        if mode == "power_duo":
+            logger.info(f"Using GEMINI + DEEPSEEK POWER DUO for prompt: {prompt[:100]}...")
+            # Get both responses
+            gemini_response, gemini_meta = self.query_gemini(prompt, conversation_history)
+            deepseek_response, deepseek_meta = self.query_deepseek(prompt, conversation_history)
+            
+            # Use Gemini to synthesize both
+            synthesis_prompt = f"""
+You are Gemini 2.0 Flash Thinking - synthesizing insights from two powerful thinking models.
+
+Original Question: {original_prompt}
+
+YOUR ANALYSIS (Gemini Tier 3):
+{gemini_response}
+
+DEEPSEEK REASONER ANALYSIS (Ultra Cost-Effective Deep Thinking):
+{deepseek_response}
+
+Provide a final synthesized answer that combines the best of both analyses:"""
+            
+            final_response, final_meta = self.query_gemini(synthesis_prompt)
+            
+            return {
+                "mode": "power_duo",
+                "final_response": final_response,
+                "gemini_response": gemini_response,
+                "deepseek_response": deepseek_response,
+                "metadata": final_meta,
+                "synthesis": "gemini_tier_3"
+            }
+        
+        # Query all LLMs - prioritize Gemini & DeepSeek first (power duo!)
         logger.info(f"Orchestrating '{mode}' response for prompt: {prompt[:100]}...")
         
         llm_queries = {
-            "openai": self.query_openai,
-            "gemini": self.query_gemini,
+            "gemini": self.query_gemini,      # #1 - Gemini Tier 3 Premium
+            "deepseek": self.query_deepseek,  # #2 - DeepSeek Reasoner (ultra cost-effective)
             "claude": self.query_claude,
-            "deepseek": self.query_deepseek,
+            "openai": self.query_openai,
             "grok": self.query_grok,
             "huggingface": self.query_huggingface
         }
@@ -265,27 +369,49 @@ class LLMOrchestrator:
             return {"mode": "parallel", "results": results}
     
     def _build_consensus(self, results: Dict, original_prompt: str) -> Dict:
-        """Build a consensus response from all LLMs"""
-        # Use OpenAI to synthesize all responses
+        """Build a consensus response from all LLMs - Led by Gemini Tier 3"""
+        # Use Gemini Tier 3 (Premium) as PRIMARY synthesizer due to advanced thinking
+        # Give Gemini's response DOUBLE WEIGHT in synthesis
         synthesis_prompt = f"""
-You are the Conductor of a multi-AI orchestra. Review these responses from different AI models and create a unified, comprehensive answer.
+You are Google Gemini 2.0 Flash Thinking - the PRIMARY STRATEGIST leading a team of AI models.
+
+Your role is to synthesize the best insights from all AI responses into a single, comprehensive answer.
+
+⭐ PRIORITY: Your own analysis and insights should be weighted HEAVILY as you have the most advanced reasoning.
 
 Original Question: {original_prompt}
 
-Responses:
+TEAM RESPONSES:
 """
+        # Highlight Gemini & DeepSeek responses with special emphasis
         for name, data in results.items():
-            synthesis_prompt += f"\n\n{name.upper()}:\n{data['response']}\n"
+            if name == 'gemini':
+                synthesis_prompt += f"\n\n🌟 YOUR ANALYSIS (GEMINI TIER 3 - PRIMARY WEIGHT):\n{data['response']}\n"
+            elif name == 'deepseek':
+                synthesis_prompt += f"\n\n💎 DEEPSEEK REASONER ANALYSIS (DEEP THINKING - HIGH WEIGHT):\n{data['response']}\n"
+            else:
+                synthesis_prompt += f"\n\n{name.upper()}:\n{data['response']}\n"
         
-        synthesis_prompt += "\n\nProvide a synthesized response that combines the best insights from all models:"
+        synthesis_prompt += """
+
+INSTRUCTIONS:
+1. Lead with YOUR insights and analysis (Gemini Tier 3)
+2. Give HEAVY WEIGHT to DeepSeek Reasoner's deep analytical thinking
+3. Integrate valuable points from other models
+4. Provide a comprehensive, well-reasoned final answer
+5. Leverage your advanced thinking capabilities to go deeper than the others
+
+Final synthesized response:"""
         
-        final_response, metadata = self.query_openai(synthesis_prompt)
+        # Use Gemini to synthesize (instead of OpenAI)
+        final_response, metadata = self.query_gemini(synthesis_prompt)
         
         return {
             "mode": "consensus",
             "final_response": final_response,
             "individual_responses": results,
-            "metadata": metadata
+            "metadata": metadata,
+            "primary_synthesizer": "gemini_tier_3"
         }
     
     def _get_fastest(self, results: Dict) -> Dict:
@@ -303,21 +429,38 @@ Responses:
         }
     
     def _get_best(self, results: Dict, original_prompt: str) -> Dict:
-        """Use OpenAI to determine the best response"""
+        """Use Gemini Tier 3 to determine the best response (most advanced reasoning)"""
         evaluation_prompt = f"""
-Evaluate these AI responses and select the BEST one. Return only the name of the provider (openai, gemini, claude, deepseek, grok, or huggingface).
+You are Gemini 2.0 Flash Thinking - the most advanced AI evaluator.
+
+Analyze these AI responses and determine which ONE is the BEST based on:
+- Accuracy and correctness
+- Depth of reasoning
+- Practical usefulness
+- Completeness
+
+⭐ Be objective - if YOUR response (gemini) is best, say so. If another model did better, acknowledge it.
 
 Original Question: {original_prompt}
 
-Responses:
+RESPONSES TO EVALUATE:
 """
         for name, data in results.items():
-            evaluation_prompt += f"\n\n{name}: {data['response']}\n"
+            evaluation_prompt += f"\n\n{name.upper()}:\n{data['response']}\n"
         
-        evaluation_prompt += "\n\nWhich provider gave the best response? Reply with ONLY the provider name:"
+        evaluation_prompt += """
+
+Reply with ONLY the provider name (openai, gemini, claude, deepseek, grok, or huggingface) - nothing else:"""
         
-        best_provider, _ = self.query_openai(evaluation_prompt)
+        # Use Gemini to evaluate (more advanced reasoning)
+        best_provider, _ = self.query_gemini(evaluation_prompt)
         best_provider = best_provider.strip().lower()
+        
+        # Clean up response (in case Gemini added explanation)
+        for provider in ['openai', 'gemini', 'claude', 'deepseek', 'grok', 'huggingface']:
+            if provider in best_provider:
+                best_provider = provider
+                break
         
         if best_provider in results:
             return {
@@ -325,15 +468,17 @@ Responses:
                 "provider": best_provider,
                 "response": results[best_provider]['response'],
                 "metadata": results[best_provider]['metadata'],
-                "all_responses": results
+                "all_responses": results,
+                "evaluated_by": "gemini_tier_3"
             }
         else:
-            # Fallback to OpenAI
+            # Fallback to Gemini (our premium model)
             return {
                 "mode": "best",
-                "provider": "openai",
-                "response": results['openai']['response'],
-                "metadata": results['openai']['metadata'],
-                "all_responses": results
+                "provider": "gemini",
+                "response": results['gemini']['response'],
+                "metadata": results['gemini']['metadata'],
+                "all_responses": results,
+                "evaluated_by": "gemini_tier_3"
             }
 

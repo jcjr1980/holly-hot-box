@@ -4,22 +4,27 @@
 
 Holly Hot Box is an advanced AI orchestration platform that combines **6 powerful LLMs** to provide the best collaborative responses for complex tasks.
 
-### 🤖 The Team
+### 🤖 The Power Duo Leadership
 
-- **OpenAI GPT-4o** - The Conductor & Creative Director
-- **Google Gemini** - Platform Strategist & Malpractice Detective
-- **Anthropic Claude** - Creative Director & Strategy
-- **DeepSeek** - Data Scientist & Fast Analysis
+- **⭐ Google Gemini Tier 3** - PRIMARY STRATEGIST (Premium, Advanced Thinking)
+- **💎 DeepSeek Reasoner** - DEEP ANALYTICAL THINKING (Ultra Cost-Effective, V3.2-Exp)
+
+### Supporting Team
+
+- **OpenAI GPT-4o** - Creative Director & General Intelligence
+- **Anthropic Claude** - Strategy & Writing
 - **xAI Grok** - Market Pulse & Social Intelligence
 - **Hugging Face (Llama 3)** - Johnny's Digital Clone
 
 ### ✨ Features
 
 1. **Multi-Mode Operation**
-   - **Consensus**: All LLMs collaborate for the best synthesized response
-   - **Fastest**: Returns the quickest response
-   - **Best**: Uses GPT-4o to select the highest quality response
-   - **Parallel**: Shows all responses side-by-side
+   - **⚡ Power Duo**: Gemini Tier 3 + DeepSeek Reasoner working together (RECOMMENDED!)
+   - **Consensus**: All 6 LLMs collaborate, led by Gemini & DeepSeek
+   - **⭐ Gemini Only**: Premium Gemini Tier 3 for fast, high-quality responses
+   - **💎 DeepSeek Only**: Cost-effective deep reasoning and analysis
+   - **Best**: Gemini evaluates all responses and picks the best
+   - **All 6**: Shows all responses side-by-side for comparison
 
 2. **Auto-Backup System**
    - Chats backed up every 30 seconds to JSON
