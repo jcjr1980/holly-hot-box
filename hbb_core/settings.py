@@ -116,7 +116,6 @@ else:
     }
 
 # Database routing for hybrid approach
-DATABASE_ROUTERS = ['hbb_core.db_router.DatabaseRouter']
 
 
 # Password validation
