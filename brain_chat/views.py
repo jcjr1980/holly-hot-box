@@ -318,22 +318,34 @@ def get_session_messages(request, session_id):
 def health_check(request):
     """Health check endpoint with auto-migration"""
     try:
-        # Auto-run migrations if needed
         from django.core.management import execute_from_command_line
         from django.db import connection
+        from django.conf import settings
         
         # Test database connection
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
         
-        # Run migrations (this will be a no-op if already run)
-        execute_from_command_line(['manage.py', 'migrate', '--noinput'])
+        # Check if auth_user table exists
+        table_exists = False
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT COUNT(*) FROM auth_user")
+                table_exists = True
+        except Exception:
+            table_exists = False
+        
+        # Run migrations if tables don't exist
+        if not table_exists:
+            execute_from_command_line(['manage.py', 'migrate', '--noinput'])
         
         return JsonResponse({
             'status': 'healthy',
             'service': 'Holly Hot Box',
             'user': request.user.username if request.user.is_authenticated else 'anonymous',
-            'migrations': 'completed'
+            'database': settings.DATABASES['default']['ENGINE'],
+            'table_exists': table_exists,
+            'migrations': 'completed' if table_exists else 'running'
         })
     except Exception as e:
         return JsonResponse({
