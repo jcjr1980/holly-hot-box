@@ -27,17 +27,20 @@
         
         /* Top Navigation - Minimalist & Sticky */
         .top-nav {
-            background: #1b263b;
+            background: rgba(27, 38, 59, 0.95);
             color: #e0e1dd;
             padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            box-shadow: 
+                0 2px 8px rgba(0,0,0,0.3),
+                0 0 20px rgba(147, 51, 234, 0.2);
             position: sticky;
             top: 0;
             z-index: 1000;
-            border-bottom: 1px solid #415a77;
+            border-bottom: 1px solid rgba(147, 51, 234, 0.3);
+            backdrop-filter: blur(10px);
         }
         
         .nav-brand {
@@ -49,7 +52,8 @@
         .nav-brand h1 {
             font-size: 18px;
             font-weight: 600;
-            color: #a8dadc;
+            color: #9333ea;
+            text-shadow: 0 0 10px rgba(147, 51, 234, 0.5);
         }
         
         .nav-user {
@@ -69,7 +73,7 @@
             padding: 6px 10px;
             background: transparent;
             color: #e0e1dd;
-            border: 1px solid #415a77;
+            border: 1px solid rgba(147, 51, 234, 0.3);
             border-radius: 4px;
             cursor: pointer;
             font-weight: 500;
@@ -79,8 +83,22 @@
         }
         
         .nav-btn:hover {
-            background: #415a77;
-            border-color: #a8dadc;
+            border-color: #9333ea;
+            color: #9333ea;
+            box-shadow: 0 0 8px rgba(147, 51, 234, 0.3);
+        }
+        
+        .nav-btn.home-btn {
+            background: linear-gradient(135deg, #9333ea 0%, #ff1493 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .nav-btn.home-btn:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            box-shadow: 0 0 12px rgba(147, 51, 234, 0.4);
+        }
         }
         
         .nav-btn.logout {
@@ -367,9 +385,17 @@
                 linear-gradient(45deg, transparent 30%, rgba(255, 20, 147, 0.06) 50%, transparent 70%),
                 linear-gradient(135deg, transparent 20%, rgba(59, 130, 246, 0.04) 40%, transparent 60%),
                 url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxkZWZzPgo8cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHBhdGggZD0iTSAyMCAwIEwgMCAwIDAgMjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsIDIwLCAxNDcsIDAuMDgpIiBzdHJva2Utd2lkdGg9IjEiLz4KPC9wYXR0ZXJuPgo8L2RlZnM+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSJ1cmwoI2dyaWQpIi8+Cjwvc3ZnPg==');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            background-size: cover, cover, cover, cover, cover, cover, cover;
+            background-position: center, center, center, center, center, center, center;
+            background-attachment: fixed, scroll, scroll, scroll, scroll, scroll, scroll;
+        }
+        
+        /* Mobile responsive background */
+        @media (max-width: 768px) {
+            .messages-container {
+                background-attachment: scroll, scroll, scroll, scroll, scroll, scroll, scroll;
+                background-size: cover, cover, cover, cover, cover, cover, cover;
+                background-position: center, center, center, center, center, center, center;
             scroll-behavior: smooth;
             position: relative;
         }
@@ -1001,6 +1027,7 @@
                 <span class="nav-user">{{ request.user.username }}</span>
             </div>
             <div class="nav-actions">
+                <button class="nav-btn home-btn" onclick="window.location.href='{% url 'home' %}'">🏠 Home</button>
                 <button class="nav-btn" onclick="newChat()">💬 New Chat</button>
                 <button class="nav-btn" onclick="openProjectModal()">📁 New Project</button>
                 <button class="nav-btn" onclick="openDiaryModal()">📝 Diary</button>
