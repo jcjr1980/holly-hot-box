@@ -1,0 +1,252 @@
+"""
+Holly Hot Box Views
+Multi-LLM Chat Interface
+"""
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+import json
+import pyotp
+import os
+from .models import ChatSession, ChatMessage, LLMResponse, UserProfile
+from .llm_orchestrator import LLMOrchestrator
+
+
+def login_view(request):
+    """Custom login with 2FA"""
+    if request.user.is_authenticated:
+        return redirect('chat_home')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        code = request.POST.get('code')
+        
+        # Check credentials
+        expected_username = os.getenv('HBB_USERNAME', 'jcjr1980')
+        expected_password = os.getenv('HBB_PASSWORD', '@cc0r-D69_8123$!')
+        expected_code = os.getenv('HBB_2FA_CODE', '267769')
+        
+        if username == expected_username and password == expected_password and code == expected_code:
+            # Get or create user
+            user, created = User.objects.get_or_create(username=username)
+            if created:
+                user.set_password(password)
+                user.save()
+                UserProfile.objects.create(user=user)
+            
+            # Log the user in
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            return redirect('chat_home')
+        else:
+            return render(request, 'brain_chat/login.html', {
+                'error': 'Invalid credentials or 2FA code'
+            })
+    
+    return render(request, 'brain_chat/login.html')
+
+
+def logout_view(request):
+    """Logout user"""
+    logout(request)
+    return redirect('login')
+
+
+@login_required
+def chat_home(request):
+    """Main chat interface"""
+    # Get or create active session
+    active_session = ChatSession.objects.filter(
+        user=request.user,
+        is_active=True
+    ).first()
+    
+    if not active_session:
+        active_session = ChatSession.objects.create(
+            user=request.user,
+            title="New Chat Session"
+        )
+    
+    # Get all user's sessions
+    sessions = ChatSession.objects.filter(user=request.user)
+    
+    # Get messages for active session
+    messages = active_session.messages.all() if active_session else []
+    
+    return render(request, 'brain_chat/chat.html', {
+        'active_session': active_session,
+        'sessions': sessions,
+        'messages': messages
+    })
+
+
+@login_required
+@require_http_methods(["POST"])
+def send_message(request):
+    """Send a message and get LLM response"""
+    try:
+        data = json.loads(request.body)
+        prompt = data.get('message', '').strip()
+        mode = data.get('mode', 'consensus')  # consensus, fastest, best, parallel
+        session_id = data.get('session_id')
+        
+        if not prompt:
+            return JsonResponse({'error': 'Message cannot be empty'}, status=400)
+        
+        # Get or create session
+        if session_id:
+            session = get_object_or_404(ChatSession, id=session_id, user=request.user)
+        else:
+            session = ChatSession.objects.create(
+                user=request.user,
+                title=prompt[:50]  # Use first 50 chars as title
+            )
+        
+        # Save user message
+        user_message = ChatMessage.objects.create(
+            session=session,
+            role='user',
+            content=prompt
+        )
+        
+        # Get conversation history
+        history = []
+        for msg in session.messages.filter(role__in=['user', 'assistant']).order_by('created_at'):
+            history.append({
+                "role": msg.role,
+                "content": msg.content
+            })
+        
+        # Orchestrate LLM response
+        orchestrator = LLMOrchestrator()
+        result = orchestrator.orchestrate_response(prompt, history[:-1], mode=mode)
+        
+        # Save assistant response
+        if mode == 'parallel':
+            # Save all responses
+            assistant_message = ChatMessage.objects.create(
+                session=session,
+                role='assistant',
+                content=json.dumps(result['results'], indent=2),
+                llm_provider='multi',
+                metadata=result
+            )
+            
+            # Save individual LLM responses
+            for llm_name, llm_data in result['results'].items():
+                LLMResponse.objects.create(
+                    message=assistant_message,
+                    llm_provider=llm_name,
+                    response_text=llm_data['response'],
+                    tokens_used=llm_data['metadata'].get('tokens', 0),
+                    response_time_ms=llm_data['metadata'].get('response_time_ms', 0),
+                    metadata=llm_data['metadata']
+                )
+        
+        elif mode == 'consensus':
+            assistant_message = ChatMessage.objects.create(
+                session=session,
+                role='assistant',
+                content=result['final_response'],
+                llm_provider='multi',
+                metadata=result,
+                tokens_used=result['metadata'].get('tokens', 0),
+                response_time_ms=result['metadata'].get('response_time_ms', 0)
+            )
+            
+            # Save individual responses
+            for llm_name, llm_data in result['individual_responses'].items():
+                LLMResponse.objects.create(
+                    message=assistant_message,
+                    llm_provider=llm_name,
+                    response_text=llm_data['response'],
+                    tokens_used=llm_data['metadata'].get('tokens', 0),
+                    response_time_ms=llm_data['metadata'].get('response_time_ms', 0),
+                    metadata=llm_data['metadata']
+                )
+        
+        else:  # fastest or best
+            assistant_message = ChatMessage.objects.create(
+                session=session,
+                role='assistant',
+                content=result['response'],
+                llm_provider=result['provider'],
+                metadata=result,
+                tokens_used=result['metadata'].get('tokens', 0),
+                response_time_ms=result['metadata'].get('response_time_ms', 0)
+            )
+        
+        # Update session timestamp
+        session.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message_id': assistant_message.id,
+            'response': assistant_message.content,
+            'mode': mode,
+            'session_id': session.id,
+            'metadata': result
+        })
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def new_session(request):
+    """Create a new chat session"""
+    session = ChatSession.objects.create(
+        user=request.user,
+        title="New Chat Session"
+    )
+    return redirect('chat_home')
+
+
+@login_required
+def load_session(request, session_id):
+    """Load a specific chat session"""
+    session = get_object_or_404(ChatSession, id=session_id, user=request.user)
+    
+    # Set all sessions to inactive
+    ChatSession.objects.filter(user=request.user).update(is_active=False)
+    
+    # Set this session as active
+    session.is_active = True
+    session.save()
+    
+    return redirect('chat_home')
+
+
+@login_required
+def get_session_messages(request, session_id):
+    """Get messages for a specific session (AJAX)"""
+    session = get_object_or_404(ChatSession, id=session_id, user=request.user)
+    messages = session.messages.all()
+    
+    data = []
+    for msg in messages:
+        data.append({
+            'id': msg.id,
+            'role': msg.role,
+            'content': msg.content,
+            'llm_provider': msg.llm_provider,
+            'created_at': msg.created_at.isoformat(),
+            'tokens_used': msg.tokens_used,
+            'response_time_ms': msg.response_time_ms
+        })
+    
+    return JsonResponse({'messages': data})
+
+
+@login_required
+def health_check(request):
+    """Health check endpoint"""
+    return JsonResponse({
+        'status': 'healthy',
+        'service': 'Holly Hot Box',
+        'user': request.user.username
+    })
