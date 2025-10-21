@@ -14,8 +14,9 @@ import pyotp
 import os
 import requests
 import logging
-from .models import Project, ChatSession, ChatMessage, LLMResponse, DiaryNote, UserProfile
+from .models import Project, ChatSession, ChatMessage, LLMResponse, DiaryNote, UserProfile, ProjectFile
 from .llm_orchestrator import LLMOrchestrator
+from .summarization_service import FileSummarizer
 
 logger = logging.getLogger(__name__)
 
@@ -196,7 +197,36 @@ def create_project_view(request):
                         content_type=content_type
                     )
                     
-                    # TODO: Process file content and summarization
+                    # Process file content and summarization
+                    try:
+                        summarizer = FileSummarizer()
+                        
+                        # Extract text content
+                        content = summarizer.process_file_content(
+                            project_file.file_path.path, 
+                            project_file.file_type
+                        )
+                        project_file.original_content = content
+                        
+                        # Summarize if needed
+                        if summarizer.should_summarize(content, project_file.file_size):
+                            if len(content) > 50000:  # Large file
+                                result = summarizer.summarize_large_file(content, content_type)
+                            else:
+                                result = summarizer.summarize_file(content, content_type)
+                            
+                            if result['success']:
+                                project_file.summary = result['summary']
+                                project_file.summarized_by = result['llm_used']
+                                project_file.is_summarized = True
+                        
+                        project_file.save()
+                        
+                    except Exception as e:
+                        logger.error(f"File processing error for {value.name}: {e}")
+                        project_file.summary = f"Error processing file: {str(e)}"
+                        project_file.save()
+                    
                     file_count += 1
             
             return JsonResponse({
