@@ -67,7 +67,7 @@ def login_view(request):
         
         # Check credentials
         expected_username = os.getenv('HBB_USERNAME', 'jcjr1980')
-        expected_password = os.getenv('HBB_PASSWORD', '@cc0r-D69_8123$!')
+        expected_password = os.getenv('HBB_PASSWORD', '@cc0r-D69_*123$!')
         
         if username == expected_username and password == expected_password:
             # Store credentials in session for 2FA step
