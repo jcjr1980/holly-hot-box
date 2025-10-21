@@ -908,3 +908,93 @@ def delete_project(request, project_id):
     except Exception as e:
         logger.error(f"Project deletion error: {e}")
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def update_project(request, project_id):
+    """Update project description or summary"""
+    try:
+        project = get_object_or_404(Project, id=project_id, user=request.user)
+        data = json.loads(request.body)
+        
+        if 'description' in data:
+            project.description = data['description']
+        if 'summary' in data:
+            project.summary = data['summary']
+        
+        project.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Project updated successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Project update error: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def upload_project_files(request, project_id):
+    """Upload additional files to an existing project"""
+    try:
+        project = get_object_or_404(Project, id=project_id, user=request.user)
+        
+        if not request.FILES:
+            return JsonResponse({'error': 'No files provided'}, status=400)
+        
+        uploaded_count = 0
+        summarizer = FileSummarizer()
+        
+        for file_key in request.FILES:
+            for uploaded_file in request.FILES.getlist(file_key):
+                # Create ProjectFile instance
+                project_file = ProjectFile.objects.create(
+                    project=project,
+                    file_name=uploaded_file.name,
+                    file_path=uploaded_file,
+                    file_type=uploaded_file.content_type or 'unknown',
+                    file_size=uploaded_file.size,
+                    content_type='general'  # Default content type
+                )
+                
+                # Process file content and summarization
+                try:
+                    # Extract text content
+                    content = summarizer.process_file_content(
+                        project_file.file_path.path, 
+                        project_file.file_type
+                    )
+                    project_file.original_content = content
+                    
+                    # Summarize if needed
+                    if summarizer.should_summarize(content, project_file.file_size):
+                        if len(content) > 50000:  # Large file
+                            result = summarizer.summarize_large_file(content, 'general')
+                        else:
+                            result = summarizer.summarize_file(content, 'general')
+                        
+                        if result['success']:
+                            project_file.summary = result['summary']
+                            project_file.summarized_by = result['llm_used']
+                            project_file.is_summarized = True
+                    
+                    project_file.save()
+                    uploaded_count += 1
+                    
+                except Exception as e:
+                    logger.error(f"File processing error for {uploaded_file.name}: {e}")
+                    project_file.summary = f"Error processing file: {str(e)}"
+                    project_file.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'{uploaded_count} file(s) uploaded successfully',
+            'uploaded_count': uploaded_count
+        })
+        
+    except Exception as e:
+        logger.error(f"File upload error: {e}")
+        return JsonResponse({'error': str(e)}, status=500)

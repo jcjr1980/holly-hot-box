@@ -257,6 +257,55 @@
             color: #e0e1dd;
         }
         
+        .edit-btn {
+            background: #457b9d;
+            color: #e0e1dd;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .edit-btn:hover {
+            background: #a8dadc;
+            color: #0d1b2a;
+        }
+        
+        .save-btn {
+            background: #2a9d8f;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .save-btn:hover {
+            background: #21867a;
+        }
+        
+        .cancel-btn {
+            background: #778da9;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .cancel-btn:hover {
+            background: #415a77;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -295,19 +344,35 @@
             <button class="delete-btn" onclick="deleteProject()">🗑️ Delete Project</button>
         </div>
         
-        {% if project.description %}
         <div class="content-section">
-            <h2>📝 Description</h2>
-            <p>{{ project.description }}</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>📝 Description</h2>
+                <button class="edit-btn" onclick="toggleEdit('description')">✏️ Edit</button>
+            </div>
+            <p id="description-display">{{ project.description|default:"No description yet. Click Edit to add one." }}</p>
+            <div id="description-edit" style="display: none;">
+                <textarea id="description-input" style="width: 100%; min-height: 100px; padding: 10px; border-radius: 6px; border: 1px solid #415a77; background: #0d1b2a; color: #e0e1dd; font-family: inherit;">{{ project.description }}</textarea>
+                <div style="margin-top: 10px; display: flex; gap: 10px;">
+                    <button class="save-btn" onclick="saveDescription()">💾 Save</button>
+                    <button class="cancel-btn" onclick="cancelEdit('description')">❌ Cancel</button>
+                </div>
+            </div>
         </div>
-        {% endif %}
         
-        {% if project.summary %}
         <div class="content-section">
-            <h2>📋 Summary</h2>
-            <p>{{ project.summary }}</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>📋 Summary (Quick Notes for LLMs)</h2>
+                <button class="edit-btn" onclick="toggleEdit('summary')">✏️ Edit</button>
+            </div>
+            <p id="summary-display" style="font-style: italic; color: #a8dadc;">{{ project.summary|default:"No summary yet. This will help LLMs understand your project context quickly." }}</p>
+            <div id="summary-edit" style="display: none;">
+                <textarea id="summary-input" style="width: 100%; min-height: 150px; padding: 10px; border-radius: 6px; border: 1px solid #415a77; background: #0d1b2a; color: #e0e1dd; font-family: inherit;">{{ project.summary }}</textarea>
+                <div style="margin-top: 10px; display: flex; gap: 10px;">
+                    <button class="save-btn" onclick="saveSummary()">💾 Save</button>
+                    <button class="cancel-btn" onclick="cancelEdit('summary')">❌ Cancel</button>
+                </div>
+            </div>
         </div>
-        {% endif %}
         
         {% if project.selected_llms %}
         <div class="content-section">
@@ -376,7 +441,23 @@
         </div>
         
         <div class="files-section">
-            <h2>📁 Files ({{ files|length }})</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>📁 Files ({{ files|length }})</h2>
+                <button class="new-chat-btn" onclick="document.getElementById('file-upload-section').style.display='block'; this.style.display='none';">+ Upload Files</button>
+            </div>
+            
+            <div id="file-upload-section" style="display: none; background: #0d1b2a; padding: 20px; border-radius: 8px; border: 1px solid #457b9d; margin-bottom: 20px;">
+                <h3 style="color: #a8dadc; margin-bottom: 15px;">Upload Additional Files</h3>
+                <div style="margin-bottom: 15px;">
+                    <input type="file" id="additional-files" multiple accept=".txt,.json,.md,.pdf,.docx,.png,.jpg,.jpeg,.eml,.msg,.mbox" style="display: block; margin-bottom: 10px; color: #e0e1dd;">
+                    <p style="font-size: 12px; color: #778da9;">Supported: Text, JSON, Markdown, PDF, DOCX, Images, Email (.eml, .msg, .mbox)</p>
+                </div>
+                <div id="file-list" style="margin-bottom: 15px;"></div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="save-btn" onclick="uploadAdditionalFiles()">📤 Upload Files</button>
+                    <button class="cancel-btn" onclick="document.getElementById('file-upload-section').style.display='none'; document.querySelector('.new-chat-btn').style.display='block';">❌ Cancel</button>
+                </div>
+            </div>
             
             {% if files %}
                 {% for file in files %}
@@ -460,6 +541,105 @@
             .catch(error => {
                 console.error('Error:', error);
                 alert('❌ Error deleting project');
+            });
+        }
+        
+        function toggleEdit(field) {
+            document.getElementById(field + '-display').style.display = 'none';
+            document.getElementById(field + '-edit').style.display = 'block';
+        }
+        
+        function cancelEdit(field) {
+            document.getElementById(field + '-display').style.display = 'block';
+            document.getElementById(field + '-edit').style.display = 'none';
+        }
+        
+        function saveDescription() {
+            const newDescription = document.getElementById('description-input').value;
+            
+            fetch('/project/{{ project.id }}/update/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ description: newDescription })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('description-display').textContent = newDescription || 'No description yet. Click Edit to add one.';
+                    cancelEdit('description');
+                } else {
+                    alert('❌ Error saving description');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error saving description');
+            });
+        }
+        
+        function saveSummary() {
+            const newSummary = document.getElementById('summary-input').value;
+            
+            fetch('/project/{{ project.id }}/update/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ summary: newSummary })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('summary-display').textContent = newSummary || 'No summary yet. This will help LLMs understand your project context quickly.';
+                    cancelEdit('summary');
+                } else {
+                    alert('❌ Error saving summary');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error saving summary');
+            });
+        }
+        
+        function uploadAdditionalFiles() {
+            const files = document.getElementById('additional-files').files;
+            
+            if (files.length === 0) {
+                alert('Please select at least one file');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('project_id', '{{ project.id }}');
+            
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files[]', files[i]);
+            }
+            
+            fetch('/project/{{ project.id }}/upload-files/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('✅ Files uploaded successfully!');
+                    window.location.reload();
+                } else {
+                    alert('❌ Error uploading files: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error uploading files');
             });
         }
     </script>
