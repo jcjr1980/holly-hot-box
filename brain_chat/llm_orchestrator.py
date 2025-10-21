@@ -22,7 +22,7 @@ class LLMOrchestrator:
     def __init__(self):
         """Initialize all LLM clients"""
         try:
-            # OpenAI GPT-4o - The Conductor
+            # OpenAI GPT-5 Nano - Cost-Effective GPT-5 Variant
             self.openai_client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
         except Exception as e:
             logger.error(f"OpenAI init error: {e}")
@@ -70,7 +70,7 @@ class LLMOrchestrator:
         self.grok_key = os.getenv('GROK_API_KEY')
     
     def query_openai(self, prompt: str, conversation_history: List[Dict] = None) -> Tuple[str, Dict]:
-        """Query OpenAI GPT-4o"""
+        """Query OpenAI GPT-5 Nano - Cost-effective GPT-5 variant"""
         if not self.openai_client:
             return "OpenAI is temporarily unavailable", {"error": "Client not initialized"}
         
@@ -81,7 +81,7 @@ class LLMOrchestrator:
             messages.append({"role": "user", "content": prompt})
             
             response = self.openai_client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-5-nano",  # Using GPT-5 Nano for cost efficiency
                 messages=messages,
                 temperature=0.7,
                 max_tokens=2000
@@ -92,7 +92,7 @@ class LLMOrchestrator:
             return response.choices[0].message.content, {
                 "tokens": response.usage.total_tokens,
                 "response_time_ms": response_time,
-                "model": "gpt-4o"
+                "model": "gpt-5-nano"
             }
         except Exception as e:
             logger.error(f"OpenAI error: {e}")
@@ -224,39 +224,50 @@ Please think deeply and provide a well-reasoned, analytical response."""
             return f"DeepSeek Error: {str(e)}", {"error": str(e)}
     
     def query_grok(self, prompt: str, conversation_history: List[Dict] = None) -> Tuple[str, Dict]:
-        """Query xAI Grok"""
+        """Query xAI Grok - Try SuperGrok first, fall back to regular Grok"""
         try:
             start_time = time.time()
             
             messages = conversation_history or []
             messages.append({"role": "user", "content": prompt})
             
-            response = requests.post(
-                "https://api.x.ai/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.grok_key}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": "grok-beta",
-                    "messages": messages,
-                    "temperature": 0.7,
-                    "max_tokens": 2000
-                },
-                timeout=30
-            )
+            # Try SuperGrok first (premium tier)
+            models_to_try = ["grok-2-1212", "grok-2", "grok-beta"]  # SuperGrok variants, then fallback
             
-            response_time = int((time.time() - start_time) * 1000)
+            for model in models_to_try:
+                try:
+                    response = requests.post(
+                        "https://api.x.ai/v1/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {self.grok_key}",
+                            "Content-Type": "application/json"
+                        },
+                        json={
+                            "model": model,
+                            "messages": messages,
+                            "temperature": 0.7,
+                            "max_tokens": 4000
+                        },
+                        timeout=30
+                    )
+                    
+                    response_time = int((time.time() - start_time) * 1000)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        model_used = "SuperGrok" if model in ["grok-2-1212", "grok-2"] else "Grok"
+                        return data['choices'][0]['message']['content'], {
+                            "tokens": data['usage']['total_tokens'],
+                            "response_time_ms": response_time,
+                            "model": f"{model_used} ({model})"
+                        }
+                except Exception as model_error:
+                    logger.debug(f"Model {model} failed, trying next: {model_error}")
+                    continue
             
-            if response.status_code == 200:
-                data = response.json()
-                return data['choices'][0]['message']['content'], {
-                    "tokens": data['usage']['total_tokens'],
-                    "response_time_ms": response_time,
-                    "model": "grok-beta"
-                }
-            else:
-                return f"Grok Error: HTTP {response.status_code}", {"error": response.text}
+            # If all models failed
+            return "Grok Error: All model variants unavailable", {"error": "All Grok models failed"}
+            
         except Exception as e:
             logger.error(f"Grok error: {e}")
             return f"Grok Error: {str(e)}", {"error": str(e)}

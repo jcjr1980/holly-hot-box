@@ -442,9 +442,9 @@
                     <span class="tag">
                         {% if llm == 'gemini' %}⭐ Gemini Tier 3
                         {% elif llm == 'deepseek' %}💎 DeepSeek
-                        {% elif llm == 'openai' %}🤖 OpenAI GPT-4o
+                        {% elif llm == 'openai' %}🚀 GPT-5 Nano
                         {% elif llm == 'claude' %}🧠 Claude
-                        {% elif llm == 'grok' %}⚡ Grok
+                        {% elif llm == 'grok' %}⚡ SuperGrok
                         {% elif llm == 'huggingface' %}🤗 HuggingFace
                         {% else %}{{ llm|title }}
                         {% endif %}
@@ -467,7 +467,7 @@
                     </label>
                     <label class="llm-option">
                         <input type="checkbox" name="llms" value="openai" {% if 'openai' in project.selected_llms %}checked{% endif %}>
-                        <span>🤖 OpenAI GPT-4o</span>
+                        <span>🚀 GPT-5 Nano</span>
                     </label>
                     <label class="llm-option">
                         <input type="checkbox" name="llms" value="claude" {% if 'claude' in project.selected_llms %}checked{% endif %}>
@@ -475,7 +475,7 @@
                     </label>
                     <label class="llm-option">
                         <input type="checkbox" name="llms" value="grok" {% if 'grok' in project.selected_llms %}checked{% endif %}>
-                        <span>⚡ Grok</span>
+                        <span>⚡ SuperGrok</span>
                     </label>
                     <label class="llm-option">
                         <input type="checkbox" name="llms" value="huggingface" {% if 'huggingface' in project.selected_llms %}checked{% endif %}>
