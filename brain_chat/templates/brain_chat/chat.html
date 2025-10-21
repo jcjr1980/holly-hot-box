@@ -566,45 +566,6 @@
             }
         }
         
-        .messages-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(
-                135deg,
-                rgba(13, 27, 42, 0.75) 0%,
-                rgba(27, 38, 59, 0.85) 30%,
-                rgba(13, 27, 42, 0.8) 70%,
-                rgba(13, 27, 42, 0.75) 100%
-            );
-            pointer-events: none;
-            z-index: 1;
-            animation: subtleGlow 8s ease-in-out infinite alternate;
-        }
-        
-        @keyframes subtleGlow {
-            0% {
-                background: linear-gradient(
-                    135deg,
-                    rgba(13, 27, 42, 0.75) 0%,
-                    rgba(27, 38, 59, 0.85) 30%,
-                    rgba(13, 27, 42, 0.8) 70%,
-                    rgba(13, 27, 42, 0.75) 100%
-                );
-            }
-            100% {
-                background: linear-gradient(
-                    135deg,
-                    rgba(13, 27, 42, 0.7) 0%,
-                    rgba(27, 38, 59, 0.8) 30%,
-                    rgba(13, 27, 42, 0.75) 70%,
-                    rgba(13, 27, 42, 0.7) 100%
-                );
-            }
-        }
         
         .message {
             margin-bottom: 20px;
