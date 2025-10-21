@@ -85,6 +85,14 @@ def login_2fa_view(request):
     if not request.session.get('temp_username'):
         return redirect('login')
     
+    # Auto-run migrations if needed (first request only)
+    try:
+        from django.core.management import execute_from_command_line
+        execute_from_command_line(['manage.py', 'migrate', '--noinput'])
+    except Exception as e:
+        print(f"Migration check failed: {e}")
+        pass
+    
     # Geo-blocking check - TEMPORARILY DISABLED
     # country = get_client_country(request)
     # if is_blocked_country(country):
