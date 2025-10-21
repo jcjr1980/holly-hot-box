@@ -447,9 +447,47 @@ def setup_database(request):
         # Run migrations
         execute_from_command_line(['manage.py', 'migrate', '--noinput'])
         
-        # Manual column additions for new fields (in case migrations didn't create them)
+        # Manual table and column additions for new fields (in case migrations didn't create them)
         messages = []
         with connection.cursor() as cursor:
+            # Create Project table if missing
+            try:
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS brain_chat_project (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL REFERENCES auth_user(id) ON DELETE CASCADE,
+                        name VARCHAR(255) NOT NULL,
+                        description TEXT,
+                        selected_llms JSONB DEFAULT '[]'::jsonb,
+                        priority INTEGER DEFAULT 3,
+                        tags VARCHAR(500),
+                        status VARCHAR(20) DEFAULT 'active',
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        ai_summary TEXT
+                    )
+                """)
+                messages.append("Created brain_chat_project table")
+            except Exception as e:
+                messages.append(f"project table: {str(e)}")
+            
+            # Create DiaryNote table if missing
+            try:
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS brain_chat_diarynote (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL REFERENCES auth_user(id) ON DELETE CASCADE,
+                        content TEXT NOT NULL,
+                        tags VARCHAR(500),
+                        mood VARCHAR(50),
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                messages.append("Created brain_chat_diarynote table")
+            except Exception as e:
+                messages.append(f"diary table: {str(e)}")
+            
             # Add project_id column to ChatSession if missing
             try:
                 cursor.execute("""
