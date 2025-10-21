@@ -69,6 +69,9 @@ def login_view(request):
         expected_username = os.getenv('HBB_USERNAME', 'jcjr1980')
         expected_password = os.getenv('HBB_PASSWORD', '@cc0r-D69_*123$!')
         
+        # DEBUG: Log the expected password (remove after testing)
+        logger.info(f"Expected password: {expected_password}")
+        
         if username == expected_username and password == expected_password:
             # Store credentials in session for 2FA step
             request.session['temp_username'] = username
