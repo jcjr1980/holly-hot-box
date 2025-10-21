@@ -14,5 +14,6 @@ urlpatterns = [
     path('session/<int:session_id>/', views.load_session, name='load_session'),
     path('session/<int:session_id>/messages/', views.get_session_messages, name='get_session_messages'),
     path('health/', views.health_check, name='health_check'),
+    path('setup-db/', views.setup_database, name='setup_database'),
 ]
 

@@ -85,14 +85,6 @@ def login_2fa_view(request):
     if not request.session.get('temp_username'):
         return redirect('login')
     
-    # Auto-run migrations if needed (first request only)
-    try:
-        from django.core.management import execute_from_command_line
-        execute_from_command_line(['manage.py', 'migrate', '--noinput'])
-    except Exception as e:
-        print(f"Migration check failed: {e}")
-        pass
-    
     # Geo-blocking check - TEMPORARILY DISABLED
     # country = get_client_country(request)
     # if is_blocked_country(country):
@@ -331,3 +323,26 @@ def health_check(request):
         'service': 'Holly Hot Box',
         'user': request.user.username
     })
+
+def setup_database(request):
+    """Temporary endpoint to setup database - REMOVE AFTER USE"""
+    try:
+        from django.core.management import execute_from_command_line
+        from django.db import connection
+        
+        # Test database connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        
+        # Run migrations
+        execute_from_command_line(['manage.py', 'migrate', '--noinput'])
+        
+        return JsonResponse({
+            'status': 'success', 
+            'message': 'Database setup completed successfully!'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error', 
+            'message': f'Database setup failed: {str(e)}'
+        }, status=500)
