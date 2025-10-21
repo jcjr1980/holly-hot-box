@@ -8,13 +8,57 @@ from django.utils import timezone
 import json
 
 
+class Project(models.Model):
+    """Represents a research/work project with specific LLM configuration"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects')
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    
+    # LLM Selection (JSON array of selected LLMs)
+    selected_llms = models.JSONField(default=list, help_text="List of LLM names: gemini, deepseek, openai, claude, grok, huggingface")
+    
+    # Priority and organization
+    priority = models.IntegerField(default=3, choices=[(i, str(i)) for i in range(1, 6)], help_text="1=Low, 5=Urgent")
+    tags = models.CharField(max_length=500, blank=True, help_text="Comma-separated tags")
+    
+    # Status tracking
+    status = models.CharField(max_length=20, default='active', choices=[
+        ('active', 'Active'),
+        ('paused', 'Paused'),
+        ('completed', 'Completed'),
+        ('archived', 'Archived'),
+    ])
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # AI-generated insights
+    ai_summary = models.TextField(blank=True, help_text="Gemini-generated project summary")
+    
+    class Meta:
+        ordering = ['-priority', '-updated_at']
+    
+    def __str__(self):
+        return f"{self.name} (Priority {self.priority})"
+    
+    def get_tags_list(self):
+        """Return tags as a list"""
+        return [tag.strip() for tag in self.tags.split(',') if tag.strip()]
+
+
 class ChatSession(models.Model):
     """Represents a chat session with the multi-LLM system"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_sessions')
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name='chat_sessions')
     title = models.CharField(max_length=255, default="New Chat")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
+    
+    # Session types
+    is_quickie = models.BooleanField(default=False, help_text="Quick one-off question")
+    is_private = models.BooleanField(default=False, help_text="Private mode - temporary only")
     
     # JSON metadata for quick LLM reference
     metadata = models.JSONField(default=dict, blank=True)
@@ -98,6 +142,26 @@ class ChatBackup(models.Model):
     
     def __str__(self):
         return f"Backup - Session {self.session.id} - {self.backup_timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+
+
+class DiaryNote(models.Model):
+    """Personal diary notes and reminders"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='diary_notes')
+    content = models.TextField()
+    tags = models.CharField(max_length=500, blank=True, help_text="Comma-separated tags")
+    mood = models.CharField(max_length=50, blank=True, help_text="Optional mood indicator")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Diary - {self.created_at.strftime('%Y-%m-%d %H:%M')} - {self.content[:50]}"
+    
+    def get_tags_list(self):
+        """Return tags as a list"""
+        return [tag.strip() for tag in self.tags.split(',') if tag.strip()]
 
 
 class UserProfile(models.Model):

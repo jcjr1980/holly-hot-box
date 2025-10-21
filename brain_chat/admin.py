@@ -2,14 +2,22 @@
 Holly Hot Box Admin Interface
 """
 from django.contrib import admin
-from .models import ChatSession, ChatMessage, LLMResponse, ChatBackup, UserProfile
+from .models import Project, ChatSession, ChatMessage, LLMResponse, ChatBackup, DiaryNote, UserProfile
+
+
+@admin.register(Project)
+class ProjectAdmin(admin.ModelAdmin):
+    list_display = ('name', 'user', 'priority', 'status', 'created_at')
+    list_filter = ('priority', 'status', 'created_at', 'user')
+    search_fields = ('name', 'description', 'tags')
+    date_hierarchy = 'created_at'
 
 
 @admin.register(ChatSession)
 class ChatSessionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'title', 'created_at', 'updated_at', 'is_active')
-    list_filter = ('is_active', 'created_at')
-    search_fields = ('title', 'user__username')
+    list_display = ('id', 'title', 'user', 'project', 'is_quickie', 'is_private', 'created_at', 'is_active')
+    list_filter = ('is_active', 'is_quickie', 'is_private', 'created_at')
+    search_fields = ('title', 'user__username', 'project__name')
     date_hierarchy = 'created_at'
 
 
@@ -33,6 +41,18 @@ class ChatBackupAdmin(admin.ModelAdmin):
     list_display = ('id', 'session', 'message_count', 'backup_timestamp')
     list_filter = ('backup_timestamp',)
     date_hierarchy = 'backup_timestamp'
+
+
+@admin.register(DiaryNote)
+class DiaryNoteAdmin(admin.ModelAdmin):
+    list_display = ('user', 'created_at', 'get_preview', 'mood')
+    list_filter = ('created_at', 'mood', 'user')
+    search_fields = ('content', 'tags')
+    date_hierarchy = 'created_at'
+    
+    def get_preview(self, obj):
+        return obj.content[:100] + '...' if len(obj.content) > 100 else obj.content
+    get_preview.short_description = 'Preview'
 
 
 @admin.register(UserProfile)
