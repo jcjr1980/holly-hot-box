@@ -248,6 +248,43 @@
             border-top: 1px solid #415a77;
         }
         
+        .llm-selection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+        }
+        
+        .llm-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #415a77;
+            border-radius: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .llm-option:hover {
+            background: #4a6b8a;
+        }
+        
+        .llm-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+        }
+        
+        .llm-option label {
+            color: #e0e1dd;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            margin: 0;
+            flex: 1;
+        }
+        
         .btn-primary {
             background: linear-gradient(135deg, #a8dadc 0%, #457b9d 100%);
             color: #0d1b2a;
@@ -315,6 +352,20 @@
                 width: 100%;
                 justify-content: flex-end;
             }
+            
+            .llm-selection-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .llm-option {
+                padding: 10px;
+                gap: 8px;
+            }
+            
+            .llm-option label {
+                font-size: 13px;
+            }
         }
     </style>
 </head>
@@ -376,28 +427,28 @@
                                 🤖 Auto-Suggest LLMs
                             </button>
                         </div>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
-                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #415a77; border-radius: 6px;">
+                        <div class="llm-selection-grid">
+                            <div class="llm-option">
                                 <input type="checkbox" id="llm-gemini" name="selected_llms" value="gemini" checked>
                                 <label for="llm-gemini">⭐ Gemini Tier 3</label>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #415a77; border-radius: 6px;">
+                            <div class="llm-option">
                                 <input type="checkbox" id="llm-deepseek" name="selected_llms" value="deepseek" checked>
                                 <label for="llm-deepseek">💎 DeepSeek</label>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #415a77; border-radius: 6px;">
+                            <div class="llm-option">
                                 <input type="checkbox" id="llm-openai" name="selected_llms" value="openai">
                                 <label for="llm-openai">OpenAI GPT-4o</label>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #415a77; border-radius: 6px;">
+                            <div class="llm-option">
                                 <input type="checkbox" id="llm-claude" name="selected_llms" value="claude">
                                 <label for="llm-claude">Claude</label>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #415a77; border-radius: 6px;">
+                            <div class="llm-option">
                                 <input type="checkbox" id="llm-grok" name="selected_llms" value="grok">
                                 <label for="llm-grok">Grok</label>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #415a77; border-radius: 6px;">
+                            <div class="llm-option">
                                 <input type="checkbox" id="llm-huggingface" name="selected_llms" value="huggingface">
                                 <label for="llm-huggingface">HuggingFace</label>
                             </div>
