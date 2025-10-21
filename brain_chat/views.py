@@ -315,14 +315,32 @@ def get_session_messages(request, session_id):
     return JsonResponse({'messages': data})
 
 
-@login_required
 def health_check(request):
-    """Health check endpoint"""
-    return JsonResponse({
-        'status': 'healthy',
-        'service': 'Holly Hot Box',
-        'user': request.user.username
-    })
+    """Health check endpoint with auto-migration"""
+    try:
+        # Auto-run migrations if needed
+        from django.core.management import execute_from_command_line
+        from django.db import connection
+        
+        # Test database connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        
+        # Run migrations (this will be a no-op if already run)
+        execute_from_command_line(['manage.py', 'migrate', '--noinput'])
+        
+        return JsonResponse({
+            'status': 'healthy',
+            'service': 'Holly Hot Box',
+            'user': request.user.username if request.user.is_authenticated else 'anonymous',
+            'migrations': 'completed'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'service': 'Holly Hot Box',
+            'error': str(e)
+        }, status=500)
 
 def setup_database(request):
     """Temporary endpoint to setup database - REMOVE AFTER USE"""
