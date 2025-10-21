@@ -879,3 +879,32 @@ def chat_detail(request, chat_id):
         'messages': messages,
         'sessions': ChatSession.objects.filter(user=request.user, is_active=True)
     })
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def delete_project(request, project_id):
+    """Delete a project and all associated data"""
+    try:
+        project = get_object_or_404(Project, id=project_id, user=request.user)
+        project_name = project.name
+        
+        # Count related items for logging
+        chat_count = project.chat_sessions.count()
+        file_count = project.files.count()
+        
+        # Django will cascade delete related chats and files automatically
+        project.delete()
+        
+        logger.info(f"Project deleted: {project_name} (ID: {project_id}) - {chat_count} chats, {file_count} files")
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Project "{project_name}" deleted successfully',
+            'deleted_chats': chat_count,
+            'deleted_files': file_count
+        })
+        
+    except Exception as e:
+        logger.error(f"Project deletion error: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
