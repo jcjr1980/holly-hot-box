@@ -66,8 +66,8 @@ def login_view(request):
         password = request.POST.get('password')
         
         # Check credentials
-        expected_username = os.getenv('HBB_USERNAME', 'jcjr1980')
-        expected_password = os.getenv('HBB_PASSWORD', '@cc0r-D69_*123$!')
+        expected_username = os.getenv('HHB_USERNAME', 'jcjr1980')
+        expected_password = os.getenv('HHB_PASSWORD', '@cc0r-D69_*123$!')
         
         # DEBUG: Log the expected password (remove after testing)
         logger.info(f"Expected password: {expected_password}")
@@ -103,7 +103,7 @@ def login_2fa_view(request):
     
     if request.method == 'POST':
         code = request.POST.get('code')
-        expected_code = os.getenv('HBB_2FA_CODE', '267769')
+        expected_code = os.getenv('HHB_2FA_CODE', '267769')
         
         if code == expected_code:
             username = request.session['temp_username']
