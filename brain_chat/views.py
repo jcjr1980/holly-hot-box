@@ -316,17 +316,18 @@ def get_session_messages(request, session_id):
 
 
 def health_check(request):
-    """Health check endpoint with auto-migration"""
+    """Health check endpoint with auto-migration and shared DB test"""
     try:
         from django.core.management import execute_from_command_line
         from django.db import connection
         from django.conf import settings
+        from .shared_db_utils import get_shared_db_connection, query_shared_database
         
-        # Test database connection
+        # Test HBB database connection
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
         
-        # Check if auth_user table exists
+        # Check if auth_user table exists in HBB database
         table_exists = False
         try:
             with connection.cursor() as cursor:
@@ -339,13 +340,36 @@ def health_check(request):
         if not table_exists:
             execute_from_command_line(['manage.py', 'migrate', '--noinput'])
         
+        # Test shared database connection
+        shared_db_status = "connected"
+        shared_tables = []
+        try:
+            shared_conn = get_shared_db_connection()
+            if shared_conn:
+                # Get list of tables from shared database
+                result = query_shared_database("""
+                    SELECT table_name 
+                    FROM information_schema.tables 
+                    WHERE table_schema = 'public' 
+                    ORDER BY table_name
+                """)
+                shared_tables = [row['table_name'] for row in result] if result else []
+                shared_conn.close()
+            else:
+                shared_db_status = "failed"
+        except Exception as e:
+            shared_db_status = f"error: {str(e)}"
+        
         return JsonResponse({
             'status': 'healthy',
             'service': 'Holly Hot Box',
             'user': request.user.username if request.user.is_authenticated else 'anonymous',
-            'database': settings.DATABASES['default']['ENGINE'],
-            'table_exists': table_exists,
-            'migrations': 'completed' if table_exists else 'running'
+            'hbb_database': settings.DATABASES['default']['ENGINE'],
+            'hbb_table_exists': table_exists,
+            'migrations': 'completed' if table_exists else 'running',
+            'shared_db_status': shared_db_status,
+            'shared_tables_count': len(shared_tables),
+            'shared_tables_sample': shared_tables[:5]  # First 5 tables
         })
     except Exception as e:
         return JsonResponse({
