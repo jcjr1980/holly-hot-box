@@ -83,6 +83,19 @@
             border-color: #a8dadc;
         }
         
+        .nav-btn.logout {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+        
+        .nav-btn.logout:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            color: #ef4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+        }
+        
         .nav-btn.primary {
             background: #a8dadc;
             color: #0d1b2a;
@@ -279,6 +292,7 @@
                 <button class="nav-btn" onclick="startQuickie()">⚡ Quickie!</button>
                 <button class="nav-btn" onclick="togglePrivacyMode()">🔒 Privacy</button>
                 <button class="nav-btn" onclick="openSettings()">⚙️</button>
+                <button class="nav-btn logout" onclick="window.location.href='{% url 'logout' %}'">Logout</button>
             </div>
         </div>
         
