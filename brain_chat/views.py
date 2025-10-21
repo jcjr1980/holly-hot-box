@@ -151,6 +151,21 @@ def new_chat(request):
     return render(request, 'brain_chat/new_chat.html')
 
 @login_required
+def project_detail(request, project_id):
+    """View project details and files"""
+    project = get_object_or_404(Project, id=project_id, user=request.user)
+    
+    # Get project files
+    files = project.files.all()
+    
+    context = {
+        'project': project,
+        'files': files,
+    }
+    
+    return render(request, 'brain_chat/project_detail.html', context)
+
+@login_required
 def create_project_view(request):
     """Create new project with file uploads"""
     if request.method == 'GET':

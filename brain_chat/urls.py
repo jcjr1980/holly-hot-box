@@ -20,6 +20,7 @@ urlpatterns = [
     # Projects
     path('projects/', views.get_projects, name='get_projects'),
     path('projects/create/', views.create_project, name='create_project'),
+    path('project/<int:project_id>/', views.project_detail, name='project_detail'),
     
     # Diary
     path('diary/', views.get_diary_notes, name='get_diary_notes'),
