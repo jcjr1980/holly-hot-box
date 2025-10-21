@@ -161,7 +161,7 @@ def create_project_view(request):
             # Get form data
             name = request.POST.get('name', '').strip()
             description = request.POST.get('description', '').strip()
-            # summary = request.POST.get('summary', '').strip()  # Temporarily disabled
+            summary = request.POST.get('summary', '').strip()
             priority = int(request.POST.get('priority', 3))
             tags = request.POST.get('tags', '').strip()
             selected_llms = json.loads(request.POST.get('selected_llms', '[]'))
@@ -174,7 +174,7 @@ def create_project_view(request):
                 user=request.user,
                 name=name,
                 description=description,
-                # summary=summary,  # Temporarily disabled
+                summary=summary,
                 priority=priority,
                 tags=tags,
                 selected_llms=selected_llms
