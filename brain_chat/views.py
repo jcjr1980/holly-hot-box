@@ -636,6 +636,29 @@ def setup_database(request):
                 messages.append("Added summary column to project")
             except Exception as e:
                 messages.append(f"summary column: {str(e)}")
+            
+            # Create ProjectFile table
+            try:
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS brain_chat_projectfile (
+                        id SERIAL PRIMARY KEY,
+                        project_id INTEGER NOT NULL REFERENCES brain_chat_project(id) ON DELETE CASCADE,
+                        file_name VARCHAR(255) NOT NULL,
+                        file_path VARCHAR(100) NOT NULL,
+                        file_type VARCHAR(50),
+                        file_size INTEGER,
+                        original_content TEXT,
+                        summary TEXT,
+                        summarized_by VARCHAR(50),
+                        is_summarized BOOLEAN DEFAULT FALSE,
+                        content_type VARCHAR(50),
+                        uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        metadata JSONB DEFAULT '{}'::jsonb
+                    )
+                """)
+                messages.append("Created brain_chat_projectfile table")
+            except Exception as e:
+                messages.append(f"projectfile table: {str(e)}")
         
         return JsonResponse({
             'status': 'success', 
