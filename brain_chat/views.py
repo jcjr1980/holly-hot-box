@@ -461,12 +461,21 @@ def send_message(request):
             })
         
         # Orchestrate LLM response - SIMPLIFIED (bypass Conductor for now to debug)
-        orchestrator = LLMOrchestrator()
-        
-        # Direct orchestration based on mode
-        logger.info(f"🎭 Direct orchestration with mode='{mode}', prompt length={len(prompt)}")
-        result = orchestrator.orchestrate_response(prompt, history[:-1], mode=mode)
-        logger.info(f"✅ Orchestrator returned result with mode='{result.get('mode')}'")
+        try:
+            orchestrator = LLMOrchestrator()
+            
+            # Direct orchestration based on mode
+            logger.info(f"🎭 Direct orchestration with mode='{mode}', prompt length={len(prompt)}")
+            result = orchestrator.orchestrate_response(prompt, history[:-1], mode=mode)
+            logger.info(f"✅ Orchestrator returned result with mode='{result.get('mode')}'")
+        except Exception as orchestrator_error:
+            logger.error(f"💥 ORCHESTRATOR CRASHED: {type(orchestrator_error).__name__}: {str(orchestrator_error)}")
+            import traceback
+            logger.error(f"Traceback:\n{traceback.format_exc()}")
+            return JsonResponse({
+                'error': f"Orchestrator failed: {type(orchestrator_error).__name__}: {str(orchestrator_error)}",
+                'traceback': traceback.format_exc()
+            }, status=500)
         
         # Save assistant response (skip for privacy mode)
         if mode == 'parallel':
