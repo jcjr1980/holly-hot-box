@@ -532,20 +532,27 @@ Provide a final synthesized answer that combines the best of both analyses:"""
         # Execute all queries with individual timeouts
         for name, query_func in llm_queries.items():
             try:
+                logger.info(f"🔄 Querying {name}...")
                 response, metadata = query_func(prompt, conversation_history)
+                
+                # Validate response is not empty or error
+                if not response or response.startswith('Error:') or response.startswith('<'):
+                    raise ValueError(f"{name} returned invalid response (likely HTML error page)")
+                
                 results[name] = {
                     "response": response,
                     "metadata": metadata
                 }
+                logger.info(f"✅ {name} responded successfully ({len(response)} chars)")
             except Exception as e:
-                logger.error(f"Error querying {name}: {e}")
+                logger.error(f"❌ Error querying {name}: {type(e).__name__}: {str(e)}")
                 results[name] = {
-                    "response": f"Error: {str(e)}",
-                    "metadata": {"error": str(e)}
+                    "response": f"{name} temporarily unavailable",
+                    "metadata": {"error": str(e), "error_type": type(e).__name__}
                 }
         
         # If all LLMs failed, return a simple fallback
-        successful_responses = [r for r in results.values() if not r['response'].startswith('Error:')]
+        successful_responses = [r for r in results.values() if not r['response'].startswith('Error:') and 'temporarily unavailable' not in r['response']]
         if not successful_responses:
             return {
                 "mode": mode,
