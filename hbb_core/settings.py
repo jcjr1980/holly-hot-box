@@ -35,10 +35,16 @@ CSRF_TRUSTED_ORIGINS = [
     'https://holly-hot-box-production.up.railway.app',
 ]
 
+# Allow Railway to override CSRF settings via environment variable
+if os.getenv('CSRF_TRUSTED_ORIGINS'):
+    CSRF_TRUSTED_ORIGINS.extend(os.getenv('CSRF_TRUSTED_ORIGINS').split(','))
+
 # Additional CSRF settings for production
 CSRF_COOKIE_SECURE = False  # Set to False for development/testing
 CSRF_COOKIE_HTTPONLY = False
 CSRF_USE_SESSIONS = False
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_FAILURE_VIEW = 'django.views.csrf.csrf_failure'
 
 
 # Application definition
