@@ -7,10 +7,10 @@ requests==2.32.3
 dj-database-url==2.2.0
 
 # LLM SDKs
-openai==1.40.0
-google-generativeai==0.7.2
-anthropic==0.34.0
-huggingface-hub==0.24.5
+openai==1.58.1
+google-generativeai==0.8.3
+anthropic==0.42.0
+huggingface-hub==0.26.5
 
 # Additional utilities
 Pillow==10.4.0
