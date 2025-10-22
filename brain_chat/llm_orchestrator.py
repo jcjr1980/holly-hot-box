@@ -644,7 +644,8 @@ Final synthesized response:"""
         
         return {
             "mode": "consensus",
-            "final_response": final_response,
+            "response": final_response,
+            "final_response": final_response,  # Keep both for compatibility
             "individual_responses": results,
             "metadata": metadata,
             "primary_synthesizer": "gemini_tier_3"
