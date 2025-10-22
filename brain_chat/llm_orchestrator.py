@@ -396,8 +396,10 @@ Please think deeply and provide a well-reasoned, analytical response."""
             last_error = None
             for model_name in models_to_try:
                 try:
+                    # Try both old and new endpoint formats
+                    url = f"{self.hf_base_url}/models/{model_name}"
                     response = requests.post(
-                        f"{self.hf_base_url}/{model_name}",
+                        url,
                         headers=headers,
                         json=payload,
                         timeout=30
