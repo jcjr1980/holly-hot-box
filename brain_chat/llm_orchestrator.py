@@ -386,12 +386,31 @@ Please think deeply and provide a well-reasoned, analytical response."""
                 }
             }
             
-            response = requests.post(
-                f"{self.hf_base_url}/meta-llama/Meta-Llama-3-8B-Instruct",
-                headers=headers,
-                json=payload,
-                timeout=30
-            )
+            # Try multiple models - some might require special access
+            models_to_try = [
+                "mistralai/Mistral-7B-Instruct-v0.2",  # Open access
+                "meta-llama/Meta-Llama-3-8B-Instruct",  # Might need access
+                "HuggingFaceH4/zephyr-7b-beta"  # Open access
+            ]
+            
+            last_error = None
+            for model_name in models_to_try:
+                try:
+                    response = requests.post(
+                        f"{self.hf_base_url}/{model_name}",
+                        headers=headers,
+                        json=payload,
+                        timeout=30
+                    )
+                    
+                    if response.status_code == 200:
+                        break  # Success!
+                    else:
+                        last_error = f"HTTP {response.status_code}"
+                        continue  # Try next model
+                except Exception as e:
+                    last_error = str(e)
+                    continue
             
             response_time = int((time.time() - start_time) * 1000)
             
@@ -399,13 +418,16 @@ Please think deeply and provide a well-reasoned, analytical response."""
                 data = response.json()
                 text = data[0]['generated_text'] if isinstance(data, list) else data.get('generated_text', str(data))
                 
+                # Get the model name that worked
+                model_display = model_name.split('/')[-1] if 'model_name' in locals() else "HuggingFace Model"
+                
                 return text, {
                     "tokens": len(prompt.split()) + len(text.split()),
                     "response_time_ms": response_time,
-                    "model": "Meta-Llama-3-8B-Instruct (REST API)"
+                    "model": f"{model_display} (HuggingFace REST API)"
                 }
             else:
-                error_msg = f"HTTP {response.status_code}: {response.text}"
+                error_msg = last_error or f"HTTP {response.status_code}: {response.text}"
                 logger.error(f"HuggingFace error: {error_msg}")
                 return f"HuggingFace Error: {error_msg}", {"error": error_msg}
                 
