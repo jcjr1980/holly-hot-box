@@ -461,13 +461,37 @@ def send_message(request):
             })
         
         # Orchestrate LLM response using the intelligent Conductor
-        orchestrator = LLMOrchestrator()
-        conductor = QueryConductor(orchestrator)
-        
-        # ALWAYS let conductor analyze complexity first
-        # It will automatically use orchestrated_breakdown for complex queries
-        # Even if user selected "consensus", the conductor should break it down if needed
-        result = conductor.conduct_query(prompt, history[:-1])
+        try:
+            orchestrator = LLMOrchestrator()
+            conductor = QueryConductor(orchestrator)
+            
+            # ALWAYS let conductor analyze complexity first
+            # It will automatically use orchestrated_breakdown for complex queries
+            # Even if user selected "consensus", the conductor should break it down if needed
+            logger.info(f"🎭 Calling Conductor with mode='{mode}', prompt length={len(prompt)}")
+            result = conductor.conduct_query(prompt, history[:-1])
+            logger.info(f"✅ Conductor returned result with mode='{result.get('mode')}'")
+        except Exception as conductor_error:
+            logger.error(f"💥 CONDUCTOR CRASHED: {type(conductor_error).__name__}: {str(conductor_error)}")
+            import traceback
+            logger.error(f"Traceback:\n{traceback.format_exc()}")
+            # Fallback to simple Gemini-only
+            logger.info("🔄 Falling back to Gemini-only mode...")
+            try:
+                orchestrator = LLMOrchestrator()
+                response, metadata = orchestrator.query_gemini(prompt, history[:-1])
+                result = {
+                    "mode": "gemini_fallback",
+                    "response": response,
+                    "metadata": metadata,
+                    "provider": "gemini",
+                    "fallback_reason": f"Conductor failed: {str(conductor_error)}"
+                }
+            except Exception as fallback_error:
+                return JsonResponse({
+                    'error': f"Both Conductor and fallback failed. Conductor: {str(conductor_error)}, Fallback: {str(fallback_error)}",
+                    'traceback': traceback.format_exc()
+                }, status=500)
         
         # Save assistant response (skip for privacy mode)
         if mode == 'parallel':
