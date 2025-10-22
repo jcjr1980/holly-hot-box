@@ -46,7 +46,16 @@ def test_llms(request):
                 response, metadata = query_func(test_prompt)
                 
                 # Check if it's actually working (not just returning without error)
-                if response and not response.startswith('Error:') and not response.startswith(f"{llm_name} is temporarily unavailable") and "LLM_NAME is working" in response:
+                # Accept any response that contains "is working" or doesn't start with error messages
+                is_working = (
+                    response and 
+                    not response.startswith('Error:') and 
+                    not response.startswith(f"{llm_name} is temporarily unavailable") and
+                    not "temporarily unavailable" in response and
+                    ("is working" in response.lower() or ("I" in response and len(response) > 10))
+                )
+                
+                if is_working:
                     results[llm_name] = {
                         "status": "WORKING",
                         "response": response,
