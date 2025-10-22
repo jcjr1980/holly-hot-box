@@ -386,18 +386,21 @@ Please think deeply and provide a well-reasoned, analytical response."""
                 }
             }
             
-            # Try multiple models - some might require special access
+            # Try multiple models - prioritize fully open models first
             models_to_try = [
+                "microsoft/phi-2",  # Fully open, no terms needed
                 "mistralai/Mistral-7B-Instruct-v0.2",  # Open access
-                "meta-llama/Meta-Llama-3-8B-Instruct",  # Might need access
-                "HuggingFaceH4/zephyr-7b-beta"  # Open access
+                "HuggingFaceH4/zephyr-7b-beta",  # Open access
+                "google/flan-t5-large",  # Google's open model
+                "meta-llama/Meta-Llama-3-8B-Instruct",  # Requires terms acceptance
             ]
             
             last_error = None
             for model_name in models_to_try:
                 try:
-                    # Try both old and new endpoint formats
-                    url = f"{self.hf_base_url}/models/{model_name}"
+                    # Use new HuggingFace Inference Providers API format
+                    url = f"{self.hf_base_url}/{model_name}"
+                    logger.info(f"Trying HuggingFace model at: {url}")
                     response = requests.post(
                         url,
                         headers=headers,
