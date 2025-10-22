@@ -209,7 +209,7 @@ JSON Response:"""
         # Step 2: If simple enough, just use recommended strategy
         if not analysis['requires_breakdown']:
             logger.info(f"✅ Using simple strategy: {analysis['recommended_strategy']}")
-            return self.orchestrator.orchestrate_response(
+            return self.orchestrator.query_all(
                 prompt,
                 conversation_history,
                 mode=analysis['recommended_strategy']
@@ -221,7 +221,7 @@ JSON Response:"""
         
         if breakdown.get('fallback'):
             logger.warning("⚠️ Breakdown failed, using power_duo fallback")
-            return self.orchestrator.orchestrate_response(
+            return self.orchestrator.query_all(
                 prompt,
                 conversation_history,
                 mode='power_duo'
@@ -340,7 +340,7 @@ Final Response:"""
         # If mode is forced, use it
         if force_mode:
             logger.info(f"🎯 Using forced mode: {force_mode}")
-            return self.orchestrator.orchestrate_response(
+            return self.orchestrator.query_all(
                 prompt,
                 conversation_history,
                 mode=force_mode
@@ -354,7 +354,7 @@ Final Response:"""
             return self.execute_orchestrated_breakdown(prompt, conversation_history)
         else:
             logger.info(f"✅ Using recommended strategy: {analysis['recommended_strategy']}")
-            return self.orchestrator.orchestrate_response(
+            return self.orchestrator.query_all(
                 prompt,
                 conversation_history,
                 mode=analysis['recommended_strategy']
