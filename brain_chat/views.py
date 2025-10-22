@@ -464,14 +464,10 @@ def send_message(request):
         orchestrator = LLMOrchestrator()
         conductor = QueryConductor(orchestrator)
         
-        # Use conductor for intelligent orchestration (auto-detects complexity)
-        # Unless user explicitly chose a mode
-        if mode == 'consensus':
-            # Let the conductor analyze and decide the best approach
-            result = conductor.conduct_query(prompt, history[:-1])
-        else:
-            # User selected specific mode, honor it
-            result = conductor.conduct_query(prompt, history[:-1], force_mode=mode)
+        # ALWAYS let conductor analyze complexity first
+        # It will automatically use orchestrated_breakdown for complex queries
+        # Even if user selected "consensus", the conductor should break it down if needed
+        result = conductor.conduct_query(prompt, history[:-1])
         
         # Save assistant response (skip for privacy mode)
         if mode == 'parallel':
