@@ -59,14 +59,13 @@ class LLMOrchestrator:
             logger.warning("Claude API key not found in environment")
         self.claude_base_url = "https://api.anthropic.com/v1"
         
-        # Hugging Face - Johnny's Digital Clone
-        # Temporarily disabled due to API compatibility issues
-        self.hf_client = None
-        # try:
-        #     self.hf_client = InferenceClient(token=os.getenv('HUGGINGFACE_API_KEY'))
-        # except Exception as e:
-        #     logger.error(f"HuggingFace init error: {e}")
-        #     self.hf_client = None
+        # Hugging Face - Using REST API
+        self.hf_key = os.getenv('HUGGINGFACE_API_KEY')
+        if self.hf_key:
+            logger.info(f"HuggingFace API key found (length: {len(self.hf_key)})")
+        else:
+            logger.warning("HuggingFace API key not found in environment")
+        self.hf_base_url = "https://api-inference.huggingface.co/models"
         
         # DeepSeek Reasoner - DEEP THINKING at ultra-low cost! 
         # DeepSeek-V3.2 Reasoner is incredibly cost-effective
@@ -365,28 +364,51 @@ Please think deeply and provide a well-reasoned, analytical response."""
             return f"Grok Error: {str(e)}", {"error": str(e)}
     
     def query_huggingface(self, prompt: str, conversation_history: List[Dict] = None) -> Tuple[str, Dict]:
-        """Query Hugging Face (Johnny's Digital Clone)"""
-        if not self.hf_client:
-            return "Hugging Face is temporarily unavailable", {"error": "Client not initialized"}
+        """Query Hugging Face (Johnny's Digital Clone) - Using REST API"""
+        if not self.hf_key:
+            return "Hugging Face is temporarily unavailable", {"error": "API key not found"}
         
         try:
             start_time = time.time()
             
             # Use Meta-Llama-3 for the digital clone
-            response = self.hf_client.text_generation(
-                prompt,
-                model="meta-llama/Meta-Llama-3-8B-Instruct",
-                max_new_tokens=500,
-                temperature=0.7
+            headers = {
+                "Authorization": f"Bearer {self.hf_key}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "inputs": prompt,
+                "parameters": {
+                    "max_new_tokens": 500,
+                    "temperature": 0.7,
+                    "return_full_text": False
+                }
+            }
+            
+            response = requests.post(
+                f"{self.hf_base_url}/meta-llama/Meta-Llama-3-8B-Instruct",
+                headers=headers,
+                json=payload,
+                timeout=30
             )
             
             response_time = int((time.time() - start_time) * 1000)
             
-            return response, {
-                "tokens": len(prompt.split()) + len(response.split()),
-                "response_time_ms": response_time,
-                "model": "Meta-Llama-3-8B-Instruct"
-            }
+            if response.status_code == 200:
+                data = response.json()
+                text = data[0]['generated_text'] if isinstance(data, list) else data.get('generated_text', str(data))
+                
+                return text, {
+                    "tokens": len(prompt.split()) + len(text.split()),
+                    "response_time_ms": response_time,
+                    "model": "Meta-Llama-3-8B-Instruct (REST API)"
+                }
+            else:
+                error_msg = f"HTTP {response.status_code}: {response.text}"
+                logger.error(f"HuggingFace error: {error_msg}")
+                return f"HuggingFace Error: {error_msg}", {"error": error_msg}
+                
         except Exception as e:
             logger.error(f"Hugging Face error: {e}")
             return f"Hugging Face Error: {str(e)}", {"error": str(e)}
