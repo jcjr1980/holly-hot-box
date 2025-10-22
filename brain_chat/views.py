@@ -27,7 +27,7 @@ def test_llms(request):
     """Test all LLMs individually - Web page format"""
     try:
         orchestrator = LLMOrchestrator()
-        test_prompt = "Hello! Please respond with just 'LLM_NAME is working' to confirm you're functioning."
+        test_prompt = "Please confirm you are online and functioning by saying 'I am working' in your response."
         
         results = {}
         
