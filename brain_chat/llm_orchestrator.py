@@ -59,13 +59,13 @@ class LLMOrchestrator:
             logger.warning("Claude API key not found in environment")
         self.claude_base_url = "https://api.anthropic.com/v1"
         
-        # Hugging Face - Using REST API
+        # Hugging Face - Using Inference Providers API (OpenAI-compatible)
         self.hf_key = os.getenv('HUGGINGFACE_API_KEY')
         if self.hf_key:
             logger.info(f"HuggingFace API key found (length: {len(self.hf_key)})")
         else:
             logger.warning("HuggingFace API key not found in environment")
-        self.hf_base_url = "https://router.huggingface.co/hf-inference"
+        self.hf_base_url = "https://router.huggingface.co/v1"
         
         # DeepSeek Reasoner - DEEP THINKING at ultra-low cost! 
         # DeepSeek-V3.2 Reasoner is incredibly cost-effective
@@ -364,76 +364,80 @@ Please think deeply and provide a well-reasoned, analytical response."""
             return f"Grok Error: {str(e)}", {"error": str(e)}
     
     def query_huggingface(self, prompt: str, conversation_history: List[Dict] = None) -> Tuple[str, Dict]:
-        """Query Hugging Face (Johnny's Digital Clone) - Using REST API"""
+        """Query Hugging Face - Using Inference Providers API (OpenAI-compatible)"""
         if not self.hf_key:
             return "Hugging Face is temporarily unavailable", {"error": "API key not found"}
         
         try:
             start_time = time.time()
             
-            # Use Meta-Llama-3 for the digital clone
+            messages = conversation_history or []
+            messages.append({"role": "user", "content": prompt})
+            
+            # Use OpenAI-compatible format as per HuggingFace Inference Providers docs
             headers = {
                 "Authorization": f"Bearer {self.hf_key}",
                 "Content-Type": "application/json"
             }
             
-            payload = {
-                "inputs": prompt,
-                "parameters": {
-                    "max_new_tokens": 500,
-                    "temperature": 0.7,
-                    "return_full_text": False
-                }
-            }
-            
-            # Try multiple models - prioritize fully open models first
+            # Try multiple models available on Inference Providers
             models_to_try = [
-                "microsoft/phi-2",  # Fully open, no terms needed
-                "mistralai/Mistral-7B-Instruct-v0.2",  # Open access
-                "HuggingFaceH4/zephyr-7b-beta",  # Open access
-                "google/flan-t5-large",  # Google's open model
-                "meta-llama/Meta-Llama-3-8B-Instruct",  # Requires terms acceptance
+                "Qwen/Qwen2-5-Coder-32B-Instruct",  # Great open model
+                "google/gemma-2-2b-it",  # Google's Gemma  
+                "deepseek-ai/DeepSeek-R1",  # DeepSeek on HF
+                "mistralai/Mistral-7B-Instruct-v0.2",  # Mistral
+                "meta-llama/Llama-3.2-3B-Instruct",  # Meta Llama (might need terms)
             ]
             
             last_error = None
+            successful_model = None
+            
             for model_name in models_to_try:
                 try:
-                    # Use new HuggingFace Inference Providers API format
-                    url = f"{self.hf_base_url}/{model_name}"
-                    logger.info(f"Trying HuggingFace model at: {url}")
+                    payload = {
+                        "model": model_name,
+                        "messages": messages,
+                        "max_tokens": 500,
+                        "temperature": 0.7
+                    }
+                    
+                    logger.info(f"Trying HuggingFace model: {model_name}")
                     response = requests.post(
-                        url,
+                        f"{self.hf_base_url}/chat/completions",
                         headers=headers,
                         json=payload,
                         timeout=30
                     )
                     
                     if response.status_code == 200:
+                        successful_model = model_name
                         break  # Success!
                     else:
-                        last_error = f"HTTP {response.status_code}"
+                        last_error = f"HTTP {response.status_code}: {response.text[:100]}"
+                        logger.debug(f"Model {model_name} failed with: {last_error}")
                         continue  # Try next model
                 except Exception as e:
                     last_error = str(e)
+                    logger.debug(f"Model {model_name} exception: {e}")
                     continue
             
             response_time = int((time.time() - start_time) * 1000)
             
             if response.status_code == 200:
                 data = response.json()
-                text = data[0]['generated_text'] if isinstance(data, list) else data.get('generated_text', str(data))
+                text = data['choices'][0]['message']['content']
                 
                 # Get the model name that worked
-                model_display = model_name.split('/')[-1] if 'model_name' in locals() else "HuggingFace Model"
+                model_display = successful_model.split('/')[-1] if successful_model else "HuggingFace Model"
                 
                 return text, {
-                    "tokens": len(prompt.split()) + len(text.split()),
+                    "tokens": data.get('usage', {}).get('total_tokens', len(prompt.split()) + len(text.split())),
                     "response_time_ms": response_time,
-                    "model": f"{model_display} (HuggingFace REST API)"
+                    "model": f"{model_display} (HuggingFace)"
                 }
             else:
-                error_msg = last_error or f"HTTP {response.status_code}: {response.text}"
-                logger.error(f"HuggingFace error: {error_msg}")
+                error_msg = last_error or f"HTTP {response.status_code}"
+                logger.error(f"HuggingFace error: All models failed. Last error: {error_msg}")
                 return f"HuggingFace Error: {error_msg}", {"error": error_msg}
                 
         except Exception as e:
