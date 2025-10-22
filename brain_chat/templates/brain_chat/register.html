@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Holly Hot Box - Login v4.0 PASSWORD UPDATED</title>
+    <title>Holly Hot Box - Register</title>
     {% load static %}
     <style>
         * {
@@ -30,13 +30,13 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxkZWZzPgo8cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFBrownVzZSI+CjxwYXRoIGQ9Ik0gMjAgMCBMIDAgMCAwIDIwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LCAyMCwgMTQ3LCAwLjA2KSIgc3Ryb2tlLXdpZHRoPSIxIi8+CjwvcGF0dGVybj4KPC9kZWZzPgo8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0idXJsKCNncmlkKSIvPgo8L3N2Zz4=');
+            background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxkZWZzPgo8cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHBhdGggZD0iTSAyMCAwIEwgMCAwIDAgMjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsIDIwLCAxNDcsIDAuMDYpIiBzdHJva2Utd2lkdGg9IjEiLz4KPC9wYXR0ZXJuPgo8L2RlZnM+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSJ1cmwoI2dyaWQpIi8+Cjwvc3ZnPg==');
             opacity: 0.3;
             pointer-events: none;
             z-index: 1;
         }
         
-        .login-container {
+        .register-container {
             background-image: 
                 url('{% static "brain_chat/images/hollyhotbox.jpg" %}'),
                 radial-gradient(circle at 20% 80%, rgba(147, 51, 234, 0.25) 0%, transparent 50%),
@@ -71,9 +71,6 @@
             font-weight: 800;
             margin-bottom: 15px;
             text-shadow: 0 0 20px rgba(0, 191, 255, 0.8);
-            border: none;
-            padding: 0;
-            background: none;
         }
         
         .logo p {
@@ -93,7 +90,7 @@
         }
         
         .form-group.inline label {
-            min-width: 60px;
+            min-width: 80px;
             margin-bottom: 0;
             text-align: right;
         }
@@ -129,7 +126,7 @@
             color: rgba(224, 225, 221, 0.6);
         }
         
-        .btn-login {
+        .btn-register {
             width: 100%;
             padding: 18px;
             background: linear-gradient(135deg, #00bfff 0%, #0080ff 100%);
@@ -143,20 +140,20 @@
             box-shadow: 0 4px 15px rgba(0, 191, 255, 0.4);
         }
         
-        .btn-login:hover {
+        .btn-register:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 191, 255, 0.6);
             background: linear-gradient(135deg, #0080ff 0%, #0066cc 100%);
         }
         
-        .register-link {
+        .back-link {
             text-align: center;
             margin-top: 20px;
             padding-top: 20px;
             border-top: 1px solid rgba(147, 51, 234, 0.3);
         }
         
-        .register-link a {
+        .back-link a {
             color: #00bfff;
             text-decoration: none;
             font-size: 16px;
@@ -164,7 +161,7 @@
             transition: all 0.3s ease;
         }
         
-        .register-link a:hover {
+        .back-link a:hover {
             color: #0080ff;
             text-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
         }
@@ -181,29 +178,9 @@
             backdrop-filter: blur(5px);
         }
         
-        .features {
-            margin-top: 30px;
-            padding-top: 30px;
-            border-top: 1px solid #e1e8ed;
-        }
-        
-        .feature {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            color: white;
-            font-size: 16px;
-        }
-        
-        .feature::before {
-            content: "✨";
-            margin-right: 12px;
-            font-size: 20px;
-        }
-        
         /* Mobile Responsive */
         @media (max-width: 480px) {
-            .login-container {
+            .register-container {
                 padding: 25px;
                 margin: 15px;
             }
@@ -216,53 +193,57 @@
                 font-size: 12px;
             }
             
-            .btn-login {
+            .btn-register {
                 padding: 12px;
                 font-size: 14px;
             }
             
-            .features {
-                font-size: 12px;
+            .form-group.inline {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .form-group.inline label {
+                text-align: left;
+                min-width: auto;
             }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
+    <div class="register-container">
         <div class="logo">
             <h1>Holly Hot Box</h1>
-            <p>Multi-LLM Brain Child System v2.0</p>
+            <p>Register for Early Access</p>
         </div>
         
         {% if error %}
         <div class="error">{{ error }}</div>
         {% endif %}
         
-        <form method="POST" action="{% url 'login' %}">
+        <form method="POST" action="{% url 'register' %}">
             {% csrf_token %}
             
             <div class="form-group inline">
-                <label for="username">User:</label>
-                <input type="text" id="username" name="username" required autocomplete="username">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
             </div>
             
             <div class="form-group inline">
-                <label for="password">Pass:</label>
-                <input type="password" id="password" name="password" required autocomplete="current-password">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
             </div>
             
-            <button type="submit" class="btn-login">Login</button>
+            <div class="form-group inline">
+                <label for="phone">Phone:</label>
+                <input type="tel" id="phone" name="phone" placeholder="(555) 555-5555" required>
+            </div>
+            
+            <button type="submit" class="btn-register">Register</button>
         </form>
         
-        <div class="register-link">
-            <a href="{% url 'register' %}">Register for an account</a>
-        </div>
-        
-        <div class="features">
-            <div class="feature">6 LLMs working together</div>
-            <div class="feature">OpenAI, Gemini, Claude & more</div>
-            <div class="feature">Consensus-driven responses</div>
-            <div class="feature">Auto-backup every 30 seconds</div>
+        <div class="back-link">
+            <a href="{% url 'login' %}">← Back to Login</a>
         </div>
     </div>
 </body>

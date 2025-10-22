@@ -198,3 +198,23 @@ class ProjectFile(models.Model):
     
     def __str__(self):
         return f"{self.file_name} ({self.project.name})"
+
+
+class RegistrationRequest(models.Model):
+    """Store registration requests for new users"""
+    name = models.CharField(max_length=255)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, default='pending', choices=[
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ])
+    notes = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.name} ({self.email}) - {self.status}"

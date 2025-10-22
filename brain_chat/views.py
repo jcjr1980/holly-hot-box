@@ -14,7 +14,7 @@ import pyotp
 import os
 import requests
 import logging
-from .models import Project, ChatSession, ChatMessage, LLMResponse, DiaryNote, UserProfile, ProjectFile
+from .models import Project, ChatSession, ChatMessage, LLMResponse, DiaryNote, UserProfile, ProjectFile, RegistrationRequest
 from .llm_orchestrator import LLMOrchestrator
 from .query_conductor import QueryConductor
 from .summarization_service import FileSummarizer
@@ -212,6 +212,36 @@ def logout_view(request):
     """Logout user"""
     logout(request)
     return redirect('login')
+
+
+def register_view(request):
+    """Registration page for new users"""
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        
+        if not name or not email or not phone:
+            return render(request, 'brain_chat/register.html', {
+                'error': 'All fields are required'
+            })
+        
+        # Create registration request
+        RegistrationRequest.objects.create(
+            name=name,
+            email=email,
+            phone=phone
+        )
+        
+        # Redirect to success page
+        return redirect('register_success')
+    
+    return render(request, 'brain_chat/register.html')
+
+
+def register_success_view(request):
+    """Thank you page after registration"""
+    return render(request, 'brain_chat/register_success.html')
 
 
 @login_required
