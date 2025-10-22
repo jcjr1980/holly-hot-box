@@ -638,7 +638,19 @@ def send_message(request):
             })
     
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        # Log full exception details for debugging
+        import traceback
+        error_details = {
+            'error': str(e),
+            'error_type': type(e).__name__,
+            'traceback': traceback.format_exc()
+        }
+        logger.error(f"❌ SEND MESSAGE FAILED: {type(e).__name__}: {str(e)}")
+        logger.error(f"Full traceback:\n{traceback.format_exc()}")
+        return JsonResponse({
+            'error': f"{type(e).__name__}: {str(e)}",
+            'details': error_details
+        }, status=500)
 
 
 @login_required

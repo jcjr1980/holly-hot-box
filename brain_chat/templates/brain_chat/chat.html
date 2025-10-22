@@ -1446,15 +1446,35 @@
                     })
                 });
                 
+                // Check if response is OK and is JSON
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('Server error:', response.status, text);
+                    addMessageToUI('assistant', `Server Error (${response.status}): ${text.substring(0, 200)}`);
+                    return;
+                }
+                
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('Non-JSON response:', text);
+                    addMessageToUI('assistant', `Error: Server returned non-JSON response. Details: ${text.substring(0, 200)}`);
+                    return;
+                }
+                
                 const data = await response.json();
                 
                 if (data.success) {
                     currentSessionId = data.session_id;
                     addMessageToUI('assistant', data.response, data.metadata);
                 } else {
-                    addMessageToUI('assistant', 'Error: ' + (data.error || 'Unknown error'));
+                    // Show detailed error if available
+                    const errorMsg = data.error || 'Unknown error';
+                    const details = data.details ? JSON.stringify(data.details, null, 2) : '';
+                    addMessageToUI('assistant', `Error: ${errorMsg}\n\nDetails: ${details}`);
                 }
             } catch (error) {
+                console.error('Frontend error:', error);
                 addMessageToUI('assistant', 'Error: ' + error.message);
             } finally {
                 input.disabled = false;
