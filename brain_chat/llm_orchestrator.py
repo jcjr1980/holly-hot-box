@@ -611,6 +611,30 @@ Final synthesized response:"""
                     final_response += f"**{name.upper()}:** {data['response'][:500]}...\n\n"
             metadata = {"error": "gemini_synthesis_failed", "fallback": "simple_concat"}
         
+        # Aggregate metadata from all responses
+        total_tokens = 0
+        total_response_time = 0
+        for name, data in results.items():
+            if 'metadata' in data and data['metadata']:
+                # Safely extract tokens
+                tokens = data['metadata'].get('tokens', 0)
+                if isinstance(tokens, list):
+                    total_tokens += sum(tokens) if tokens else 0
+                elif isinstance(tokens, int):
+                    total_tokens += tokens
+                
+                # Safely extract response time
+                response_time = data['metadata'].get('response_time_ms', 0)
+                if isinstance(response_time, int):
+                    total_response_time += response_time
+        
+        # Add aggregated metadata
+        metadata.update({
+            'total_tokens': total_tokens,
+            'total_response_time_ms': total_response_time,
+            'individual_responses_count': len(results)
+        })
+        
         return {
             "mode": "consensus",
             "final_response": final_response,
