@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holly Hot Box - Coming Soon</title>
+    {% load static %}
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0d1b2a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxkZWZzPgo8cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHBhdGggZD0iTSAyMCAwIEwgMCAwIDAgMjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsIDIwLCAxNDcsIDAuMDYpIiBzdHJva2Utd2lkdGg9IjEiLz4KPC9wYXR0ZXJuPgo8L2RlZnM+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSJ1cmwoI2dyaWQpIi8+Cjwvc3ZnPg==');
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .coming-soon-container {
+            background-image: 
+                url('{% static "brain_chat/images/hollyhotbox.jpg" %}'),
+                radial-gradient(circle at 20% 80%, rgba(147, 51, 234, 0.25) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 20, 147, 0.20) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(59, 130, 246, 0.18) 0%, transparent 50%),
+                linear-gradient(45deg, rgba(27, 38, 59, 0.25) 30%, rgba(27, 38, 59, 0.25) 50%, rgba(27, 38, 59, 0.25) 70%);
+            background-size: cover, cover, cover, cover, cover;
+            background-position: center, center, center, center, center;
+            background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+            padding: 60px;
+            border-radius: 20px;
+            box-shadow: 
+                0 20px 60px rgba(0,0,0,0.5),
+                0 0 30px rgba(147, 51, 234, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 700px;
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo h1 {
+            color: #00bfff;
+            font-size: 64px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(0, 191, 255, 0.8);
+        }
+        
+        .logo p {
+            color: #e0e1dd;
+            font-size: 18px;
+            opacity: 0.8;
+        }
+        
+        .coming-soon {
+            margin: 60px 0;
+        }
+        
+        .coming-soon h2 {
+            color: #00bfff;
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-shadow: 0 0 15px rgba(0, 191, 255, 0.6);
+        }
+        
+        .coming-soon p {
+            color: #e0e1dd;
+            font-size: 20px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .features {
+            margin-top: 50px;
+            padding-top: 40px;
+            border-top: 1px solid rgba(147, 51, 234, 0.3);
+        }
+        
+        .feature {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            color: white;
+            font-size: 16px;
+        }
+        
+        .feature::before {
+            content: "✨";
+            margin-right: 12px;
+            font-size: 20px;
+        }
+        
+        .register-link {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(147, 51, 234, 0.3);
+        }
+        
+        .register-link a {
+            display: inline-block;
+            padding: 18px 40px;
+            background: linear-gradient(135deg, #00bfff 0%, #0080ff 100%);
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 191, 255, 0.4);
+            margin: 0 10px;
+        }
+        
+        .register-link a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 191, 255, 0.6);
+            background: linear-gradient(135deg, #0080ff 0%, #0066cc 100%);
+        }
+        
+        .register-link a.secondary {
+            background: transparent;
+            border: 2px solid #00bfff;
+            box-shadow: none;
+        }
+        
+        .register-link a.secondary:hover {
+            background: rgba(0, 191, 255, 0.1);
+            box-shadow: 0 0 15px rgba(0, 191, 255, 0.3);
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 480px) {
+            .coming-soon-container {
+                padding: 30px;
+                margin: 15px;
+            }
+            
+            .logo h1 {
+                font-size: 32px;
+            }
+            
+            .logo p {
+                font-size: 14px;
+            }
+            
+            .coming-soon h2 {
+                font-size: 32px;
+            }
+            
+            .coming-soon p {
+                font-size: 16px;
+            }
+            
+            .register-link a {
+                display: block;
+                margin: 10px 0;
+                padding: 14px 30px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="coming-soon-container">
+        <div class="logo">
+            <h1>Holly Hot Box</h1>
+            <p>Multi-LLM Brain Child System v2.0</p>
+        </div>
+        
+        <div class="coming-soon">
+            <h2>Coming Soon</h2>
+            <p>The future of AI collaboration is almost here.</p>
+            <p>We're putting the finishing touches on something amazing.</p>
+        </div>
+        
+        <div class="features">
+            <div class="feature">6 LLMs working together</div>
+            <div class="feature">OpenAI, Gemini, Claude & more</div>
+            <div class="feature">Consensus-driven responses</div>
+            <div class="feature">Deep reasoning & synthesis</div>
+        </div>
+        
+        <div class="register-link">
+            <a href="{% url 'register' %}">Register for Early Access</a>
+            <a href="{% url 'login' %}" class="secondary">Member Login</a>
+        </div>
+    </div>
+</body>
+</html>
+

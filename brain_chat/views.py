@@ -133,10 +133,15 @@ def is_blocked_country(country):
     ]
     return country in blocked_countries
 
+def coming_soon_view(request):
+    """Coming Soon landing page"""
+    return render(request, 'brain_chat/coming_soon.html')
+
+
 def login_view(request):
     """Step 1: Username and Password only"""
     if request.user.is_authenticated:
-        return redirect('chat_home')
+        return redirect('home')
     
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -164,7 +169,7 @@ def login_view(request):
 def login_2fa_view(request):
     """Step 2: 2FA Code with geo-blocking"""
     if request.user.is_authenticated:
-        return redirect('chat_home')
+        return redirect('home')
     
     # Check if user has valid session from step 1
     if not request.session.get('temp_username'):
