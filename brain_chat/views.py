@@ -519,7 +519,7 @@ def send_message(request):
                 assistant_message = ChatMessage.objects.create(
                     session=session,
                     role='assistant',
-                    content=result['final_response'],
+                    content=result.get('final_response') or result.get('response', 'No response available'),
                     llm_provider='conductor' if result.get('conductor_used') else 'multi',
                     metadata=result,
                     tokens_used=tokens,
