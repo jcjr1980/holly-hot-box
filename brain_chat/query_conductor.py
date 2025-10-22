@@ -43,11 +43,13 @@ class QueryConductor:
         
         # Check for complexity indicators
         has_multiple_questions = prompt.count('?') > 1
-        has_long_context = len(prompt.split()) > 500
+        has_long_context = len(prompt.split()) > 200  # Lowered from 500 to 200 words
         has_file_references = conversation_history and len(conversation_history) > 0
         has_list_request = any(word in prompt.lower() for word in ['list', 'enumerate', 'identify all', 'find all'])
-        has_analysis_request = any(word in prompt.lower() for word in ['analyze', 'evaluate', 'assess', 'compare'])
-        has_research_request = any(word in prompt.lower() for word in ['research', 'find firms', 'locate', 'search for'])
+        has_analysis_request = any(word in prompt.lower() for word in ['analyze', 'evaluate', 'assess', 'compare', 'review', 'examine'])
+        has_research_request = any(word in prompt.lower() for word in ['research', 'find firms', 'locate', 'search for', 'finding', 'help me by finding'])
+        # Additional: Check if query has multiple distinct parts (numbered lists, "then", "also", etc.)
+        has_multiple_parts = any(indicator in prompt.lower() for indicator in ['1)', '2)', 'then', 'also', 'additionally', 'based on'])
         
         complexity_score = sum([
             has_multiple_questions * 2,
@@ -55,14 +57,18 @@ class QueryConductor:
             has_file_references * 2,
             has_list_request * 1,
             has_analysis_request * 2,
-            has_research_request * 3
+            has_research_request * 3,
+            has_multiple_parts * 2  # Added weight for multi-part queries
         ])
         
-        # Determine complexity level
-        if complexity_score >= 8:
+        # Log complexity analysis for debugging
+        logger.info(f"🔍 Complexity Analysis: score={complexity_score}, questions={has_multiple_questions}, long={has_long_context}, list={has_list_request}, analyze={has_analysis_request}, research={has_research_request}")
+        
+        # Determine complexity level - LOWERED THRESHOLDS for better breakdown detection
+        if complexity_score >= 6:  # Was 8, now 6
             complexity = 'multi_faceted'
             requires_breakdown = True
-        elif complexity_score >= 5:
+        elif complexity_score >= 4:  # Was 5, now 4
             complexity = 'complex'
             requires_breakdown = True
         elif complexity_score >= 2:
