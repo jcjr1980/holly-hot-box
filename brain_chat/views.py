@@ -467,37 +467,79 @@ def send_message(request):
         elif mode == 'consensus' or result.get('mode') == 'orchestrated_breakdown':
             # Handle both consensus and orchestrated breakdown modes
             if not is_private:
+                # Safely extract tokens and response_time_ms with type checking
+                tokens = result['metadata'].get('tokens', 0)
+                response_time = result['metadata'].get('response_time_ms', 0)
+                
+                # Ensure tokens is an integer, not a list
+                if isinstance(tokens, list):
+                    tokens = sum(tokens) if tokens else 0
+                elif not isinstance(tokens, int):
+                    tokens = 0
+                
+                # Ensure response_time_ms is an integer
+                if not isinstance(response_time, int):
+                    response_time = 0
+                
                 assistant_message = ChatMessage.objects.create(
                     session=session,
                     role='assistant',
                     content=result['final_response'],
                     llm_provider='conductor' if result.get('conductor_used') else 'multi',
                     metadata=result,
-                    tokens_used=result['metadata'].get('tokens', 0),
-                    response_time_ms=result['metadata'].get('response_time_ms', 0)
+                    tokens_used=tokens,
+                    response_time_ms=response_time
                 )
                 
                 # Save individual responses
                 if result.get('individual_responses'):
                     # Consensus mode
                     for llm_name, llm_data in result['individual_responses'].items():
+                        # Safely extract tokens and response_time_ms with type checking
+                        llm_tokens = llm_data['metadata'].get('tokens', 0)
+                        llm_response_time = llm_data['metadata'].get('response_time_ms', 0)
+                        
+                        # Ensure tokens is an integer, not a list
+                        if isinstance(llm_tokens, list):
+                            llm_tokens = sum(llm_tokens) if llm_tokens else 0
+                        elif not isinstance(llm_tokens, int):
+                            llm_tokens = 0
+                        
+                        # Ensure response_time_ms is an integer
+                        if not isinstance(llm_response_time, int):
+                            llm_response_time = 0
+                        
                         LLMResponse.objects.create(
                             message=assistant_message,
                             llm_provider=llm_name,
                             response_text=llm_data['response'],
-                            tokens_used=llm_data['metadata'].get('tokens', 0),
-                            response_time_ms=llm_data['metadata'].get('response_time_ms', 0),
+                            tokens_used=llm_tokens,
+                            response_time_ms=llm_response_time,
                             metadata=llm_data['metadata']
                         )
                 elif result.get('sub_task_results'):
                     # Orchestrated breakdown mode
                     for task_result in result['sub_task_results']:
+                        # Safely extract tokens and response_time_ms with type checking
+                        task_tokens = task_result['metadata'].get('tokens', 0)
+                        task_response_time = task_result['metadata'].get('response_time_ms', 0)
+                        
+                        # Ensure tokens is an integer, not a list
+                        if isinstance(task_tokens, list):
+                            task_tokens = sum(task_tokens) if task_tokens else 0
+                        elif not isinstance(task_tokens, int):
+                            task_tokens = 0
+                        
+                        # Ensure response_time_ms is an integer
+                        if not isinstance(task_response_time, int):
+                            task_response_time = 0
+                        
                         LLMResponse.objects.create(
                             message=assistant_message,
                             llm_provider=task_result['llm_used'],
                             response_text=task_result['response'],
-                            tokens_used=task_result['metadata'].get('tokens', 0),
-                            response_time_ms=task_result['metadata'].get('response_time_ms', 0),
+                            tokens_used=task_tokens,
+                            response_time_ms=task_response_time,
                             metadata={
                                 **task_result['metadata'],
                                 'task': task_result['task'],
@@ -509,14 +551,28 @@ def send_message(request):
         
         else:  # fastest, best, gemini_only, deepseek_only, power_duo, quickie, privacy
             if not is_private:
+                # Safely extract tokens and response_time_ms with type checking
+                single_tokens = result['metadata'].get('tokens', 0)
+                single_response_time = result['metadata'].get('response_time_ms', 0)
+                
+                # Ensure tokens is an integer, not a list
+                if isinstance(single_tokens, list):
+                    single_tokens = sum(single_tokens) if single_tokens else 0
+                elif not isinstance(single_tokens, int):
+                    single_tokens = 0
+                
+                # Ensure response_time_ms is an integer
+                if not isinstance(single_response_time, int):
+                    single_response_time = 0
+                
                 assistant_message = ChatMessage.objects.create(
                     session=session,
                     role='assistant',
                     content=result['response'],
                     llm_provider=result['provider'],
                     metadata=result,
-                    tokens_used=result['metadata'].get('tokens', 0),
-                    response_time_ms=result['metadata'].get('response_time_ms', 0)
+                    tokens_used=single_tokens,
+                    response_time_ms=single_response_time
                 )
             else:
                 assistant_message = None
