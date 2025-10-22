@@ -25,12 +25,16 @@ class LLMOrchestrator:
             # OpenAI GPT-4o - Latest Stable Model
             openai_key = os.getenv('OPENAI_API_KEY')
             if openai_key:
+                logger.info(f"OpenAI API key found (length: {len(openai_key)})")
                 self.openai_client = openai.OpenAI(api_key=openai_key)
+                logger.info("OpenAI client initialized successfully")
             else:
-                logger.warning("OpenAI API key not found")
+                logger.warning("OpenAI API key not found in environment")
                 self.openai_client = None
         except Exception as e:
-            logger.error(f"OpenAI init error: {e}")
+            logger.error(f"OpenAI init error: {type(e).__name__}: {str(e)}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             self.openai_client = None
         
         try:
@@ -59,12 +63,16 @@ class LLMOrchestrator:
             # Anthropic Claude - Creative Director
             claude_key = os.getenv('CLAUDE_API_KEY')
             if claude_key:
+                logger.info(f"Claude API key found (length: {len(claude_key)})")
                 self.claude_client = anthropic.Anthropic(api_key=claude_key)
+                logger.info("Claude client initialized successfully")
             else:
-                logger.warning("Claude API key not found")
+                logger.warning("Claude API key not found in environment")
                 self.claude_client = None
         except Exception as e:
-            logger.error(f"Claude init error: {e}")
+            logger.error(f"Claude init error: {type(e).__name__}: {str(e)}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             self.claude_client = None
         
         # Hugging Face - Johnny's Digital Clone
