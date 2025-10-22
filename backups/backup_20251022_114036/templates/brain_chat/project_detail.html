@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holly Hot Box - {{ project.name }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0d1b2a;
+            color: #e0e1dd;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #415a77;
+        }
+        
+        .back-btn {
+            background: #415a77;
+            border: 1px solid #778da9;
+            color: #a8dadc;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        
+        .back-btn:hover {
+            background: #a8dadc;
+            color: #0d1b2a;
+        }
+        
+        .delete-btn {
+            background: #e76f51;
+            border: 1px solid #c85a42;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .delete-btn:hover {
+            background: #c85a42;
+            transform: translateY(-1px);
+        }
+        
+        .project-header h1 {
+            color: #a8dadc;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .project-meta {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .priority-badge {
+            background: #e76f51;
+            color: #0d1b2a;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-badge {
+            background: #a8dadc;
+            color: #0d1b2a;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .content-section {
+            background: #1b263b;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #415a77;
+        }
+        
+        .content-section h2 {
+            color: #a8dadc;
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .content-section p {
+            color: #e0e1dd;
+            line-height: 1.6;
+        }
+        
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .tag {
+            background: #415a77;
+            color: #a8dadc;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .files-section {
+            background: #1b263b;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #415a77;
+        }
+        
+        .file-item {
+            background: #0d1b2a;
+            border: 1px solid #415a77;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .file-info h4 {
+            color: #a8dadc;
+            margin-bottom: 5px;
+        }
+        
+        .file-info p {
+            color: #778da9;
+            font-size: 12px;
+        }
+        
+        .file-type-badge {
+            background: #457b9d;
+            color: #e0e1dd;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #778da9;
+        }
+        
+        .empty-state h3 {
+            color: #a8dadc;
+            margin-bottom: 10px;
+        }
+        
+        .new-chat-btn {
+            background: #457b9d;
+            color: #e0e1dd;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .new-chat-btn:hover {
+            background: #a8dadc;
+            color: #0d1b2a;
+        }
+        
+        .chats-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .chat-item {
+            background: #0d1b2a;
+            border: 1px solid #415a77;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-item:hover {
+            background: #1b263b;
+            border-color: #457b9d;
+        }
+        
+        .chat-info h4 {
+            color: #a8dadc;
+            margin: 0 0 5px 0;
+            font-size: 16px;
+        }
+        
+        .chat-info p {
+            color: #778da9;
+            margin: 0;
+            font-size: 12px;
+        }
+        
+        .chat-type-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .chat-type-badge.quickie {
+            background: #f9a825;
+            color: #0d1b2a;
+        }
+        
+        .chat-type-badge.private {
+            background: #e76f51;
+            color: #0d1b2a;
+        }
+        
+        .chat-type-badge.normal {
+            background: #457b9d;
+            color: #e0e1dd;
+        }
+        
+        .edit-btn {
+            background: #457b9d;
+            color: #e0e1dd;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .edit-btn:hover {
+            background: #a8dadc;
+            color: #0d1b2a;
+        }
+        
+        .save-btn {
+            background: #2a9d8f;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .save-btn:hover {
+            background: #21867a;
+        }
+        
+        .cancel-btn {
+            background: #778da9;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .cancel-btn:hover {
+            background: #415a77;
+        }
+        
+        .delete-file-btn {
+            background: #e76f51;
+            border: none;
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .delete-file-btn:hover {
+            background: #c85a42;
+            transform: scale(1.1);
+        }
+        
+        .llm-selection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .llm-option {
+            background: #1b263b;
+            border: 2px solid #415a77;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .llm-option:hover {
+            border-color: #a8dadc;
+            background: #283845;
+        }
+        
+        .llm-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .llm-option input[type="checkbox"]:checked + span {
+            font-weight: 700;
+            color: #a8dadc;
+        }
+        
+        .llm-option span {
+            font-size: 14px;
+            color: #e0e1dd;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .project-meta {
+                flex-wrap: wrap;
+            }
+            
+            .file-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="window.location.href='/'">← Back to Home</button>
+            <div class="project-header">
+                <h1>📁 {{ project.name }}</h1>
+                <div class="project-meta">
+                    <span class="priority-badge">Priority {{ project.priority }}</span>
+                    <span class="status-badge">{{ project.status }}</span>
+                    <span style="color: #778da9;">Created {{ project.created_at|date:"M d, Y" }}</span>
+                </div>
+            </div>
+            <button class="delete-btn" onclick="deleteProject()">🗑️ Delete Project</button>
+        </div>
+        
+        <div class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>📝 Description</h2>
+                <button class="edit-btn" onclick="toggleEdit('description')">✏️ Edit</button>
+            </div>
+            <p id="description-display">{{ project.description|default:"No description yet. Click Edit to add one." }}</p>
+            <div id="description-edit" style="display: none;">
+                <textarea id="description-input" style="width: 100%; min-height: 100px; padding: 10px; border-radius: 6px; border: 1px solid #415a77; background: #0d1b2a; color: #e0e1dd; font-family: inherit;">{{ project.description }}</textarea>
+                <div style="margin-top: 10px; display: flex; gap: 10px;">
+                    <button class="save-btn" onclick="saveDescription()">💾 Save</button>
+                    <button class="cancel-btn" onclick="cancelEdit('description')">❌ Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>📋 Summary (Quick Notes for LLMs)</h2>
+                <button class="edit-btn" onclick="toggleEdit('summary')">✏️ Edit</button>
+            </div>
+            <p id="summary-display" style="font-style: italic; color: #a8dadc;">{{ project.summary|default:"No summary yet. This will help LLMs understand your project context quickly." }}</p>
+            <div id="summary-edit" style="display: none;">
+                <textarea id="summary-input" style="width: 100%; min-height: 150px; padding: 10px; border-radius: 6px; border: 1px solid #415a77; background: #0d1b2a; color: #e0e1dd; font-family: inherit;">{{ project.summary }}</textarea>
+                <div style="margin-top: 10px; display: flex; gap: 10px;">
+                    <button class="save-btn" onclick="saveSummary()">💾 Save</button>
+                    <button class="cancel-btn" onclick="cancelEdit('summary')">❌ Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>🤖 Selected LLMs</h2>
+                <button class="edit-btn" onclick="toggleEdit('llms')">✏️ Edit</button>
+            </div>
+            <div id="llms-display">
+                {% if project.selected_llms %}
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    {% for llm in project.selected_llms %}
+                    <span class="tag">
+                        {% if llm == 'gemini' %}⭐ Gemini Tier 3
+                        {% elif llm == 'deepseek' %}💎 DeepSeek
+                        {% elif llm == 'openai' %}🚀 GPT-5 Nano
+                        {% elif llm == 'claude' %}🧠 Claude Haiku 4.5
+                        {% elif llm == 'grok' %}⚡ SuperGrok
+                        {% elif llm == 'huggingface' %}🤗 HuggingFace
+                        {% else %}{{ llm|title }}
+                        {% endif %}
+                    </span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="color: #778da9;">No LLMs selected yet. Click Edit to choose.</p>
+                {% endif %}
+            </div>
+            <div id="llms-edit" style="display: none;">
+                <div class="llm-selection-grid">
+                    <label class="llm-option">
+                        <input type="checkbox" name="llms" value="gemini" {% if 'gemini' in project.selected_llms %}checked{% endif %}>
+                        <span>⭐ Gemini Tier 3</span>
+                    </label>
+                    <label class="llm-option">
+                        <input type="checkbox" name="llms" value="deepseek" {% if 'deepseek' in project.selected_llms %}checked{% endif %}>
+                        <span>💎 DeepSeek</span>
+                    </label>
+                    <label class="llm-option">
+                        <input type="checkbox" name="llms" value="openai" {% if 'openai' in project.selected_llms %}checked{% endif %}>
+                        <span>🚀 GPT-5 Nano</span>
+                    </label>
+                    <label class="llm-option">
+                        <input type="checkbox" name="llms" value="claude" {% if 'claude' in project.selected_llms %}checked{% endif %}>
+                        <span>🧠 Claude Haiku 4.5</span>
+                    </label>
+                    <label class="llm-option">
+                        <input type="checkbox" name="llms" value="grok" {% if 'grok' in project.selected_llms %}checked{% endif %}>
+                        <span>⚡ SuperGrok</span>
+                    </label>
+                    <label class="llm-option">
+                        <input type="checkbox" name="llms" value="huggingface" {% if 'huggingface' in project.selected_llms %}checked{% endif %}>
+                        <span>🤗 HuggingFace</span>
+                    </label>
+                </div>
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button class="save-btn" onclick="saveLLMs()">💾 Save</button>
+                    <button class="cancel-btn" onclick="cancelEdit('llms')">❌ Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        {% if project.tags %}
+        <div class="content-section">
+            <h2>🏷️ Tags</h2>
+            <div class="tags">
+                {% for tag in project.get_tags_list %}
+                <span class="tag">{{ tag }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>💬 Chats ({{ chats|length }})</h2>
+                <button onclick="createNewChat()" class="new-chat-btn">+ New Chat</button>
+            </div>
+            
+            {% if chats %}
+                <div class="chats-list">
+                    {% for chat in chats %}
+                    <div class="chat-item" onclick="openChat({{ chat.id }})">
+                        <div class="chat-info">
+                            <h4>{{ chat.title }}</h4>
+                            <p>{{ chat.messages.count }} messages • {{ chat.updated_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        <div class="chat-meta">
+                            {% if chat.is_quickie %}
+                            <span class="chat-type-badge quickie">Quickie</span>
+                            {% elif chat.is_private %}
+                            <span class="chat-type-badge private">Private</span>
+                            {% else %}
+                            <span class="chat-type-badge normal">Project Chat</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+            <div class="empty-state">
+                <h3>No chats yet</h3>
+                <p>Start a conversation with your selected LLMs for this project.</p>
+                <button onclick="createNewChat()" class="new-chat-btn" style="margin-top: 15px;">+ Create First Chat</button>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="files-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>📁 Files ({{ files|length }})</h2>
+                <button class="new-chat-btn" onclick="document.getElementById('file-upload-section').style.display='block'; this.style.display='none';">+ Upload Files</button>
+            </div>
+            
+            <div id="file-upload-section" style="display: none; background: #0d1b2a; padding: 20px; border-radius: 8px; border: 1px solid #457b9d; margin-bottom: 20px;">
+                <h3 style="color: #a8dadc; margin-bottom: 15px;">Upload Additional Files</h3>
+                <div style="margin-bottom: 15px;">
+                    <input type="file" id="additional-files" multiple accept=".txt,.json,.md,.pdf,.docx,.png,.jpg,.jpeg,.eml,.msg,.mbox" style="display: block; margin-bottom: 10px; color: #e0e1dd;">
+                    <p style="font-size: 12px; color: #778da9;">Supported: Text, JSON, Markdown, PDF, DOCX, Images, Email (.eml, .msg, .mbox)</p>
+                </div>
+                <div id="file-list" style="margin-bottom: 15px;"></div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="save-btn" onclick="uploadAdditionalFiles()">📤 Upload Files</button>
+                    <button class="cancel-btn" onclick="document.getElementById('file-upload-section').style.display='none'; document.querySelector('.new-chat-btn').style.display='block';">❌ Cancel</button>
+                </div>
+            </div>
+            
+            {% if files %}
+                {% for file in files %}
+                <div class="file-item" id="file-{{ file.id }}">
+                    <div class="file-info">
+                        <h4>📄 {{ file.file_name }}</h4>
+                        <p>{{ file.file_size|filesizeformat }} • {{ file.content_type|title }}</p>
+                        {% if file.summary %}
+                        <p style="margin-top: 8px; font-size: 11px; color: #a8dadc;">{{ file.summary|truncatewords:20 }}</p>
+                        {% endif %}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="file-type-badge">{{ file.content_type|title }}</span>
+                        <button class="delete-file-btn" onclick="deleteFile({{ file.id }}, '{{ file.file_name }}')">🗑️</button>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <h3>No files uploaded yet</h3>
+                <p>Upload files to this project to get AI-powered analysis and summaries.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        function createNewChat() {
+            // Create a new chat session for this project
+            fetch('/chat/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    'project_id': {{ project.id }},
+                    'title': 'New Chat - {{ project.name }}'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Redirect to chat interface
+                    window.location.href = `/chat/${data.chat_id}/`;
+                } else {
+                    alert('Error creating chat: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error creating chat');
+            });
+        }
+        
+        function openChat(chatId) {
+            // Open existing chat
+            window.location.href = `/chat/${chatId}/`;
+        }
+        
+        function deleteProject() {
+            // Confirm deletion
+            if (!confirm('⚠️ Are you sure you want to delete "{{ project.name }}"?\n\nThis will permanently delete:\n• The project\n• All associated chats ({{ chats|length }} chat{{ chats|length|pluralize }})\n• All uploaded files ({{ files|length }} file{{ files|length|pluralize }})\n\nThis action CANNOT be undone!')) {
+                return;
+            }
+            
+            // Delete the project
+            fetch('/project/{{ project.id }}/delete/', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('✅ Project deleted successfully');
+                    window.location.href = '/';
+                } else {
+                    alert('❌ Error deleting project: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error deleting project');
+            });
+        }
+        
+        function toggleEdit(field) {
+            document.getElementById(field + '-display').style.display = 'none';
+            document.getElementById(field + '-edit').style.display = 'block';
+        }
+        
+        function cancelEdit(field) {
+            document.getElementById(field + '-display').style.display = 'block';
+            document.getElementById(field + '-edit').style.display = 'none';
+        }
+        
+        function saveDescription() {
+            const newDescription = document.getElementById('description-input').value;
+            
+            fetch('/project/{{ project.id }}/update/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ description: newDescription })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('description-display').textContent = newDescription || 'No description yet. Click Edit to add one.';
+                    cancelEdit('description');
+                } else {
+                    alert('❌ Error saving description');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error saving description');
+            });
+        }
+        
+        function saveSummary() {
+            const newSummary = document.getElementById('summary-input').value;
+            
+            fetch('/project/{{ project.id }}/update/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ summary: newSummary })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('summary-display').textContent = newSummary || 'No summary yet. This will help LLMs understand your project context quickly.';
+                    cancelEdit('summary');
+                } else {
+                    alert('❌ Error saving summary');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error saving summary');
+            });
+        }
+        
+        function saveLLMs() {
+            // Get all checked LLMs
+            const selectedLLMs = [];
+            document.querySelectorAll('input[name="llms"]:checked').forEach(checkbox => {
+                selectedLLMs.push(checkbox.value);
+            });
+            
+            if (selectedLLMs.length === 0) {
+                alert('⚠️ Please select at least one LLM');
+                return;
+            }
+            
+            fetch('/project/{{ project.id }}/update/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ selected_llms: selectedLLMs })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Reload page to show updated LLMs
+                    window.location.reload();
+                } else {
+                    alert('❌ Error saving LLMs');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error saving LLMs');
+            });
+        }
+        
+        function uploadAdditionalFiles() {
+            const files = document.getElementById('additional-files').files;
+            
+            if (files.length === 0) {
+                alert('Please select at least one file');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('project_id', '{{ project.id }}');
+            
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files[]', files[i]);
+            }
+            
+            fetch('/project/{{ project.id }}/upload-files/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('✅ Files uploaded successfully!');
+                    window.location.reload();
+                } else {
+                    alert('❌ Error uploading files: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error uploading files');
+            });
+        }
+        
+        function deleteFile(fileId, fileName) {
+            // Confirm deletion
+            if (!confirm(`🗑️ Delete "${fileName}"?\n\nThis action cannot be undone.`)) {
+                return;
+            }
+            
+            fetch(`/project/{{ project.id }}/file/${fileId}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Remove the file item from the DOM
+                    const fileElement = document.getElementById(`file-${fileId}`);
+                    if (fileElement) {
+                        fileElement.style.opacity = '0';
+                        setTimeout(() => {
+                            fileElement.remove();
+                            // Update file count in header
+                            const fileCount = document.querySelectorAll('.file-item').length;
+                            document.querySelector('.files-section h2').textContent = `📁 Files (${fileCount})`;
+                        }, 300);
+                    }
+                } else {
+                    alert('❌ Error deleting file: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error deleting file');
+            });
+        }
+    </script>
+</body>
+</html>

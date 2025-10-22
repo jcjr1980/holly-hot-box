@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holly Hot Box - Multi-LLM Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            background: #34495e;
+            border-bottom: 1px solid #3a506b;
+        }
+        
+        .sidebar-header h1 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-header p {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .new-chat-btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+        
+        .new-chat-btn:hover {
+            background: #764ba2;
+        }
+        
+        .sessions-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .session-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #34495e;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .session-item:hover {
+            background: #3a506b;
+        }
+        
+        .session-item.active {
+            background: #667eea;
+        }
+        
+        .session-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .session-date {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+        
+        .sidebar-footer {
+            padding: 15px;
+            background: #34495e;
+            border-top: 1px solid #3a506b;
+        }
+        
+        .logout-btn {
+            width: 100%;
+            padding: 10px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        /* Main Chat Area */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            padding: 20px 30px;
+            background: white;
+            border-bottom: 1px solid #e1e8ed;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-title h2 {
+            font-size: 20px;
+            color: #2c3e50;
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .mode-btn {
+            padding: 8px 16px;
+            border: 2px solid #e1e8ed;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .mode-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .mode-btn.gemini-premium {
+            border-color: #4285f4;
+            color: #4285f4;
+            font-weight: 700;
+        }
+        
+        .mode-btn.gemini-premium:hover {
+            border-color: #4285f4;
+            background: #4285f4;
+            color: white;
+        }
+        
+        .mode-btn.gemini-premium.active {
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            border-color: #4285f4;
+            color: white;
+        }
+        
+        .mode-btn.deepseek-premium {
+            border-color: #7c3aed;
+            color: #7c3aed;
+            font-weight: 700;
+        }
+        
+        .mode-btn.deepseek-premium:hover {
+            border-color: #7c3aed;
+            background: #7c3aed;
+            color: white;
+        }
+        
+        .mode-btn.deepseek-premium.active {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            border-color: #7c3aed;
+            color: white;
+        }
+        
+        .mode-btn.power-duo-btn {
+            border-color: #f59e0b;
+            color: #f59e0b;
+            font-weight: 800;
+        }
+        
+        .mode-btn.power-duo-btn:hover {
+            border-color: #f59e0b;
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .mode-btn.quickie-btn {
+            border-color: #10b981;
+            color: #10b981;
+            font-weight: 700;
+        }
+        
+        .mode-btn.quickie-btn:hover {
+            background: #10b981;
+            color: white;
+        }
+        
+        .mode-btn.privacy-btn {
+            border-color: #ef4444;
+            color: #ef4444;
+            font-weight: 700;
+        }
+        
+        .mode-btn.privacy-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .mode-btn.power-duo-btn.active {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            border-color: #f59e0b;
+            color: white;
+        }
+        
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            background: #f5f7fa;
+        }
+        
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.user {
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .message.assistant {
+            display: flex;
+            justify-content: flex-start;
+        }
+        
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 12px;
+        }
+        
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .message.assistant .message-content {
+            background: white;
+            color: #2c3e50;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .message-meta {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 8px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .message-meta span {
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .input-area {
+            padding: 20px 30px;
+            background: white;
+            border-top: 1px solid #e1e8ed;
+        }
+        
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+        
+        #message-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: none;
+            min-height: 56px;
+            max-height: 150px;
+        }
+        
+        #message-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .send-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+        
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+        
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .empty-state h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        /* Floating Action Buttons */
+        .fab-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+        }
+        
+        .fab {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+        
+        .fab-project {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .fab-diary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            font-size: 24px;
+            color: #333;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .modal-close:hover {
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input[type="text"],
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+        
+        .btn-secondary {
+            background: #e1e8ed;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+        
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 40vh;
+                position: relative;
+            }
+            
+            .sidebar-header h1 {
+                font-size: 16px;
+            }
+            
+            .sidebar-header p {
+                font-size: 11px;
+            }
+            
+            .sessions-list {
+                max-height: 25vh;
+            }
+            
+            .session-item {
+                padding: 8px;
+            }
+            
+            .session-title {
+                font-size: 12px;
+            }
+            
+            .session-date {
+                font-size: 10px;
+            }
+            
+            .chat-container {
+                flex: 1;
+                height: 60vh;
+            }
+            
+            .chat-header {
+                padding: 10px;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .chat-title h2 {
+                font-size: 16px;
+            }
+            
+            .mode-selector {
+                flex-wrap: wrap;
+                gap: 6px;
+                justify-content: flex-start;
+            }
+            
+            .mode-btn {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+            
+            .messages-container {
+                padding: 10px;
+            }
+            
+            .message {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .message-meta {
+                font-size: 10px;
+            }
+            
+            .input-container {
+                padding: 10px;
+            }
+            
+            .message-input {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .send-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+            
+            .fab-container {
+                bottom: 15px;
+                right: 15px;
+                gap: 10px;
+            }
+            
+            .fab {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+                max-height: 90vh;
+            }
+            
+            .modal-header h2 {
+                font-size: 18px;
+            }
+            
+            .form-group label {
+                font-size: 13px;
+            }
+            
+            .form-group input[type="text"],
+            .form-group textarea,
+            .form-group select {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+            
+            .logout-btn {
+                padding: 8px;
+                font-size: 12px;
+            }
+        }
+        
+        /* Small Mobile (phones in portrait) */
+        @media (max-width: 480px) {
+            .sidebar-header {
+                padding: 15px;
+            }
+            
+            .new-chat-btn {
+                padding: 10px;
+                font-size: 13px;
+            }
+            
+            .mode-btn {
+                padding: 5px 8px;
+                font-size: 10px;
+            }
+            
+            .message {
+                font-size: 13px;
+            }
+            
+            .fab {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+            
+            .fab-container {
+                bottom: 10px;
+                right: 10px;
+            }
+            
+            .modal-content {
+                padding: 15px;
+            }
+            
+            .modal-header h2 {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>🔥 Holly Hot Box</h1>
+                <p>Welcome, {{ request.user.username }}</p>
+                <button class="new-chat-btn" onclick="newChat()">+ New Chat</button>
+            </div>
+            
+            <div class="sessions-list">
+                {% for session in sessions %}
+                <div class="session-item {% if session.id == active_session.id %}active{% endif %}" 
+                     onclick="loadSession({{ session.id }})">
+                    <div class="session-title">{{ session.title }}</div>
+                    <div class="session-date">{{ session.updated_at|date:"M d, Y H:i" }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="window.location.href='{% url 'logout' %}'">Logout</button>
+            </div>
+        </div>
+        
+        <!-- Main Chat Area -->
+        <div class="chat-area">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <h2>{{ active_session.title }}</h2>
+                </div>
+                <div class="mode-selector">
+                    <button class="mode-btn power-duo-btn" data-mode="power_duo" onclick="setMode('power_duo')" title="Gemini + DeepSeek Power Duo">
+                        ⚡ Power Duo
+                    </button>
+                    <button class="mode-btn active" data-mode="consensus" onclick="setMode('consensus')" title="All 6 LLMs - Gemini & DeepSeek lead">
+                        Consensus
+                    </button>
+                    <button class="mode-btn gemini-premium" data-mode="gemini_only" onclick="setMode('gemini_only')" title="Gemini Tier 3 Premium ONLY">
+                        ⭐ Gemini
+                    </button>
+                    <button class="mode-btn deepseek-premium" data-mode="deepseek_only" onclick="setMode('deepseek_only')" title="DeepSeek Reasoner ONLY - Ultra Cost-Effective">
+                        💎 DeepSeek
+                    </button>
+                    <button class="mode-btn" data-mode="best" onclick="setMode('best')" title="Gemini evaluates best response">
+                        Best
+                    </button>
+                    <button class="mode-btn" data-mode="parallel" onclick="setMode('parallel')">
+                        All 6
+                    </button>
+                    <button class="mode-btn quickie-btn" data-mode="quickie" onclick="setMode('quickie')" title="Quick one-off question - Saved for future reference">
+                        ⚡ Quickie!
+                    </button>
+                    <button class="mode-btn privacy-btn" data-mode="privacy" onclick="setMode('privacy')" title="Private mode - Not saved to database">
+                        🔒 Privacy Please
+                    </button>
+                </div>
+            </div>
+            
+            <div class="messages-container" id="messages-container">
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="message {{ message.role }}">
+                        <div class="message-content">
+                            {{ message.content }}
+                            {% if message.llm_provider %}
+                            <div class="message-meta">
+                                <span>🤖 {{ message.llm_provider }}</span>
+                                {% if message.tokens_used %}
+                                <span>📊 {{ message.tokens_used }} tokens</span>
+                                {% endif %}
+                                {% if message.response_time_ms %}
+                                <span>⚡ {{ message.response_time_ms }}ms</span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <h3>🚀 Welcome to Holly Hot Box!</h3>
+                        <p>Your Multi-LLM Brain Child is ready to help.</p>
+                        <p><strong>Power Duo Leadership:</strong></p>
+                        <p>⭐ <strong>Gemini Tier 3</strong> (Premium Synthesis) • 💎 <strong>DeepSeek Reasoner</strong> (Deep Thinking)</p>
+                        <p><strong>Supporting Team:</strong></p>
+                        <p>OpenAI GPT-4o • Claude • Grok • Hugging Face</p>
+                        <p style="margin-top: 20px; color: #4285f4;"><strong>🌟 Gemini Tier 3 Premium + 💎 DeepSeek Reasoner</strong></p>
+                        <p style="color: #10b981; font-weight: 600;">Premium Intelligence • Ultra Cost-Effective • Deep Reasoning</p>
+                        <p style="margin-top: 15px;">Try <strong>⚡ Power Duo</strong> mode for the ultimate combination!</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="message-input" 
+                        placeholder="Ask anything... All 6 LLMs are listening 👂"
+                        onkeypress="handleKeyPress(event)"
+                    ></textarea>
+                    <button class="send-btn" id="send-btn" onclick="sendMessage()">
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Floating Action Buttons -->
+    <div class="fab-container">
+        <button class="fab fab-project" onclick="openProjectModal()" title="New Project">
+            📁
+        </button>
+        <button class="fab fab-diary" onclick="openDiaryModal()" title="Diary Note">
+            📝
+        </button>
+    </div>
+    
+    <!-- New Project Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🚀 Create New Project</h2>
+                <button class="modal-close" onclick="closeProjectModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="project-name">Project Name *</label>
+                <input type="text" id="project-name" placeholder="e.g., SearchAI Market Research" required>
+            </div>
+            <div class="form-group">
+                <label for="project-description">Description</label>
+                <textarea id="project-description" placeholder="Describe your project..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="project-priority">Priority</label>
+                <select id="project-priority">
+                    <option value="1">1 - Low</option>
+                    <option value="2">2</option>
+                    <option value="3" selected>3 - Medium</option>
+                    <option value="4">4</option>
+                    <option value="5">5 - Urgent</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="project-tags">Tags (comma-separated)</label>
+                <input type="text" id="project-tags" placeholder="research, business, strategy">
+            </div>
+            <div class="form-group">
+                <label>Select LLMs</label>
+                <div style="margin-bottom: 15px;">
+                    <button type="button" class="btn btn-secondary" onclick="autoSuggestLLMs()">
+                        🤖 Auto-Suggest LLMs
+                    </button>
+                </div>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="llm-gemini" value="gemini" checked>
+                        <label for="llm-gemini">⭐ Gemini Tier 3</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="llm-deepseek" value="deepseek" checked>
+                        <label for="llm-deepseek">💎 DeepSeek</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="llm-openai" value="openai">
+                        <label for="llm-openai">OpenAI GPT-4o</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="llm-claude" value="claude">
+                        <label for="llm-claude">Claude</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="llm-grok" value="grok">
+                        <label for="llm-grok">Grok</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="llm-huggingface" value="huggingface">
+                        <label for="llm-huggingface">HuggingFace</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeProjectModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createProject()">Create Project</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Diary Note Modal -->
+    <div id="diaryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📝 Quick Diary Note</h2>
+                <button class="modal-close" onclick="closeDiaryModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="diary-content">What's on your mind? *</label>
+                <textarea id="diary-content" placeholder="e.g., Stop being nice to people that waste my time..." required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="diary-mood">Mood (optional)</label>
+                <input type="text" id="diary-mood" placeholder="e.g., frustrated, inspired, focused">
+            </div>
+            <div class="form-group">
+                <label for="diary-tags">Tags (optional)</label>
+                <input type="text" id="diary-tags" placeholder="reminder, business, personal">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeDiaryModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createDiaryNote()">Save Note</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentMode = 'consensus';
+        let currentSessionId = {{ active_session.id|default:"null" }};
+        
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+        }
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Disable input and button
+            input.disabled = true;
+            const sendBtn = document.getElementById('send-btn');
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<span class="loading"></span>';
+            
+            // Add user message to UI immediately
+            addMessageToUI('user', message);
+            input.value = '';
+            
+            try {
+                const response = await fetch('/send-message/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        mode: currentMode,
+                        session_id: currentSessionId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentSessionId = data.session_id;
+                    addMessageToUI('assistant', data.response, data.metadata);
+                } else {
+                    addMessageToUI('assistant', 'Error: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                addMessageToUI('assistant', 'Error: ' + error.message);
+            } finally {
+                input.disabled = false;
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = 'Send';
+                input.focus();
+            }
+        }
+        
+        function addMessageToUI(role, content, metadata = {}) {
+            const container = document.getElementById('messages-container');
+            
+            // Remove empty state if exists
+            const emptyState = container.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            let metaHtml = '';
+            if (role === 'assistant' && metadata) {
+                const provider = metadata.provider || metadata.mode || 'multi';
+                const tokens = metadata.tokens || (metadata.metadata && metadata.metadata.tokens) || 0;
+                const time = metadata.response_time_ms || (metadata.metadata && metadata.metadata.response_time_ms) || 0;
+                
+                metaHtml = `
+                    <div class="message-meta">
+                        <span>🤖 ${provider}</span>
+                        ${tokens ? `<span>📊 ${tokens} tokens</span>` : ''}
+                        ${time ? `<span>⚡ ${time}ms</span>` : ''}
+                    </div>
+                `;
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    ${content}
+                    ${metaHtml}
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function newChat() {
+            window.location.href = '/new-session/';
+        }
+        
+        function loadSession(sessionId) {
+            window.location.href = `/session/${sessionId}/`;
+        }
+        
+        // Auto-scroll to bottom on page load
+        window.addEventListener('load', () => {
+            const container = document.getElementById('messages-container');
+            container.scrollTop = container.scrollHeight;
+            document.getElementById('message-input').focus();
+        });
+        
+        // Project Modal Functions
+        function openProjectModal() {
+            document.getElementById('projectModal').classList.add('active');
+        }
+        
+        function closeProjectModal() {
+            document.getElementById('projectModal').classList.remove('active');
+        }
+        
+        function autoSuggestLLMs() {
+            const description = document.getElementById('project-description').value;
+            if (!description) {
+                alert('Please enter a project description first');
+                return;
+            }
+            
+            // Show loading state
+            const btn = event.target;
+            btn.textContent = '🤖 Analyzing...';
+            btn.disabled = true;
+            
+            // This will be handled by the create project endpoint
+            // For now, suggest Gemini + DeepSeek by default
+            document.getElementById('llm-gemini').checked = true;
+            document.getElementById('llm-deepseek').checked = true;
+            
+            btn.textContent = '🤖 Auto-Suggest LLMs';
+            btn.disabled = false;
+        }
+        
+        async function createProject() {
+            const name = document.getElementById('project-name').value.trim();
+            const description = document.getElementById('project-description').value.trim();
+            const priority = document.getElementById('project-priority').value;
+            const tags = document.getElementById('project-tags').value.trim();
+            
+            if (!name) {
+                alert('Project name is required');
+                return;
+            }
+            
+            const selected_llms = [];
+            document.querySelectorAll('#projectModal input[type="checkbox"]:checked').forEach(cb => {
+                selected_llms.push(cb.value);
+            });
+            
+            try {
+                const response = await fetch('/projects/create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        name,
+                        description,
+                        priority: parseInt(priority),
+                        tags,
+                        selected_llms
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert('Project created successfully!');
+                    closeProjectModal();
+                    location.reload(); // Reload to show new project
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error creating project: ' + error);
+            }
+        }
+        
+        // Diary Modal Functions
+        function openDiaryModal() {
+            document.getElementById('diaryModal').classList.add('active');
+        }
+        
+        function closeDiaryModal() {
+            document.getElementById('diaryModal').classList.remove('active');
+            document.getElementById('diary-content').value = '';
+            document.getElementById('diary-mood').value = '';
+            document.getElementById('diary-tags').value = '';
+        }
+        
+        async function createDiaryNote() {
+            const content = document.getElementById('diary-content').value.trim();
+            const mood = document.getElementById('diary-mood').value.trim();
+            const tags = document.getElementById('diary-tags').value.trim();
+            
+            if (!content) {
+                alert('Please enter some content');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/diary/create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        content,
+                        mood,
+                        tags
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert('Diary note saved! 📝');
+                    closeDiaryModal();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error saving note: ' + error);
+            }
+        }
+    </script>
+</body>
+</html>
+
