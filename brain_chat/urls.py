@@ -38,7 +38,7 @@ urlpatterns = [
     path('diary/create/', views.create_diary_note, name='create_diary_note'),
     
     # System
-    path('health/', views.health_check, name='health_check'),
+    path('health/', views.health_check_view, name='health_check'),
     path('setup-db/', views.setup_database, name='setup_database'),
     path('test-llms/', views.test_llms, name='test_llms'),
     path('send-sms/', views.send_sms_notification, name='send_sms'),

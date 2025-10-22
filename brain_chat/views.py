@@ -1288,3 +1288,31 @@ def send_sms_notification(request):
     except Exception as e:
         logger.error(f"Error in send_sms_notification: {e}")
         return JsonResponse({"error": str(e)}, status=500)
+
+def health_check_view(request):
+    """Simple health check to verify dependencies are installed"""
+    try:
+        # Test if all required modules can be imported
+        import anthropic
+        import google.generativeai as genai
+        import openai
+        from huggingface_hub import InferenceClient
+        import requests
+        
+        return JsonResponse({
+            'status': 'healthy',
+            'dependencies': {
+                'anthropic': '✓',
+                'google.generativeai': '✓', 
+                'openai': '✓',
+                'huggingface_hub': '✓',
+                'requests': '✓'
+            },
+            'message': 'All LLM dependencies are available'
+        })
+    except ImportError as e:
+        return JsonResponse({
+            'status': 'error',
+            'error': f'Missing dependency: {str(e)}',
+            'message': 'Some LLM dependencies are missing'
+        }, status=500)
