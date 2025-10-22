@@ -65,7 +65,7 @@ class LLMOrchestrator:
             logger.info(f"HuggingFace API key found (length: {len(self.hf_key)})")
         else:
             logger.warning("HuggingFace API key not found in environment")
-        self.hf_base_url = "https://api-inference.huggingface.co/models"
+        self.hf_base_url = "https://router.huggingface.co/hf-inference"
         
         # DeepSeek Reasoner - DEEP THINKING at ultra-low cost! 
         # DeepSeek-V3.2 Reasoner is incredibly cost-effective
