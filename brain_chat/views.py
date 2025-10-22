@@ -18,6 +18,7 @@ from .models import Project, ChatSession, ChatMessage, LLMResponse, DiaryNote, U
 from .llm_orchestrator import LLMOrchestrator
 from .query_conductor import QueryConductor
 from .summarization_service import FileSummarizer
+from .twilio_utils import TwilioSMS
 
 logger = logging.getLogger(__name__)
 
@@ -1139,3 +1140,44 @@ def delete_project_file(request, project_id, file_id):
     except Exception as e:
         logger.error(f"File deletion error: {e}")
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def send_sms_notification(request):
+    """Send SMS notification using Twilio"""
+    try:
+        if request.method == 'POST':
+            data = json.loads(request.body)
+            phone_number = data.get('phone_number')
+            message = data.get('message', 'Holly Hot Box - All 6 LLM\'s Are Working!')
+            
+            if not phone_number:
+                return JsonResponse({"error": "Phone number required"}, status=400)
+            
+            # Initialize Twilio SMS
+            sms = TwilioSMS()
+            
+            # Send the message
+            result = sms.send_sms(phone_number, message)
+            
+            if result['success']:
+                logger.info(f"SMS sent successfully to {phone_number}")
+                return JsonResponse({
+                    "success": True,
+                    "message": "SMS sent successfully!",
+                    "message_sid": result.get('message_sid'),
+                    "status": result.get('status')
+                })
+            else:
+                logger.error(f"Failed to send SMS: {result.get('error')}")
+                return JsonResponse({
+                    "success": False,
+                    "error": result.get('error', 'Unknown error')
+                }, status=500)
+        
+        else:
+            return JsonResponse({"error": "POST method required"}, status=405)
+            
+    except Exception as e:
+        logger.error(f"Error in send_sms_notification: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
