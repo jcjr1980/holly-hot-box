@@ -21,21 +21,13 @@ class LLMOrchestrator:
     
     def __init__(self):
         """Initialize all LLM clients"""
-        try:
-            # OpenAI GPT-4o - Latest Stable Model
-            openai_key = os.getenv('OPENAI_API_KEY')
-            if openai_key:
-                logger.info(f"OpenAI API key found (length: {len(openai_key)})")
-                self.openai_client = openai.OpenAI(api_key=openai_key)
-                logger.info("OpenAI client initialized successfully")
-            else:
-                logger.warning("OpenAI API key not found in environment")
-                self.openai_client = None
-        except Exception as e:
-            logger.error(f"OpenAI init error: {type(e).__name__}: {str(e)}")
-            import traceback
-            logger.error(f"Traceback: {traceback.format_exc()}")
-            self.openai_client = None
+        # OpenAI GPT-4o - Using REST API instead of SDK to avoid initialization issues
+        self.openai_key = os.getenv('OPENAI_API_KEY')
+        if self.openai_key:
+            logger.info(f"OpenAI API key found (length: {len(self.openai_key)})")
+        else:
+            logger.warning("OpenAI API key not found in environment")
+        self.openai_base_url = "https://api.openai.com/v1"
         
         try:
             # Google Gemini Tier 3 - PRIMARY STRATEGIST (Premium Access!)
@@ -59,21 +51,13 @@ class LLMOrchestrator:
             logger.error(f"Gemini init error: {e}")
             self.gemini_model = None
         
-        try:
-            # Anthropic Claude - Creative Director
-            claude_key = os.getenv('CLAUDE_API_KEY')
-            if claude_key:
-                logger.info(f"Claude API key found (length: {len(claude_key)})")
-                self.claude_client = anthropic.Anthropic(api_key=claude_key)
-                logger.info("Claude client initialized successfully")
-            else:
-                logger.warning("Claude API key not found in environment")
-                self.claude_client = None
-        except Exception as e:
-            logger.error(f"Claude init error: {type(e).__name__}: {str(e)}")
-            import traceback
-            logger.error(f"Traceback: {traceback.format_exc()}")
-            self.claude_client = None
+        # Anthropic Claude - Using REST API instead of SDK to avoid initialization issues
+        self.claude_key = os.getenv('CLAUDE_API_KEY')
+        if self.claude_key:
+            logger.info(f"Claude API key found (length: {len(self.claude_key)})")
+        else:
+            logger.warning("Claude API key not found in environment")
+        self.claude_base_url = "https://api.anthropic.com/v1"
         
         # Hugging Face - Johnny's Digital Clone
         # Temporarily disabled due to API compatibility issues
@@ -93,9 +77,9 @@ class LLMOrchestrator:
         self.grok_key = os.getenv('GROK_API_KEY')
     
     def query_openai(self, prompt: str, conversation_history: List[Dict] = None) -> Tuple[str, Dict]:
-        """Query OpenAI GPT-5 Nano - Cost-effective GPT-5 variant"""
-        if not self.openai_client:
-            return "OpenAI is temporarily unavailable", {"error": "Client not initialized"}
+        """Query OpenAI GPT-4o - Using REST API"""
+        if not self.openai_key:
+            return "OpenAI is temporarily unavailable", {"error": "API key not found"}
         
         try:
             start_time = time.time()
@@ -103,20 +87,39 @@ class LLMOrchestrator:
             messages = conversation_history or []
             messages.append({"role": "user", "content": prompt})
             
-            response = self.openai_client.chat.completions.create(
-                model="gpt-4o",  # Using GPT-4o - latest stable model
-                messages=messages,
-                temperature=0.7,
-                max_tokens=2000
+            headers = {
+                "Authorization": f"Bearer {self.openai_key}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "model": "gpt-4o",
+                "messages": messages,
+                "temperature": 0.7,
+                "max_tokens": 2000
+            }
+            
+            response = requests.post(
+                f"{self.openai_base_url}/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=30
             )
             
             response_time = int((time.time() - start_time) * 1000)
             
-            return response.choices[0].message.content, {
-                "tokens": response.usage.total_tokens,
-                "response_time_ms": response_time,
-                "model": "gpt-5-nano"
-            }
+            if response.status_code == 200:
+                data = response.json()
+                return data['choices'][0]['message']['content'], {
+                    "tokens": data['usage']['total_tokens'],
+                    "response_time_ms": response_time,
+                    "model": "gpt-4o (REST API)"
+                }
+            else:
+                error_msg = f"HTTP {response.status_code}: {response.text}"
+                logger.error(f"OpenAI error: {error_msg}")
+                return f"OpenAI Error: {error_msg}", {"error": error_msg}
+                
         except Exception as e:
             logger.error(f"OpenAI error: {e}")
             return f"OpenAI Error: {str(e)}", {"error": str(e)}
@@ -178,9 +181,9 @@ Please provide a comprehensive, well-reasoned response leveraging your advanced 
             return f"Gemini Error: {str(e)}", {"error": str(e)}
     
     def query_claude(self, prompt: str, conversation_history: List[Dict] = None, preferred_model: str = "haiku") -> Tuple[str, Dict]:
-        """Query Anthropic Claude - Haiku 4.5 default with Sonnet 4.5 and Opus 4.1 available"""
-        if not self.claude_client:
-            return "Claude is temporarily unavailable", {"error": "Client not initialized"}
+        """Query Anthropic Claude - Using REST API"""
+        if not self.claude_key:
+            return "Claude is temporarily unavailable", {"error": "API key not found"}
         
         try:
             start_time = time.time()
@@ -204,25 +207,45 @@ Please provide a comprehensive, well-reasoned response leveraging your advanced 
             
             for model in models_to_try:
                 try:
-                    response = self.claude_client.messages.create(
-                        model=model,
-                        max_tokens=4000,
-                        messages=messages
+                    headers = {
+                        "x-api-key": self.claude_key,
+                        "anthropic-version": "2023-06-01",
+                        "content-type": "application/json"
+                    }
+                    
+                    payload = {
+                        "model": model,
+                        "max_tokens": 4000,
+                        "messages": messages
+                    }
+                    
+                    response = requests.post(
+                        f"{self.claude_base_url}/messages",
+                        headers=headers,
+                        json=payload,
+                        timeout=30
                     )
                     
                     response_time = int((time.time() - start_time) * 1000)
                     
-                    # Determine friendly name
-                    model_name = "Claude Haiku 4.5" if "haiku" in model else \
-                                "Claude Sonnet 4.5" if "sonnet" in model else \
-                                "Claude Opus 4.1"
-                    
-                    return response.content[0].text, {
-                        "tokens": response.usage.input_tokens + response.usage.output_tokens,
-                        "response_time_ms": response_time,
-                        "model": model_name,
-                        "model_tier": "fast" if "haiku" in model else "balanced" if "sonnet" in model else "premium"
-                    }
+                    if response.status_code == 200:
+                        data = response.json()
+                        
+                        # Determine friendly name
+                        model_name = "Claude Haiku 3.5" if "haiku" in model else \
+                                    "Claude Sonnet 3.5" if "sonnet" in model else \
+                                    "Claude Opus 3"
+                        
+                        return data['content'][0]['text'], {
+                            "tokens": data['usage']['input_tokens'] + data['usage']['output_tokens'],
+                            "response_time_ms": response_time,
+                            "model": f"{model_name} (REST API)",
+                            "model_tier": "fast" if "haiku" in model else "balanced" if "sonnet" in model else "premium"
+                        }
+                    else:
+                        logger.debug(f"Claude model {model} failed with HTTP {response.status_code}")
+                        continue
+                        
                 except Exception as model_error:
                     logger.debug(f"Claude model {model} failed, trying next: {model_error}")
                     continue
