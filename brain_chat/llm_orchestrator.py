@@ -182,9 +182,9 @@ Please provide a comprehensive, well-reasoned response leveraging your advanced 
             
             # Model selection based on preference or intelligent fallback
             model_map = {
-                "haiku": "claude-haiku-4.5-20250514",      # Default: Fast & cost-effective
-                "sonnet": "claude-sonnet-4.5-20250514",    # Balanced: Higher intelligence
-                "opus": "claude-opus-4.1-20250514"          # Premium: Maximum power
+                "haiku": "claude-3-5-haiku-20241022",      # Default: Fast & cost-effective
+                "sonnet": "claude-3-5-sonnet-20241022",    # Balanced: Higher intelligence
+                "opus": "claude-3-opus-20240229"           # Premium: Maximum power
             }
             
             # Try preferred model first, then fallback
