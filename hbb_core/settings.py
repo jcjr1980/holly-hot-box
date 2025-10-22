@@ -24,7 +24,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-holly-hot-box-dev-key-chan
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,hbb.johnnycollins.io,hhb.johnnycollins.io,holly-hot-box-production.up.railway.app').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,hbb.johnnycollins.io,hhb.johnnycollins.io,holly-hot-box-production.up.railway.app,hollyhotbox.com,www.hollyhotbox.com').split(',')
 
 # CSRF settings for production
 CSRF_TRUSTED_ORIGINS = [
@@ -33,6 +33,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://tranquil-enthusiasm-production.up.railway.app',
     'https://w2stm1r4.up.railway.app',
     'https://holly-hot-box-production.up.railway.app',
+    'https://hollyhotbox.com',  # Primary domain
+    'https://www.hollyhotbox.com',  # WWW variant
 ]
 
 # Allow Railway to override CSRF settings via environment variable
