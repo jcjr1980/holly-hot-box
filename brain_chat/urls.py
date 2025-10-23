@@ -2,7 +2,7 @@
 Holly Hot Box URL Configuration
 """
 from django.urls import path
-from . import views
+from . import views, streaming_views
 
 urlpatterns = [
     path('', views.coming_soon_view, name='coming_soon'),  # Homepage is now Coming Soon
@@ -16,6 +16,7 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
     path('register/success/', views.register_success_view, name='register_success'),
     path('send-message/', views.send_message, name='send_message'),
+    path('send-message-streaming/', streaming_views.send_message_streaming, name='send_message_streaming'),
     path('new-session/', views.new_session, name='new_session'),
     path('session/<int:session_id>/', views.load_session, name='load_session'),
     path('session/<int:session_id>/messages/', views.get_session_messages, name='get_session_messages'),
