@@ -460,7 +460,7 @@ def send_message(request):
                 "content": msg.content
             })
         
-        # SMART CONDUCTOR APPROACH: Intelligent orchestration with project context
+        # BULLETPROOF CONDUCTOR: Production-grade orchestration with graceful degradation
         orchestrator = LLMOrchestrator()
         
         # Get the current project if session is associated with one
@@ -469,37 +469,38 @@ def send_message(request):
             current_project = session.project
             logger.info(f"📁 Project context: {current_project.name}")
         
-        try:
-            logger.info(f"🎯 Processing query with SmartConductor: prompt length={len(prompt)}")
-            
-            # Use SmartConductor for intelligent orchestration
-            from .smart_conductor import SmartConductor
-            conductor = SmartConductor(orchestrator, project=current_project)
-            result = conductor.conduct_query(prompt, history[:-1])
-            
-            logger.info(f"✅ SmartConductor completed: mode={result.get('mode')}")
-                
-        except Exception as conductor_error:
-            logger.error(f"💥 SMART CONDUCTOR FAILED: {conductor_error}")
-            import traceback
-            logger.error(f"Traceback: {traceback.format_exc()}")
-            
-            # Ultimate fallback: just use Gemini directly
-            try:
-                logger.info("🔄 Falling back to direct Gemini...")
-                response, metadata = orchestrator.query_gemini(prompt, history[:-1])
-                result = {
-                    "mode": "emergency_fallback",
-                    "response": response,
-                    "metadata": metadata,
-                    "provider": "gemini",
-                    "fallback_reason": str(conductor_error)
-                }
-            except Exception as fallback_error:
-                return JsonResponse({
-                    'error': f"All systems failed: {str(conductor_error)} | Fallback: {str(fallback_error)}",
-                    'details': 'Please try simplifying your question or contact support.'
-                }, status=500)
+        # Use BulletproofConductor - processes everything and always returns something useful
+        from .bulletproof_conductor import BulletproofConductor
+        conductor = BulletproofConductor(orchestrator, project=current_project)
+        
+        logger.info(f"🎯 Processing query with BulletproofConductor: prompt length={len(prompt)}")
+        
+        # Process through streaming generator and collect final result
+        final_result = None
+        for progress_update in conductor.conduct_streaming(prompt, history[:-1]):
+            if progress_update.get('status') == 'complete':
+                final_result = progress_update
+                break
+            elif progress_update.get('status') == 'failed':
+                final_result = progress_update
+                break
+        
+        if not final_result:
+            # Should never happen, but safety net
+            final_result = {
+                "response": "System error: No response generated. Please try again.",
+                "metadata": {"mode": "safety_net"}
+            }
+        
+        # Extract result
+        result = {
+            "mode": final_result.get('metadata', {}).get('mode', 'bulletproof'),
+            "response": final_result.get('response', ''),
+            "metadata": final_result.get('metadata', {}),
+            "provider": "multi"
+        }
+        
+        logger.info(f"✅ BulletproofConductor completed: {result.get('mode')}")
         
         # Save assistant response (skip for privacy mode)
         if mode == 'parallel':
