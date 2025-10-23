@@ -460,49 +460,29 @@ def send_message(request):
                 "content": msg.content
             })
         
-        # Smart task-based breakdown system
+        # SIMPLE APPROACH: Just use Gemini directly for ALL queries
+        # No conductor, no breakdown, no fancy orchestration
         orchestrator = LLMOrchestrator()
         
-        # Import TaskBreakdown
-        from .task_breakdown import TaskBreakdown
-        
         try:
-            logger.info(f"🎯 Analyzing query complexity: prompt length={len(prompt)}")
+            logger.info(f"🎯 Processing query with Gemini-only: prompt length={len(prompt)}")
             
-            # Create task breakdown handler
-            task_handler = TaskBreakdown(orchestrator)
-            
-            # Check if this is a complex query that needs breakdown
-            prompt_words = len(prompt.split())
-            is_complex = (
-                prompt_words > 100 or 
-                any(word in prompt.lower() for word in ['lawsuit', 'legal', 'case', 'law firm', 'attorney', 'analyze', 'review', 'examine'])
-            )
-            
-            if is_complex:
-                logger.info("🔧 Complex query detected - using task breakdown system")
-                result = task_handler.execute_task_breakdown(prompt, history[:-1])
-            else:
-                logger.info("✅ Simple query - using direct orchestration")
-                result = orchestrator.orchestrate_response(prompt, history[:-1], mode='consensus')
+            # Just use Gemini directly - it's the most reliable
+            response, metadata = orchestrator.query_gemini(prompt, history[:-1])
+            result = {
+                "mode": "gemini_only",
+                "response": response,
+                "metadata": metadata,
+                "provider": "gemini"
+            }
+            logger.info(f"✅ Gemini responded successfully")
                 
-        except Exception as task_error:
-            logger.error(f"💥 TASK BREAKDOWN FAILED: {task_error}")
-            # Fallback to simple Gemini-only
-            logger.info("🔄 Falling back to Gemini-only mode...")
-            try:
-                response, metadata = orchestrator.query_gemini(prompt, history[:-1])
-                result = {
-                    "mode": "gemini_fallback",
-                    "response": response,
-                    "metadata": metadata,
-                    "provider": "gemini",
-                    "fallback_reason": f"Task breakdown failed: {str(task_error)}"
-                }
-            except Exception as fallback_error:
-                return JsonResponse({
-                    'error': f"Both task breakdown and fallback failed. Task error: {str(task_error)}, Fallback: {str(fallback_error)}"
-                }, status=500)
+        except Exception as gemini_error:
+            logger.error(f"💥 GEMINI FAILED: {gemini_error}")
+            return JsonResponse({
+                'error': f"Query failed: {str(gemini_error)}",
+                'details': 'The system encountered an error processing your query.'
+            }, status=500)
         
         # Save assistant response (skip for privacy mode)
         if mode == 'parallel':
