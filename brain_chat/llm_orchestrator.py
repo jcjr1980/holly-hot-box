@@ -153,9 +153,9 @@ Please provide a comprehensive, well-reasoned response leveraging your advanced 
             def timeout_handler(signum, frame):
                 raise TimeoutError("Gemini API call timed out")
             
-            # Set 30 second timeout
+            # Set 5 minute timeout for complex queries
             signal.signal(signal.SIGALRM, timeout_handler)
-            signal.alarm(30)
+            signal.alarm(300)
             
             try:
                 chat = self.gemini_model.start_chat(history=history)
@@ -172,7 +172,7 @@ Please provide a comprehensive, well-reasoned response leveraging your advanced 
                 }
             except TimeoutError:
                 signal.alarm(0)  # Cancel timeout
-                logger.error("Gemini API call timed out after 30 seconds")
+                logger.error("Gemini API call timed out after 5 minutes")
                 return "Gemini Error: API call timed out", {"error": "timeout"}
                 
         except Exception as e:
