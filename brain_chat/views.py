@@ -460,73 +460,49 @@ def send_message(request):
                 "content": msg.content
             })
         
-        # Progressive fallback system for complex queries
+        # Smart task-based breakdown system
         orchestrator = LLMOrchestrator()
         
-        # Try different approaches in order of complexity
-        fallback_modes = ['gemini_only', 'power_duo', 'consensus']
-        result = None
+        # Import TaskBreakdown
+        from .task_breakdown import TaskBreakdown
         
-        for i, fallback_mode in enumerate(fallback_modes):
+        try:
+            logger.info(f"🎯 Analyzing query complexity: prompt length={len(prompt)}")
+            
+            # Create task breakdown handler
+            task_handler = TaskBreakdown(orchestrator)
+            
+            # Check if this is a complex query that needs breakdown
+            prompt_words = len(prompt.split())
+            is_complex = (
+                prompt_words > 100 or 
+                any(word in prompt.lower() for word in ['lawsuit', 'legal', 'case', 'law firm', 'attorney', 'analyze', 'review', 'examine'])
+            )
+            
+            if is_complex:
+                logger.info("🔧 Complex query detected - using task breakdown system")
+                result = task_handler.execute_task_breakdown(prompt, history[:-1])
+            else:
+                logger.info("✅ Simple query - using direct orchestration")
+                result = orchestrator.orchestrate_response(prompt, history[:-1], mode='consensus')
+                
+        except Exception as task_error:
+            logger.error(f"💥 TASK BREAKDOWN FAILED: {task_error}")
+            # Fallback to simple Gemini-only
+            logger.info("🔄 Falling back to Gemini-only mode...")
             try:
-                logger.info(f"🔄 Attempt {i+1}: Trying {fallback_mode} mode for prompt length={len(prompt)}")
-                
-                if fallback_mode == 'gemini_only':
-                    # Single LLM - fastest and most reliable
-                    response, metadata = orchestrator.query_gemini(prompt, history[:-1])
-                    result = {
-                        "mode": "gemini_only",
-                        "response": response,
-                        "metadata": metadata,
-                        "provider": "gemini"
-                    }
-                elif fallback_mode == 'power_duo':
-                    # Two LLMs - good balance of speed and quality
-                    gemini_response, gemini_meta = orchestrator.query_gemini(prompt, history[:-1])
-                    deepseek_response, deepseek_meta = orchestrator.query_deepseek(prompt, history[:-1])
-                    
-                    # Simple synthesis
-                    synthesis_prompt = f"""
-                    Combine these two AI responses into a comprehensive answer:
-                    
-                    Gemini: {gemini_response}
-                    
-                    DeepSeek: {deepseek_response}
-                    
-                    Original question: {prompt}
-                    
-                    Provide a synthesized response that combines the best insights from both.
-                    """
-                    final_response, metadata = orchestrator.query_gemini(synthesis_prompt)
-                    
-                    result = {
-                        "mode": "power_duo",
-                        "response": final_response,
-                        "metadata": metadata,
-                        "provider": "power_duo"
-                    }
-                else:  # consensus
-                    # All LLMs - most comprehensive but slowest
-                    result = orchestrator.orchestrate_response(prompt, history[:-1], mode='consensus')
-                
-                logger.info(f"✅ {fallback_mode} mode succeeded!")
-                break
-                
-            except Exception as mode_error:
-                logger.warning(f"⚠️ {fallback_mode} mode failed: {mode_error}")
-                if i == len(fallback_modes) - 1:
-                    # All modes failed
-                    return JsonResponse({
-                        'error': f"All modes failed. Last error: {str(mode_error)}",
-                        'details': 'Please try breaking your question into smaller parts.'
-                    }, status=500)
-                continue
-        
-        if result is None:
-            return JsonResponse({
-                'error': 'All processing modes failed',
-                'details': 'Please try a simpler question or break it into smaller parts.'
-            }, status=500)
+                response, metadata = orchestrator.query_gemini(prompt, history[:-1])
+                result = {
+                    "mode": "gemini_fallback",
+                    "response": response,
+                    "metadata": metadata,
+                    "provider": "gemini",
+                    "fallback_reason": f"Task breakdown failed: {str(task_error)}"
+                }
+            except Exception as fallback_error:
+                return JsonResponse({
+                    'error': f"Both task breakdown and fallback failed. Task error: {str(task_error)}, Fallback: {str(fallback_error)}"
+                }, status=500)
         
         # Save assistant response (skip for privacy mode)
         if mode == 'parallel':
