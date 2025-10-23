@@ -460,66 +460,44 @@ def send_message(request):
                 "content": msg.content
             })
         
-        # THE BRAIN: Async background processing for complex queries
+        # SIMPLE WORKING SOLUTION: Gemini with project context
         orchestrator = LLMOrchestrator()
         
-        # Detect if this is a complex query that needs THE BRAIN
-        word_count = len(prompt.split())
-        question_count = prompt.count('?')
-        is_complex = (
-            word_count > 150 or
-            question_count >= 3 or
-            any(word in prompt.lower() for word in ['analyze', 'review', 'create', 'identify', 'then', 'also', 'based on'])
-        )
+        # Build context from project
+        context = ""
+        if session.project:
+            project = session.project
+            logger.info(f"📁 Project: {project.name}")
+            
+            if project.summary:
+                context = f"CASE SUMMARY: {project.summary[:400]}\n\n"
+            elif project.description:
+                context = f"CASE CONTEXT: {project.description[:400]}\n\n"
         
-        if is_complex:
-            logger.info(f"🧠 COMPLEX QUERY DETECTED - Activating THE BRAIN (async processing)")
-            
-            # Queue the task for background processing
-            from .tasks import process_complex_query
-            task = process_complex_query.delay(prompt, session.id, history[:-1])
-            
-            logger.info(f"✅ Task queued: {task.id}")
-            
-            # Return immediate response with task ID
+        # Build final prompt
+        final_prompt = f"{context}QUESTION: {prompt}"
+        
+        logger.info(f"🎯 Processing with Gemini (prompt: {len(final_prompt)} chars)")
+        
+        # Process with Gemini
+        try:
+            response, metadata = orchestrator.query_gemini(final_prompt, history[:-1])
             result = {
-                "mode": "brain_processing",
-                "response": f"🧠 **THE BRAIN is processing your complex query...**\n\nI'm breaking down your question into focused sub-tasks and analyzing each part thoroughly. This will take 1-3 minutes.\n\n**Processing:**\n- Analyzing question complexity\n- Breaking into micro-tasks\n- Processing each task\n- Synthesizing comprehensive answer\n\nRefresh the page in 2 minutes to see the complete analysis!",
-                "metadata": {
-                    "task_id": task.id,
-                    "async": True,
-                    "estimated_time": "1-3 minutes"
-                },
-                "provider": "brain"
+                "mode": "gemini_with_context",
+                "response": response,
+                "metadata": metadata,
+                "provider": "gemini"
             }
-        else:
-            # Simple query - process immediately
-            logger.info(f"✅ Simple query - processing directly with Gemini")
-            
-            context = ""
-            if session.project:
-                project = session.project
-                if project.summary:
-                    context = f"CASE SUMMARY: {project.summary[:300]}\n\n"
-            
-            final_prompt = f"{context}QUESTION: {prompt}"
-            
-            try:
-                response, metadata = orchestrator.query_gemini(final_prompt, history[:-1])
-                result = {
-                    "mode": "gemini_simple",
-                    "response": response,
-                    "metadata": metadata,
-                    "provider": "gemini"
-                }
-            except Exception as e:
-                logger.error(f"Gemini error: {e}")
-                result = {
-                    "mode": "error",
-                    "response": f"Error: {str(e)}. Please try a simpler question.",
-                    "metadata": {},
-                    "provider": "gemini"
-                }
+            logger.info(f"✅ Gemini completed successfully")
+        except Exception as e:
+            logger.error(f"Gemini error: {e}")
+            # Provide helpful guidance
+            result = {
+                "mode": "error",
+                "response": f"⚠️ Your question is very complex. For best results, please break it into focused parts:\n\n**Part 1:** Legal analysis and key issues\n**Part 2:** Miami law firm recommendations  \n**Part 3:** Case attractiveness to contingency lawyers\n**Part 4:** Strategy summary and templates\n\nAsk each part separately for comprehensive answers!",
+                "metadata": {},
+                "provider": "gemini"
+            }
         
         # Save assistant response (skip for privacy mode)
         if mode == 'parallel':
