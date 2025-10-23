@@ -1,0 +1,343 @@
+"""
+Google Sheets integration for Holly Hot Box
+Handles reading, writing, and creating spreadsheets
+"""
+
+import os
+import json
+from typing import List, Dict, Any, Optional
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+import logging
+
+logger = logging.getLogger(__name__)
+
+class GoogleSheetsManager:
+    def __init__(self):
+        """Initialize Google Sheets API client"""
+        self.service = None
+        self._initialize_service()
+    
+    def _initialize_service(self):
+        """Initialize the Google Sheets service with service account credentials"""
+        try:
+            # Try to get credentials from environment variable first
+            credentials_json = os.getenv('GOOGLE_SHEETS_CREDENTIALS')
+            
+            if credentials_json:
+                # Parse JSON from environment variable
+                import json
+                credentials_info = json.loads(credentials_json)
+                logger.info("✅ Using Google Sheets credentials from environment variable")
+            else:
+                # Fallback to file
+                credentials_path = os.path.join(os.path.dirname(__file__), 'customer-data-339404-fbc81482b160.json')
+                
+                if not os.path.exists(credentials_path):
+                    logger.error(f"Service account credentials not found in environment variable or file: {credentials_path}")
+                    return
+                
+                with open(credentials_path, 'r') as f:
+                    credentials_info = json.load(f)
+                logger.info("✅ Using Google Sheets credentials from file")
+            
+            # Define the scopes needed
+            scopes = [
+                'https://www.googleapis.com/auth/spreadsheets',
+                'https://www.googleapis.com/auth/drive'
+            ]
+            
+            # Load credentials
+            credentials = Credentials.from_service_account_info(
+                credentials_info, 
+                scopes=scopes
+            )
+            
+            # Build the service
+            self.service = build('sheets', 'v4', credentials=credentials)
+            logger.info("✅ Google Sheets service initialized successfully")
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize Google Sheets service: {e}")
+            self.service = None
+    
+    def create_spreadsheet(self, title: str, sheet_names: List[str] = None) -> Optional[str]:
+        """
+        Create a new spreadsheet
+        
+        Args:
+            title: Name of the spreadsheet
+            sheet_names: List of sheet names to create (default: ['Sheet1'])
+        
+        Returns:
+            Spreadsheet ID if successful, None otherwise
+        """
+        if not self.service:
+            logger.error("Google Sheets service not initialized")
+            return None
+        
+        try:
+            # Default sheet names
+            if sheet_names is None:
+                sheet_names = ['Sheet1']
+            
+            # Create the spreadsheet
+            spreadsheet_body = {
+                'properties': {
+                    'title': title
+                },
+                'sheets': [{'properties': {'title': name}} for name in sheet_names]
+            }
+            
+            spreadsheet = self.service.spreadsheets().create(
+                body=spreadsheet_body
+            ).execute()
+            
+            spreadsheet_id = spreadsheet.get('spreadsheetId')
+            logger.info(f"✅ Created spreadsheet '{title}' with ID: {spreadsheet_id}")
+            return spreadsheet_id
+            
+        except HttpError as e:
+            logger.error(f"❌ Error creating spreadsheet: {e}")
+            return None
+    
+    def write_data(self, spreadsheet_id: str, range_name: str, values: List[List[Any]]) -> bool:
+        """
+        Write data to a spreadsheet
+        
+        Args:
+            spreadsheet_id: ID of the spreadsheet
+            range_name: Range to write to (e.g., 'Sheet1!A1:C3')
+            values: 2D list of values to write
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self.service:
+            logger.error("Google Sheets service not initialized")
+            return False
+        
+        try:
+            body = {
+                'values': values
+            }
+            
+            result = self.service.spreadsheets().values().update(
+                spreadsheetId=spreadsheet_id,
+                range=range_name,
+                valueInputOption='RAW',
+                body=body
+            ).execute()
+            
+            logger.info(f"✅ Updated {result.get('updatedCells')} cells in {range_name}")
+            return True
+            
+        except HttpError as e:
+            logger.error(f"❌ Error writing to spreadsheet: {e}")
+            return False
+    
+    def read_data(self, spreadsheet_id: str, range_name: str) -> Optional[List[List[Any]]]:
+        """
+        Read data from a spreadsheet
+        
+        Args:
+            spreadsheet_id: ID of the spreadsheet
+            range_name: Range to read from (e.g., 'Sheet1!A1:C10')
+        
+        Returns:
+            2D list of values if successful, None otherwise
+        """
+        if not self.service:
+            logger.error("Google Sheets service not initialized")
+            return None
+        
+        try:
+            result = self.service.spreadsheets().values().get(
+                spreadsheetId=spreadsheet_id,
+                range=range_name
+            ).execute()
+            
+            values = result.get('values', [])
+            logger.info(f"✅ Read {len(values)} rows from {range_name}")
+            return values
+            
+        except HttpError as e:
+            logger.error(f"❌ Error reading from spreadsheet: {e}")
+            return None
+    
+    def append_data(self, spreadsheet_id: str, range_name: str, values: List[List[Any]]) -> bool:
+        """
+        Append data to a spreadsheet
+        
+        Args:
+            spreadsheet_id: ID of the spreadsheet
+            range_name: Range to append to (e.g., 'Sheet1!A:C')
+            values: 2D list of values to append
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self.service:
+            logger.error("Google Sheets service not initialized")
+            return False
+        
+        try:
+            body = {
+                'values': values
+            }
+            
+            result = self.service.spreadsheets().values().append(
+                spreadsheetId=spreadsheet_id,
+                range=range_name,
+                valueInputOption='RAW',
+                insertDataOption='INSERT_ROWS',
+                body=body
+            ).execute()
+            
+            logger.info(f"✅ Appended {len(values)} rows to {range_name}")
+            return True
+            
+        except HttpError as e:
+            logger.error(f"❌ Error appending to spreadsheet: {e}")
+            return False
+    
+    def format_cells(self, spreadsheet_id: str, range_name: str, format_options: Dict[str, Any]) -> bool:
+        """
+        Format cells in a spreadsheet
+        
+        Args:
+            spreadsheet_id: ID of the spreadsheet
+            range_name: Range to format (e.g., 'Sheet1!A1:C1')
+            format_options: Dictionary of formatting options
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self.service:
+            logger.error("Google Sheets service not initialized")
+            return False
+        
+        try:
+            requests = [{
+                'repeatCell': {
+                    'range': {
+                        'sheetId': 0,  # Assuming first sheet
+                        'startRowIndex': 0,
+                        'endRowIndex': 1,
+                        'startColumnIndex': 0,
+                        'endColumnIndex': len(format_options.get('values', [[]])[0]) if format_options.get('values') else 1
+                    },
+                    'cell': {
+                        'userEnteredFormat': format_options
+                    },
+                    'fields': 'userEnteredFormat'
+                }
+            }]
+            
+            body = {
+                'requests': requests
+            }
+            
+            self.service.spreadsheets().batchUpdate(
+                spreadsheetId=spreadsheet_id,
+                body=body
+            ).execute()
+            
+            logger.info(f"✅ Formatted cells in {range_name}")
+            return True
+            
+        except HttpError as e:
+            logger.error(f"❌ Error formatting cells: {e}")
+            return False
+
+# Global instance
+sheets_manager = GoogleSheetsManager()
+
+def create_law_firm_tracking_sheet(title: str = "Law Firm Tracking - Johnny Collins vs CellPay") -> Optional[str]:
+    """
+    Create a law firm tracking spreadsheet with headers
+    
+    Args:
+        title: Title of the spreadsheet
+    
+    Returns:
+        Spreadsheet ID if successful, None otherwise
+    """
+    # Create spreadsheet
+    spreadsheet_id = sheets_manager.create_spreadsheet(title, ['Law Firms', 'Consultation Notes'])
+    
+    if not spreadsheet_id:
+        return None
+    
+    # Add headers to Law Firms sheet
+    headers = [
+        ['Firm Name', 'Lead Attorney Names', 'Specific Specialties', 'Website', 'Phone', 
+         'Email Address', 'Contingency Fee Structure', 'Initial Consultation Notes', 
+         'Case Assessment (Initial)', 'Pros', 'Cons', 'Follow-up Actions', 'Next Steps']
+    ]
+    
+    # Write headers
+    sheets_manager.write_data(spreadsheet_id, 'Law Firms!A1:M1', headers)
+    
+    # Format headers (bold)
+    sheets_manager.format_cells(spreadsheet_id, 'Law Firms!A1:M1', {
+        'textFormat': {'bold': True},
+        'backgroundColor': {'red': 0.9, 'green': 0.9, 'blue': 1.0}
+    })
+    
+    # Add headers to Consultation Notes sheet
+    notes_headers = [
+        ['Firm Name', 'Date', 'Attorney', 'Notes', 'Next Steps', 'Follow-up Date']
+    ]
+    
+    sheets_manager.write_data(spreadsheet_id, 'Consultation Notes!A1:F1', notes_headers)
+    sheets_manager.format_cells(spreadsheet_id, 'Consultation Notes!A1:F1', {
+        'textFormat': {'bold': True},
+        'backgroundColor': {'red': 0.9, 'green': 0.9, 'blue': 1.0}
+    })
+    
+    logger.info(f"✅ Created law firm tracking spreadsheet: {title}")
+    return spreadsheet_id
+
+def add_law_firm_to_sheet(spreadsheet_id: str, firm_data: Dict[str, Any]) -> bool:
+    """
+    Add a law firm entry to the tracking sheet
+    
+    Args:
+        spreadsheet_id: ID of the spreadsheet
+        firm_data: Dictionary with firm information
+    
+    Returns:
+        True if successful, False otherwise
+    """
+    # Convert firm data to row format
+    row = [
+        firm_data.get('name', ''),
+        firm_data.get('attorneys', ''),
+        firm_data.get('specialties', ''),
+        firm_data.get('website', ''),
+        firm_data.get('phone', ''),
+        firm_data.get('email', ''),
+        firm_data.get('fee_structure', ''),
+        firm_data.get('consultation_notes', ''),
+        firm_data.get('case_assessment', ''),
+        firm_data.get('pros', ''),
+        firm_data.get('cons', ''),
+        firm_data.get('follow_up_actions', ''),
+        firm_data.get('next_steps', '')
+    ]
+    
+    return sheets_manager.append_data(spreadsheet_id, 'Law Firms!A:M', [row])
+
+def get_spreadsheet_url(spreadsheet_id: str) -> str:
+    """
+    Get the public URL for a spreadsheet
+    
+    Args:
+        spreadsheet_id: ID of the spreadsheet
+    
+    Returns:
+        URL to access the spreadsheet
+    """
+    return f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit"
