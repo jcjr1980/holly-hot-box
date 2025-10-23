@@ -460,45 +460,66 @@ def send_message(request):
                 "content": msg.content
             })
         
-        # DOCUMENT-AWARE APPROACH: Use file summaries intelligently
+        # THE BRAIN: Async background processing for complex queries
         orchestrator = LLMOrchestrator()
         
-        # Build MINIMAL context from project
-        context = ""
-        if session.project:
-            project = session.project
-            logger.info(f"📁 Project: {project.name}")
+        # Detect if this is a complex query that needs THE BRAIN
+        word_count = len(prompt.split())
+        question_count = prompt.count('?')
+        is_complex = (
+            word_count > 150 or
+            question_count >= 3 or
+            any(word in prompt.lower() for word in ['analyze', 'review', 'create', 'identify', 'then', 'also', 'based on'])
+        )
+        
+        if is_complex:
+            logger.info(f"🧠 COMPLEX QUERY DETECTED - Activating THE BRAIN (async processing)")
             
-            # Just use project summary - NOT all file contents
-            if project.summary:
-                context = f"CASE SUMMARY: {project.summary[:300]}\n\n"
-            elif project.description:
-                context = f"CASE CONTEXT: {project.description[:300]}\n\n"
-        
-        # Keep prompt MINIMAL to avoid timeout
-        final_prompt = f"{context}QUESTION: {prompt}"
-        
-        logger.info(f"🎯 Processing with Gemini (prompt: {len(final_prompt)} chars)")
-        
-        # Use Gemini with REDUCED timeout to fail fast if it's too complex
-        try:
-            response, metadata = orchestrator.query_gemini(final_prompt, history[:-1])
+            # Queue the task for background processing
+            from .tasks import process_complex_query
+            task = process_complex_query.delay(prompt, session.id, history[:-1])
+            
+            logger.info(f"✅ Task queued: {task.id}")
+            
+            # Return immediate response with task ID
             result = {
-                "mode": "gemini_simple",
-                "response": response,
-                "metadata": metadata,
-                "provider": "gemini"
+                "mode": "brain_processing",
+                "response": f"🧠 **THE BRAIN is processing your complex query...**\n\nI'm breaking down your question into focused sub-tasks and analyzing each part thoroughly. This will take 1-3 minutes.\n\n**Processing:**\n- Analyzing question complexity\n- Breaking into micro-tasks\n- Processing each task\n- Synthesizing comprehensive answer\n\nRefresh the page in 2 minutes to see the complete analysis!",
+                "metadata": {
+                    "task_id": task.id,
+                    "async": True,
+                    "estimated_time": "1-3 minutes"
+                },
+                "provider": "brain"
             }
-            logger.info(f"✅ Gemini completed successfully")
-        except Exception as e:
-            logger.error(f"Gemini timeout/error: {e}")
-            # Return helpful message
-            result = {
-                "mode": "error",
-                "response": f"Your question is too complex for a single response. Please break it into smaller parts:\n\n1. Ask about the legal analysis first\n2. Then ask about law firms\n3. Then ask for the spreadsheet template\n\nEach question will complete quickly and give you comprehensive answers!",
-                "metadata": {},
-                "provider": "gemini"
-            }
+        else:
+            # Simple query - process immediately
+            logger.info(f"✅ Simple query - processing directly with Gemini")
+            
+            context = ""
+            if session.project:
+                project = session.project
+                if project.summary:
+                    context = f"CASE SUMMARY: {project.summary[:300]}\n\n"
+            
+            final_prompt = f"{context}QUESTION: {prompt}"
+            
+            try:
+                response, metadata = orchestrator.query_gemini(final_prompt, history[:-1])
+                result = {
+                    "mode": "gemini_simple",
+                    "response": response,
+                    "metadata": metadata,
+                    "provider": "gemini"
+                }
+            except Exception as e:
+                logger.error(f"Gemini error: {e}")
+                result = {
+                    "mode": "error",
+                    "response": f"Error: {str(e)}. Please try a simpler question.",
+                    "metadata": {},
+                    "provider": "gemini"
+                }
         
         # Save assistant response (skip for privacy mode)
         if mode == 'parallel':
