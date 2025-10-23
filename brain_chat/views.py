@@ -460,29 +460,46 @@ def send_message(request):
                 "content": msg.content
             })
         
-        # SIMPLE APPROACH: Just use Gemini directly for ALL queries
-        # No conductor, no breakdown, no fancy orchestration
+        # SMART CONDUCTOR APPROACH: Intelligent orchestration with project context
         orchestrator = LLMOrchestrator()
         
+        # Get the current project if session is associated with one
+        current_project = None
+        if session.project:
+            current_project = session.project
+            logger.info(f"📁 Project context: {current_project.name}")
+        
         try:
-            logger.info(f"🎯 Processing query with Gemini-only: prompt length={len(prompt)}")
+            logger.info(f"🎯 Processing query with SmartConductor: prompt length={len(prompt)}")
             
-            # Just use Gemini directly - it's the most reliable
-            response, metadata = orchestrator.query_gemini(prompt, history[:-1])
-            result = {
-                "mode": "gemini_only",
-                "response": response,
-                "metadata": metadata,
-                "provider": "gemini"
-            }
-            logger.info(f"✅ Gemini responded successfully")
+            # Use SmartConductor for intelligent orchestration
+            from .smart_conductor import SmartConductor
+            conductor = SmartConductor(orchestrator, project=current_project)
+            result = conductor.conduct_query(prompt, history[:-1])
+            
+            logger.info(f"✅ SmartConductor completed: mode={result.get('mode')}")
                 
-        except Exception as gemini_error:
-            logger.error(f"💥 GEMINI FAILED: {gemini_error}")
-            return JsonResponse({
-                'error': f"Query failed: {str(gemini_error)}",
-                'details': 'The system encountered an error processing your query.'
-            }, status=500)
+        except Exception as conductor_error:
+            logger.error(f"💥 SMART CONDUCTOR FAILED: {conductor_error}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            
+            # Ultimate fallback: just use Gemini directly
+            try:
+                logger.info("🔄 Falling back to direct Gemini...")
+                response, metadata = orchestrator.query_gemini(prompt, history[:-1])
+                result = {
+                    "mode": "emergency_fallback",
+                    "response": response,
+                    "metadata": metadata,
+                    "provider": "gemini",
+                    "fallback_reason": str(conductor_error)
+                }
+            except Exception as fallback_error:
+                return JsonResponse({
+                    'error': f"All systems failed: {str(conductor_error)} | Fallback: {str(fallback_error)}",
+                    'details': 'Please try simplifying your question or contact support.'
+                }, status=500)
         
         # Save assistant response (skip for privacy mode)
         if mode == 'parallel':
