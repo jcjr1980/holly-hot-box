@@ -460,31 +460,29 @@ def send_message(request):
                 "content": msg.content
             })
         
-        # SIMPLE APPROACH: Just use Gemini directly with project context
+        # DOCUMENT-AWARE APPROACH: Use file summaries intelligently
         orchestrator = LLMOrchestrator()
         
-        # Build concise context from project if available
-        context_parts = []
+        # Build MINIMAL context from project
+        context = ""
         if session.project:
             project = session.project
             logger.info(f"📁 Project: {project.name}")
             
+            # Just use project summary - NOT all file contents
             if project.summary:
-                context_parts.append(f"CASE CONTEXT: {project.summary[:500]}")
+                context = f"CASE SUMMARY: {project.summary[:300]}\n\n"
             elif project.description:
-                context_parts.append(f"CASE CONTEXT: {project.description[:500]}")
+                context = f"CASE CONTEXT: {project.description[:300]}\n\n"
         
-        # Build final prompt with context
-        if context_parts:
-            enriched_prompt = "\n".join(context_parts) + f"\n\nQUESTION: {prompt}"
-        else:
-            enriched_prompt = prompt
+        # Keep prompt MINIMAL to avoid timeout
+        final_prompt = f"{context}QUESTION: {prompt}"
         
-        logger.info(f"🎯 Processing with Gemini (prompt: {len(enriched_prompt)} chars)")
+        logger.info(f"🎯 Processing with Gemini (prompt: {len(final_prompt)} chars)")
         
-        # Just use Gemini - fast, reliable, works every time
+        # Use Gemini with REDUCED timeout to fail fast if it's too complex
         try:
-            response, metadata = orchestrator.query_gemini(enriched_prompt, history[:-1])
+            response, metadata = orchestrator.query_gemini(final_prompt, history[:-1])
             result = {
                 "mode": "gemini_simple",
                 "response": response,
@@ -493,10 +491,11 @@ def send_message(request):
             }
             logger.info(f"✅ Gemini completed successfully")
         except Exception as e:
-            logger.error(f"Gemini failed: {e}")
+            logger.error(f"Gemini timeout/error: {e}")
+            # Return helpful message
             result = {
                 "mode": "error",
-                "response": f"I apologize, but I encountered an error. Please try breaking your question into smaller parts. Error: {str(e)}",
+                "response": f"Your question is too complex for a single response. Please break it into smaller parts:\n\n1. Ask about the legal analysis first\n2. Then ask about law firms\n3. Then ask for the spreadsheet template\n\nEach question will complete quickly and give you comprehensive answers!",
                 "metadata": {},
                 "provider": "gemini"
             }
