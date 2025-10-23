@@ -85,17 +85,10 @@ class TaskBreakdown:
         """Create specific tasks based on query content"""
         prompt_lower = prompt.lower()
         
-        # Legal case analysis tasks
+        # Legal case analysis tasks - Process ONE task at a time with FULL context
         if any(word in prompt_lower for word in ['lawsuit', 'legal', 'case', 'law firm', 'attorney']):
             return [
-                {"title": "Legal Situation Analysis", "query": f"Analyze the legal situation and identify the key issues for: {prompt[:200]}..."},
-                {"title": "Applicable Law Areas", "query": f"Identify the specific areas of law that apply to this case: {prompt[:200]}..."},
-                {"title": "Case Strengths Assessment", "query": f"Assess the strengths of this case and potential legal arguments: {prompt[:200]}..."},
-                {"title": "Law Firm Research", "query": f"Research and identify suitable law firms for this type of case: {prompt[:200]}..."},
-                {"title": "Legal Strategy Development", "query": f"Develop a comprehensive legal strategy for this case: {prompt[:200]}..."},
-                {"title": "Documentation and Tracking", "query": f"Create templates and tracking systems for this legal case: {prompt[:200]}..."},
-                {"title": "Risk Assessment", "query": f"Assess the risks and challenges associated with this case: {prompt[:200]}..."},
-                {"title": "Next Steps and Recommendations", "query": f"Provide specific next steps and recommendations for this case: {prompt[:200]}..."}
+                {"title": "Legal Situation & Law Firms", "query": f"{prompt}\n\nFocus your response on: 1) Analyze the legal situation, 2) Identify specific areas of law that apply, 3) Research Miami-Dade law firms specializing in business/contract litigation that work on contingency, 4) Explain what makes this case attractive to contingency lawyers"}
             ]
         
         # General complex query tasks
