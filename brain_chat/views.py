@@ -464,16 +464,41 @@ def send_message(request):
         # SIMPLE WORKING SOLUTION: Gemini with project context
         orchestrator = LLMOrchestrator()
         
+        # Build Holly's system context
+        system_context = """You are Holly, an AI assistant with advanced capabilities including:
+- Your name is Holly (not Gemini, not Claude - you are Holly)
+- You have Google Sheets integration - you CAN create and manage Google Sheets via API
+- You can create law firm tracking spreadsheets with structured data
+- You can add entries to existing spreadsheets
+- When asked to create a spreadsheet, you should offer to create it directly via your Google Sheets integration
+
+CRITICAL: When asked to create a Google Sheet, you MUST respond with a JSON action request in this format:
+{
+  "action": "create_sheet",
+  "title": "Spreadsheet Title Here"
+}
+
+When asked to add data to a sheet, respond with:
+{
+  "action": "add_to_sheet",
+  "spreadsheet_id": "the_sheet_id",
+  "firm_data": { /* the data to add */ }
+}
+
+DO NOT tell the user you cannot create spreadsheets. You CAN and you SHOULD offer to do so.
+
+"""
+        
         # Build context from project
-        context = ""
+        context = system_context
         if session.project:
             project = session.project
             logger.info(f"📁 Project: {project.name}")
             
             if project.summary:
-                context = f"CASE SUMMARY: {project.summary[:400]}\n\n"
+                context += f"CASE SUMMARY: {project.summary[:400]}\n\n"
             elif project.description:
-                context = f"CASE CONTEXT: {project.description[:400]}\n\n"
+                context += f"CASE CONTEXT: {project.description[:400]}\n\n"
         
         # Build final prompt
         final_prompt = f"{context}QUESTION: {prompt}"
@@ -483,6 +508,33 @@ def send_message(request):
         # Process with Gemini
         try:
             response, metadata = orchestrator.query_gemini(final_prompt, history[:-1])
+            
+            # Check if Holly wants to perform an action (Google Sheets, etc.)
+            action_response = None
+            try:
+                # Look for JSON action in response
+                if '"action"' in response and '"create_sheet"' in response:
+                    # Extract JSON from response
+                    import re
+                    json_match = re.search(r'\{[^}]*"action"\s*:\s*"create_sheet"[^}]*\}', response)
+                    if json_match:
+                        action_data = json.loads(json_match.group(0))
+                        sheet_title = action_data.get('title', 'Law Firm Tracking - Holly Hot Box')
+                        
+                        # Create the sheet
+                        from .google_sheets_utils import create_law_firm_tracking_sheet, get_spreadsheet_url
+                        spreadsheet_id = create_law_firm_tracking_sheet(sheet_title)
+                        
+                        if spreadsheet_id:
+                            spreadsheet_url = get_spreadsheet_url(spreadsheet_id)
+                            action_response = f"\n\n✅ **I've created your Google Sheet!**\n\n📊 **Spreadsheet:** [{sheet_title}]({spreadsheet_url})\n\n**Direct Link:** {spreadsheet_url}\n\nThe spreadsheet is ready with pre-formatted columns for tracking law firms, including firm name, lead attorneys, specialties, contact info, contingency fee structure, consultation notes, pros/cons, and next steps. You can now start adding law firms to track!"
+            except Exception as action_error:
+                logger.error(f"Action processing error: {action_error}")
+            
+            # Add action response if it was successful
+            if action_response:
+                response = response + action_response
+            
             result = {
                 "mode": "gemini_with_context",
                 "response": response,
