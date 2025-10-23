@@ -19,6 +19,7 @@ from .llm_orchestrator import LLMOrchestrator
 from .query_conductor import QueryConductor
 from .summarization_service import FileSummarizer
 from .twilio_utils import TwilioSMS
+from .google_sheets_utils import sheets_manager, create_law_firm_tracking_sheet, add_law_firm_to_sheet, get_spreadsheet_url
 
 logger = logging.getLogger(__name__)
 
@@ -1337,4 +1338,83 @@ def health_check_view(request):
             'status': 'error',
             'error': f'Missing dependency: {str(e)}',
             'message': 'Some LLM dependencies are missing'
+        }, status=500)
+
+@login_required
+def create_google_sheet(request):
+    """Create a Google Sheet for law firm tracking"""
+    try:
+        if request.method == 'POST':
+            data = json.loads(request.body)
+            sheet_title = data.get('title', 'Law Firm Tracking - Johnny Collins vs CellPay')
+            
+            # Create the spreadsheet
+            spreadsheet_id = create_law_firm_tracking_sheet(sheet_title)
+            
+            if spreadsheet_id:
+                spreadsheet_url = get_spreadsheet_url(spreadsheet_id)
+                
+                return JsonResponse({
+                    'success': True,
+                    'spreadsheet_id': spreadsheet_id,
+                    'spreadsheet_url': spreadsheet_url,
+                    'message': f'Successfully created spreadsheet: {sheet_title}'
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Failed to create spreadsheet'
+                }, status=500)
+        
+        else:
+            return JsonResponse({
+                'error': 'POST method required'
+            }, status=405)
+            
+    except Exception as e:
+        logger.error(f"Error creating Google Sheet: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@login_required
+def add_firm_to_sheet(request):
+    """Add a law firm entry to an existing Google Sheet"""
+    try:
+        if request.method == 'POST':
+            data = json.loads(request.body)
+            spreadsheet_id = data.get('spreadsheet_id')
+            firm_data = data.get('firm_data', {})
+            
+            if not spreadsheet_id:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Spreadsheet ID is required'
+                }, status=400)
+            
+            # Add the firm to the sheet
+            success = add_law_firm_to_sheet(spreadsheet_id, firm_data)
+            
+            if success:
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Successfully added law firm to spreadsheet'
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Failed to add law firm to spreadsheet'
+                }, status=500)
+        
+        else:
+            return JsonResponse({
+                'error': 'POST method required'
+            }, status=405)
+            
+    except Exception as e:
+        logger.error(f"Error adding firm to Google Sheet: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
         }, status=500)

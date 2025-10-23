@@ -43,5 +43,9 @@ urlpatterns = [
     path('setup-db/', views.setup_database, name='setup_database'),
     path('test-llms/', views.test_llms, name='test_llms'),
     path('send-sms/', views.send_sms_notification, name='send_sms'),
+    
+    # Google Sheets Integration
+    path('create-sheet/', views.create_google_sheet, name='create_google_sheet'),
+    path('add-firm-to-sheet/', views.add_firm_to_sheet, name='add_firm_to_sheet'),
 ]
 
