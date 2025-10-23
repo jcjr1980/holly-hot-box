@@ -285,7 +285,7 @@ Please think deeply and provide a well-reasoned, analytical response."""
                     "temperature": 1.0,  # Reasoning models work best at higher temp
                     "max_tokens": 8000  # More tokens for deep reasoning
                 },
-                timeout=45  # Reduced timeout to prevent hanging
+                timeout=15  # Much shorter timeout to prevent worker timeout
             )
             
             response_time = int((time.time() - start_time) * 1000)

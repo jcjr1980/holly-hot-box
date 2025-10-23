@@ -64,14 +64,14 @@ class QueryConductor:
         # Log complexity analysis for debugging
         logger.info(f"🔍 Complexity Analysis: score={complexity_score}, questions={has_multiple_questions}, long={has_long_context}, list={has_list_request}, analyze={has_analysis_request}, research={has_research_request}")
         
-        # Determine complexity level - LOWERED THRESHOLDS for better breakdown detection
-        if complexity_score >= 6:  # Was 8, now 6
+        # Determine complexity level - VERY AGGRESSIVE THRESHOLDS for lawsuit analysis
+        if complexity_score >= 4:  # Much more aggressive - break down sooner
             complexity = 'multi_faceted'
             requires_breakdown = True
-        elif complexity_score >= 4:  # Was 5, now 4
+        elif complexity_score >= 2:  # Even moderate queries get breakdown for complex legal work
             complexity = 'complex'
             requires_breakdown = True
-        elif complexity_score >= 2:
+        elif complexity_score >= 1:
             complexity = 'moderate'
             requires_breakdown = False
         else:
