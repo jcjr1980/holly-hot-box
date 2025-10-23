@@ -44,7 +44,11 @@ class QueryConductor:
         # Check for complexity indicators
         has_multiple_questions = prompt.count('?') > 1
         has_long_context = len(prompt.split()) > 200  # Lowered from 500 to 200 words
-        has_file_references = conversation_history and len(conversation_history) > 0
+        # Check for file references - be extra sensitive to legal documents and case files
+        has_file_references = (
+            conversation_history and len(conversation_history) > 0 or
+            any(word in prompt.lower() for word in ['file', 'document', 'upload', 'attached', 'case files', 'summary', 'uploaded', 'files'])
+        )
         has_list_request = any(word in prompt.lower() for word in ['list', 'enumerate', 'identify all', 'find all'])
         has_analysis_request = any(word in prompt.lower() for word in ['analyze', 'evaluate', 'assess', 'compare', 'review', 'examine'])
         has_research_request = any(word in prompt.lower() for word in ['research', 'find firms', 'locate', 'search for', 'finding', 'help me by finding'])
@@ -52,13 +56,13 @@ class QueryConductor:
         has_multiple_parts = any(indicator in prompt.lower() for indicator in ['1)', '2)', 'then', 'also', 'additionally', 'based on'])
         
         complexity_score = sum([
-            has_multiple_questions * 2,
-            has_long_context * 3,
-            has_file_references * 2,
-            has_list_request * 1,
-            has_analysis_request * 2,
-            has_research_request * 3,
-            has_multiple_parts * 2  # Added weight for multi-part queries
+            has_multiple_questions * 3,  # Increased weight for multiple questions
+            has_long_context * 4,  # Increased weight for long context
+            has_file_references * 4,  # Much higher weight for file-heavy queries
+            has_list_request * 2,  # Increased weight for list requests
+            has_analysis_request * 3,  # Increased weight for analysis requests
+            has_research_request * 4,  # Increased weight for research requests
+            has_multiple_parts * 3  # Increased weight for multi-part queries
         ])
         
         # Log complexity analysis for debugging
