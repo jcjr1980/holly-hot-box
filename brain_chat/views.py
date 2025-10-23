@@ -512,14 +512,24 @@ DO NOT tell the user you cannot create spreadsheets. You CAN and you SHOULD offe
             # Check if Holly wants to perform an action (Google Sheets, etc.)
             action_response = None
             try:
-                # Look for JSON action in response
+                # Look for JSON action in response (including code blocks)
                 if '"action"' in response and '"create_sheet"' in response:
-                    # Extract JSON from response
+                    # Extract JSON from response - handle both raw JSON and code blocks
                     import re
-                    json_match = re.search(r'\{[^}]*"action"\s*:\s*"create_sheet"[^}]*\}', response)
-                    if json_match:
-                        action_data = json.loads(json_match.group(0))
+                    # Try to find JSON in code blocks first
+                    code_block_match = re.search(r'```(?:json)?\s*(\{[^`]*"action"\s*:\s*"create_sheet"[^`]*\})\s*```', response, re.DOTALL)
+                    if code_block_match:
+                        json_str = code_block_match.group(1)
+                    else:
+                        # Fall back to finding raw JSON
+                        json_match = re.search(r'\{[^{}]*"action"\s*:\s*"create_sheet"[^{}]*\}', response, re.DOTALL)
+                        json_str = json_match.group(0) if json_match else None
+                    
+                    if json_str:
+                        action_data = json.loads(json_str)
                         sheet_title = action_data.get('title', 'Law Firm Tracking - Holly Hot Box')
+                        
+                        logger.info(f"🔧 Creating Google Sheet: {sheet_title}")
                         
                         # Create the sheet
                         from .google_sheets_utils import create_law_firm_tracking_sheet, get_spreadsheet_url
@@ -528,8 +538,14 @@ DO NOT tell the user you cannot create spreadsheets. You CAN and you SHOULD offe
                         if spreadsheet_id:
                             spreadsheet_url = get_spreadsheet_url(spreadsheet_id)
                             action_response = f"\n\n✅ **I've created your Google Sheet!**\n\n📊 **Spreadsheet:** [{sheet_title}]({spreadsheet_url})\n\n**Direct Link:** {spreadsheet_url}\n\nThe spreadsheet is ready with pre-formatted columns for tracking law firms, including firm name, lead attorneys, specialties, contact info, contingency fee structure, consultation notes, pros/cons, and next steps. You can now start adding law firms to track!"
+                            logger.info(f"✅ Google Sheet created successfully: {spreadsheet_url}")
+                        else:
+                            action_response = f"\n\n⚠️ I tried to create the Google Sheet but encountered an error. Please check the logs or try again."
+                            logger.error("Failed to create Google Sheet - no spreadsheet_id returned")
             except Exception as action_error:
                 logger.error(f"Action processing error: {action_error}")
+                import traceback
+                logger.error(traceback.format_exc())
             
             # Add action response if it was successful
             if action_response:
