@@ -460,47 +460,46 @@ def send_message(request):
                 "content": msg.content
             })
         
-        # BULLETPROOF CONDUCTOR: Production-grade orchestration with graceful degradation
+        # SIMPLE APPROACH: Just use Gemini directly with project context
         orchestrator = LLMOrchestrator()
         
-        # Get the current project if session is associated with one
-        current_project = None
+        # Build concise context from project if available
+        context_parts = []
         if session.project:
-            current_project = session.project
-            logger.info(f"📁 Project context: {current_project.name}")
+            project = session.project
+            logger.info(f"📁 Project: {project.name}")
+            
+            if project.summary:
+                context_parts.append(f"CASE CONTEXT: {project.summary[:500]}")
+            elif project.description:
+                context_parts.append(f"CASE CONTEXT: {project.description[:500]}")
         
-        # Use BulletproofConductor - processes everything and always returns something useful
-        from .bulletproof_conductor import BulletproofConductor
-        conductor = BulletproofConductor(orchestrator, project=current_project)
+        # Build final prompt with context
+        if context_parts:
+            enriched_prompt = "\n".join(context_parts) + f"\n\nQUESTION: {prompt}"
+        else:
+            enriched_prompt = prompt
         
-        logger.info(f"🎯 Processing query with BulletproofConductor: prompt length={len(prompt)}")
+        logger.info(f"🎯 Processing with Gemini (prompt: {len(enriched_prompt)} chars)")
         
-        # Process through streaming generator and collect final result
-        final_result = None
-        for progress_update in conductor.conduct_streaming(prompt, history[:-1]):
-            if progress_update.get('status') == 'complete':
-                final_result = progress_update
-                break
-            elif progress_update.get('status') == 'failed':
-                final_result = progress_update
-                break
-        
-        if not final_result:
-            # Should never happen, but safety net
-            final_result = {
-                "response": "System error: No response generated. Please try again.",
-                "metadata": {"mode": "safety_net"}
+        # Just use Gemini - fast, reliable, works every time
+        try:
+            response, metadata = orchestrator.query_gemini(enriched_prompt, history[:-1])
+            result = {
+                "mode": "gemini_simple",
+                "response": response,
+                "metadata": metadata,
+                "provider": "gemini"
             }
-        
-        # Extract result
-        result = {
-            "mode": final_result.get('metadata', {}).get('mode', 'bulletproof'),
-            "response": final_result.get('response', ''),
-            "metadata": final_result.get('metadata', {}),
-            "provider": "multi"
-        }
-        
-        logger.info(f"✅ BulletproofConductor completed: {result.get('mode')}")
+            logger.info(f"✅ Gemini completed successfully")
+        except Exception as e:
+            logger.error(f"Gemini failed: {e}")
+            result = {
+                "mode": "error",
+                "response": f"I apologize, but I encountered an error. Please try breaking your question into smaller parts. Error: {str(e)}",
+                "metadata": {},
+                "provider": "gemini"
+            }
         
         # Save assistant response (skip for privacy mode)
         if mode == 'parallel':
