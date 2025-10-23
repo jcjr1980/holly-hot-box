@@ -102,7 +102,7 @@ class LLMOrchestrator:
                 f"{self.openai_base_url}/chat/completions",
                 headers=headers,
                 json=payload,
-                timeout=120
+                timeout=300
             )
             
             response_time = int((time.time() - start_time) * 1000)
@@ -222,7 +222,7 @@ Please provide a comprehensive, well-reasoned response leveraging your advanced 
                         f"{self.claude_base_url}/messages",
                         headers=headers,
                         json=payload,
-                        timeout=120
+                        timeout=300
                     )
                     
                     response_time = int((time.time() - start_time) * 1000)
@@ -339,7 +339,7 @@ Please think deeply and provide a well-reasoned, analytical response."""
                             "temperature": 0.7,
                             "max_tokens": 4000
                         },
-                        timeout=120
+                        timeout=300
                     )
                     
                     response_time = int((time.time() - start_time) * 1000)
@@ -406,7 +406,7 @@ Please think deeply and provide a well-reasoned, analytical response."""
                         f"{self.hf_base_url}/chat/completions",
                         headers=headers,
                         json=payload,
-                        timeout=120
+                        timeout=300
                     )
                     
                     if response.status_code == 200:
