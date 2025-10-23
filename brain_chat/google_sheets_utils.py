@@ -13,6 +13,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Force restart to pick up new environment variables
+
 class GoogleSheetsManager:
     def __init__(self):
         """Initialize Google Sheets API client"""
