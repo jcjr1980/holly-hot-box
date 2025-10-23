@@ -460,37 +460,73 @@ def send_message(request):
                 "content": msg.content
             })
         
-        # Orchestrate LLM response using the intelligent Conductor
-        try:
-            orchestrator = LLMOrchestrator()
-            conductor = QueryConductor(orchestrator)
-            
-            # ALWAYS let conductor analyze complexity first
-            # It will automatically use orchestrated_breakdown for complex queries
-            logger.info(f"🎭 Calling Conductor with mode='{mode}', prompt length={len(prompt)}")
-            result = conductor.conduct_query(prompt, history[:-1])
-            logger.info(f"✅ Conductor returned result with mode='{result.get('mode')}'")
-        except Exception as conductor_error:
-            logger.error(f"💥 CONDUCTOR CRASHED: {type(conductor_error).__name__}: {str(conductor_error)}")
-            import traceback
-            logger.error(f"Traceback:\n{traceback.format_exc()}")
-            # Fallback to simple Gemini-only
-            logger.info("🔄 Falling back to Gemini-only mode...")
+        # Progressive fallback system for complex queries
+        orchestrator = LLMOrchestrator()
+        
+        # Try different approaches in order of complexity
+        fallback_modes = ['gemini_only', 'power_duo', 'consensus']
+        result = None
+        
+        for i, fallback_mode in enumerate(fallback_modes):
             try:
-                orchestrator = LLMOrchestrator()
-                response, metadata = orchestrator.query_gemini(prompt, history[:-1])
-                result = {
-                    "mode": "gemini_fallback",
-                    "response": response,
-                    "metadata": metadata,
-                    "provider": "gemini",
-                    "fallback_reason": f"Conductor failed: {str(conductor_error)}"
-                }
-            except Exception as fallback_error:
-                return JsonResponse({
-                    'error': f"Both Conductor and fallback failed. Conductor: {str(conductor_error)}, Fallback: {str(fallback_error)}",
-                    'traceback': traceback.format_exc()
-                }, status=500)
+                logger.info(f"🔄 Attempt {i+1}: Trying {fallback_mode} mode for prompt length={len(prompt)}")
+                
+                if fallback_mode == 'gemini_only':
+                    # Single LLM - fastest and most reliable
+                    response, metadata = orchestrator.query_gemini(prompt, history[:-1])
+                    result = {
+                        "mode": "gemini_only",
+                        "response": response,
+                        "metadata": metadata,
+                        "provider": "gemini"
+                    }
+                elif fallback_mode == 'power_duo':
+                    # Two LLMs - good balance of speed and quality
+                    gemini_response, gemini_meta = orchestrator.query_gemini(prompt, history[:-1])
+                    deepseek_response, deepseek_meta = orchestrator.query_deepseek(prompt, history[:-1])
+                    
+                    # Simple synthesis
+                    synthesis_prompt = f"""
+                    Combine these two AI responses into a comprehensive answer:
+                    
+                    Gemini: {gemini_response}
+                    
+                    DeepSeek: {deepseek_response}
+                    
+                    Original question: {prompt}
+                    
+                    Provide a synthesized response that combines the best insights from both.
+                    """
+                    final_response, metadata = orchestrator.query_gemini(synthesis_prompt)
+                    
+                    result = {
+                        "mode": "power_duo",
+                        "response": final_response,
+                        "metadata": metadata,
+                        "provider": "power_duo"
+                    }
+                else:  # consensus
+                    # All LLMs - most comprehensive but slowest
+                    result = orchestrator.orchestrate_response(prompt, history[:-1], mode='consensus')
+                
+                logger.info(f"✅ {fallback_mode} mode succeeded!")
+                break
+                
+            except Exception as mode_error:
+                logger.warning(f"⚠️ {fallback_mode} mode failed: {mode_error}")
+                if i == len(fallback_modes) - 1:
+                    # All modes failed
+                    return JsonResponse({
+                        'error': f"All modes failed. Last error: {str(mode_error)}",
+                        'details': 'Please try breaking your question into smaller parts.'
+                    }, status=500)
+                continue
+        
+        if result is None:
+            return JsonResponse({
+                'error': 'All processing modes failed',
+                'details': 'Please try a simpler question or break it into smaller parts.'
+            }, status=500)
         
         # Save assistant response (skip for privacy mode)
         if mode == 'parallel':
