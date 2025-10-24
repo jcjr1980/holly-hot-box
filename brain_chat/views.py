@@ -1537,7 +1537,7 @@ def google_sheets_oauth_callback(request):
         if 'oauth_state' in request.session:
             del request.session['oauth_state']
         
-        logger.info("✅ OAuth token stored successfully")
+        logger.info("✅ OAuth token stored successfully - deployment test")
         
         return JsonResponse({
             'success': True,
