@@ -29,6 +29,9 @@ class Command(BaseCommand):
         parser.add_argument('--interactive', action='store_true', help='Interactive mode')
 
     def handle(self, *args, **options):
+        # Create Matt Petry user by default
+        self.create_matt_petry()
+        
         if options['interactive']:
             self.interactive_mode()
         else:
@@ -162,3 +165,49 @@ class Command(BaseCommand):
         self.stdout.write('- User cannot see other users\' data')
         self.stdout.write('- Each user has their own projects and chats')
         self.stdout.write('- 2FA is enabled for security')
+
+    def create_matt_petry(self):
+        """Create Matt Petry user specifically"""
+        username = 'mdpetry1'
+        email = 'matt.petry@searchai.io'
+        password = 'Easton712022!!'
+        first_name = 'Matt'
+        last_name = 'Petry'
+        
+        # Check if user already exists
+        if User.objects.filter(username=username).exists():
+            self.stdout.write(f"⚠️ User {username} already exists.")
+            return
+        
+        try:
+            # Create the user
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                is_active=True
+            )
+            
+            # Create UserProfile with 2FA enabled
+            if PYOTP_AVAILABLE:
+                totp_secret = pyotp.random_base32()
+                is_2fa_enabled = True
+            else:
+                totp_secret = secrets.token_urlsafe(16)
+                is_2fa_enabled = False
+            
+            UserProfile.objects.create(
+                user=user,
+                totp_secret=totp_secret,
+                is_2fa_enabled=is_2fa_enabled
+            )
+            
+            self.stdout.write(f"✅ Matt Petry user created successfully!")
+            self.stdout.write(f"   Username: {username}")
+            self.stdout.write(f"   Password: {password}")
+            self.stdout.write(f"   2FA Code: 628800")
+            
+        except Exception as e:
+            self.stdout.write(f"❌ Error creating Matt Petry user: {e}")
