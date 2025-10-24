@@ -1690,3 +1690,49 @@ def create_chat(request):
             }, status=500)
     
     return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+def register_view(request):
+    """Handle user registration requests"""
+    if request.method == 'POST':
+        try:
+            name = request.POST.get('name', '').strip()
+            email = request.POST.get('email', '').strip()
+            phone = request.POST.get('phone', '').strip()
+            
+            if not name or not email or not phone:
+                return render(request, 'brain_chat/register.html', {
+                    'error': 'All fields are required'
+                })
+            
+            # Check if email already exists
+            if RegistrationRequest.objects.filter(email=email).exists():
+                return render(request, 'brain_chat/register.html', {
+                    'error': 'Email already registered'
+                })
+            
+            # Create registration request
+            registration = RegistrationRequest.objects.create(
+                name=name,
+                email=email,
+                phone=phone,
+                status='pending'
+            )
+            
+            logger.info(f"✅ New registration request: {name} ({email})")
+            
+            # Redirect to success page
+            return redirect('register_success')
+            
+        except Exception as e:
+            logger.error(f"Registration error: {e}")
+            return render(request, 'brain_chat/register.html', {
+                'error': 'Registration failed. Please try again.'
+            })
+    
+    return render(request, 'brain_chat/register.html')
+
+
+def register_success_view(request):
+    """Registration success page"""
+    return render(request, 'brain_chat/register_success.html')

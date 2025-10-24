@@ -1,0 +1,132 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block title %}Add New User - Holly Hot Box{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .form-row {
+        margin-bottom: 20px;
+    }
+    .form-row label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+    }
+    .form-row input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    .form-row input:focus {
+        border-color: #00bfff;
+        outline: none;
+        box-shadow: 0 0 5px rgba(0, 191, 255, 0.3);
+    }
+    .submit-row {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+    }
+    .submit-row input {
+        background: linear-gradient(135deg, #00bfff 0%, #0080ff 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .submit-row input:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 191, 255, 0.4);
+    }
+    .help-text {
+        color: #666;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+    .user-info {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .user-info h3 {
+        color: #00bfff;
+        margin-top: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="user-info">
+    <h3>🎯 Holly Hot Box User Creation</h3>
+    <p>Create a new user with complete data isolation. Each user will have their own:</p>
+    <ul>
+        <li>📁 Projects (completely private)</li>
+        <li>💬 Chat sessions (completely private)</li>
+        <li>📝 Diary notes (completely private)</li>
+        <li>📄 Project files (completely private)</li>
+        <li>🔐 2FA settings (individual)</li>
+    </ul>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <div class="form-row">
+        <label for="username">Username *</label>
+        <input type="text" id="username" name="username" required>
+        <div class="help-text">Unique username for login</div>
+    </div>
+    
+    <div class="form-row">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email">
+        <div class="help-text">Optional email address</div>
+    </div>
+    
+    <div class="form-row">
+        <label for="first_name">First Name</label>
+        <input type="text" id="first_name" name="first_name">
+        <div class="help-text">Optional first name</div>
+    </div>
+    
+    <div class="form-row">
+        <label for="last_name">Last Name</label>
+        <input type="text" id="last_name" name="last_name">
+        <div class="help-text">Optional last name</div>
+    </div>
+    
+    <div class="form-row">
+        <label for="password">Password</label>
+        <input type="text" id="password" name="password" placeholder="Leave blank for auto-generated password">
+        <div class="help-text">Leave blank to auto-generate a secure password</div>
+    </div>
+    
+    <div class="submit-row">
+        <input type="submit" value="Create User" class="default">
+    </div>
+</form>
+
+<script>
+// Auto-generate username from email if provided
+document.getElementById('email').addEventListener('blur', function() {
+    const email = this.value;
+    const usernameField = document.getElementById('username');
+    
+    if (email && !usernameField.value) {
+        const username = email.split('@')[0];
+        usernameField.value = username;
+    }
+});
+</script>
+{% endblock %}
