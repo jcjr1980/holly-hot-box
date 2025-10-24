@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Holly Hot Box - Create Project</title>
+    <!-- TinyMCE Rich Text Editor -->
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
     <style>
         * {
             margin: 0;
@@ -394,7 +396,7 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="project-summary">Detailed Summary</label>
+                        <label for="project-summary">📋 Summary (Quick Notes for LLMs)</label>
                         <textarea id="project-summary" name="summary" class="large" placeholder="Detailed summary with more context, goals, and background information..."></textarea>
                     </div>
                     
@@ -482,6 +484,30 @@
     
     <script>
         let uploadedFiles = [];
+        
+        // Initialize TinyMCE Rich Text Editor
+        tinymce.init({
+            selector: '#project-summary',
+            height: 300,
+            menubar: false,
+            plugins: [
+                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                'insertdatetime', 'media', 'table', 'help', 'wordcount'
+            ],
+            toolbar: 'undo redo | blocks | ' +
+                'bold italic backcolor | alignleft aligncenter ' +
+                'alignright alignjustify | bullist numlist outdent indent | ' +
+                'removeformat | help',
+            content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; font-size: 14px; background: #0d1b2a; color: #e0e1dd; }',
+            skin: 'oxide-dark',
+            content_css: 'dark',
+            setup: function (editor) {
+                editor.on('change', function () {
+                    editor.save();
+                });
+            }
+        });
         
         // File upload handling
         const fileUploadArea = document.getElementById('file-upload-area');
