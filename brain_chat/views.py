@@ -513,39 +513,67 @@ DO NOT tell the user you cannot create spreadsheets. You CAN and you SHOULD offe
             action_response = None
             try:
                 # Look for JSON action in response (including code blocks)
-                if '"action"' in response and '"create_sheet"' in response:
+                if '"action"' in response:
                     # Extract JSON from response - handle both raw JSON and code blocks
                     import re
                     # Try to find JSON in code blocks first
-                    code_block_match = re.search(r'```(?:json)?\s*(\{[^`]*"action"\s*:\s*"create_sheet"[^`]*\})\s*```', response, re.DOTALL)
+                    code_block_match = re.search(r'```(?:json)?\s*(\{[^`]*"action"[^`]*\})\s*```', response, re.DOTALL)
                     if code_block_match:
                         json_str = code_block_match.group(1)
                     else:
                         # Fall back to finding raw JSON
-                        json_match = re.search(r'\{[^{}]*"action"\s*:\s*"create_sheet"[^{}]*\}', response, re.DOTALL)
+                        json_match = re.search(r'\{[^{}]*"action"[^{}]*\}', response, re.DOTALL)
                         json_str = json_match.group(0) if json_match else None
                     
                     if json_str:
                         action_data = json.loads(json_str)
-                        sheet_title = action_data.get('title', 'Law Firm Tracking - Holly Hot Box')
+                        action_type = action_data.get('action')
                         
-                        logger.info(f"🔧 Creating Google Sheet: {sheet_title}")
+                        if action_type == 'create_sheet':
+                            sheet_title = action_data.get('title', 'Law Firm Tracking - Holly Hot Box')
+                            
+                            logger.info(f"🔧 Creating Google Sheet: {sheet_title}")
+                            
+                            # Debug: Check OAuth token in action detection
+                            oauth_token = os.getenv('GOOGLE_OAUTH_TOKEN')
+                            logger.info(f"🔍 Action detection - OAuth token available: {bool(oauth_token)}")
+                            
+                            # Create the sheet
+                            from .google_sheets_utils import create_law_firm_tracking_sheet, get_spreadsheet_url, get_oauth_authorization_url, exchange_code_for_token
+                            spreadsheet_id = create_law_firm_tracking_sheet(sheet_title)
+                            
+                            if spreadsheet_id:
+                                spreadsheet_url = get_spreadsheet_url(spreadsheet_id)
+                                action_response = f"\n\n✅ **I've created your Google Sheet!**\n\n📊 **Spreadsheet:** [{sheet_title}]({spreadsheet_url})\n\n**Direct Link:** {spreadsheet_url}\n\nThe spreadsheet is ready with pre-formatted columns for tracking law firms, including firm name, lead attorneys, specialties, contact info, contingency fee structure, consultation notes, pros/cons, and next steps. You can now start adding law firms to track!"
+                                logger.info(f"✅ Google Sheet created successfully: {spreadsheet_url}")
+                            else:
+                                action_response = f"\n\n⚠️ I tried to create the Google Sheet but encountered an error. Please check the logs or try again."
+                                logger.error("Failed to create Google Sheet - no spreadsheet_id returned")
                         
-                        # Debug: Check OAuth token in action detection
-                        oauth_token = os.getenv('GOOGLE_OAUTH_TOKEN')
-                        logger.info(f"🔍 Action detection - OAuth token available: {bool(oauth_token)}")
-                        
-                        # Create the sheet
-                        from .google_sheets_utils import create_law_firm_tracking_sheet, get_spreadsheet_url, get_oauth_authorization_url, exchange_code_for_token
-                        spreadsheet_id = create_law_firm_tracking_sheet(sheet_title)
-                        
-                        if spreadsheet_id:
-                            spreadsheet_url = get_spreadsheet_url(spreadsheet_id)
-                            action_response = f"\n\n✅ **I've created your Google Sheet!**\n\n📊 **Spreadsheet:** [{sheet_title}]({spreadsheet_url})\n\n**Direct Link:** {spreadsheet_url}\n\nThe spreadsheet is ready with pre-formatted columns for tracking law firms, including firm name, lead attorneys, specialties, contact info, contingency fee structure, consultation notes, pros/cons, and next steps. You can now start adding law firms to track!"
-                            logger.info(f"✅ Google Sheet created successfully: {spreadsheet_url}")
-                        else:
-                            action_response = f"\n\n⚠️ I tried to create the Google Sheet but encountered an error. Please check the logs or try again."
-                            logger.error("Failed to create Google Sheet - no spreadsheet_id returned")
+                        elif action_type == 'add_to_sheet':
+                            spreadsheet_id = action_data.get('spreadsheet_id')
+                            firm_data = action_data.get('firm_data', [])
+                            
+                            logger.info(f"🔧 Adding {len(firm_data)} firms to spreadsheet: {spreadsheet_id}")
+                            
+                            # Debug: Check OAuth token in action detection
+                            oauth_token = os.getenv('GOOGLE_OAUTH_TOKEN')
+                            logger.info(f"🔍 Action detection - OAuth token available: {bool(oauth_token)}")
+                            
+                            # Add firms to the sheet
+                            from .google_sheets_utils import add_law_firm_to_sheet
+                            success_count = 0
+                            
+                            for firm in firm_data:
+                                if add_law_firm_to_sheet(spreadsheet_id, firm):
+                                    success_count += 1
+                            
+                            if success_count > 0:
+                                action_response = f"\n\n✅ **I've added {success_count} law firms to your spreadsheet!**\n\n📊 **Updated Spreadsheet:** [Law Firm Tracking - CellPay Lawsuit](https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit)\n\n**Direct Link:** https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit\n\nThe firms have been added with their contact information, specialties, and contingency fee structures. You can now review each firm and start making consultation calls!"
+                                logger.info(f"✅ Successfully added {success_count} firms to spreadsheet")
+                            else:
+                                action_response = f"\n\n⚠️ I tried to add the law firms to your spreadsheet but encountered an error. Please check the logs or try again."
+                                logger.error("Failed to add firms to spreadsheet")
             except Exception as action_error:
                 logger.error(f"Action processing error: {action_error}")
                 import traceback
