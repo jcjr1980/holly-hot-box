@@ -397,7 +397,7 @@
                     
                     <div class="form-group">
                         <label for="project-summary">📋 Summary (Quick Notes for LLMs)</label>
-                        <textarea id="project-summary" name="summary" class="large" placeholder="Detailed summary with more context, goals, and background information..."></textarea>
+                        <textarea id="project-summary" name="summary" class="large" placeholder="📋 Rich text summary with bullet points, line breaks, and formatting. Use Ctrl+Shift+8 for bullets, Ctrl+Shift+7 for numbered lists..."></textarea>
                     </div>
                     
                     <div class="form-row">
@@ -485,26 +485,41 @@
     <script>
         let uploadedFiles = [];
         
-        // Initialize TinyMCE Rich Text Editor
+        // Initialize TinyMCE Rich Text Editor for Summary Field
         tinymce.init({
             selector: '#project-summary',
             height: 300,
             menubar: false,
             plugins: [
-                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
+                'searchreplace', 'visualblocks', 'code', 'wordcount'
             ],
             toolbar: 'undo redo | blocks | ' +
-                'bold italic backcolor | alignleft aligncenter ' +
-                'alignright alignjustify | bullist numlist outdent indent | ' +
-                'removeformat | help',
-            content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; font-size: 14px; background: #0d1b2a; color: #e0e1dd; }',
+                'bold italic | alignleft aligncenter alignright alignjustify | ' +
+                'bullist numlist outdent indent | link | removeformat | help',
+            content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; font-size: 14px; background: #0d1b2a; color: #e0e1dd; line-height: 1.6; }',
             skin: 'oxide-dark',
             content_css: 'dark',
+            // Enhanced list formatting
+            list_indent_on_tab: true,
+            indent: true,
+            // Better line break handling
+            forced_root_block: 'p',
+            force_br_newlines: false,
+            force_p_newlines: true,
+            // Setup function
             setup: function (editor) {
                 editor.on('change', function () {
                     editor.save();
+                });
+                
+                // Add keyboard shortcuts for lists
+                editor.addShortcut('ctrl+shift+8', 'Toggle bullet list', function() {
+                    editor.execCommand('InsertUnorderedList');
+                });
+                
+                editor.addShortcut('ctrl+shift+7', 'Toggle numbered list', function() {
+                    editor.execCommand('InsertOrderedList');
                 });
             }
         });
@@ -658,7 +673,7 @@
         }
         
         function goBack() {
-            window.location.href = '/';
+            window.location.href = '/home/';
         }
         
         // Form submission
