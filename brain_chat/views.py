@@ -135,7 +135,12 @@ def is_blocked_country(country):
     return country in blocked_countries
 
 def coming_soon_view(request):
-    """Coming Soon landing page"""
+    """Coming Soon landing page - redirects logged-in users to home"""
+    # If user is logged in, redirect to home dashboard
+    if request.user.is_authenticated:
+        return redirect('home')
+    
+    # Show coming soon page for non-authenticated users
     return render(request, 'brain_chat/coming_soon.html')
 
 
