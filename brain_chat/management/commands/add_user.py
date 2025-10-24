@@ -93,6 +93,9 @@ class Command(BaseCommand):
         
         if user:
             self.display_user_info(user, password)
+            
+        # Also create Matt Petry user if this is the first run
+        self.create_matt_petry_if_needed()
 
     def create_user(self, username, email, first_name, last_name, password):
         """Create a new user with profile"""
@@ -163,48 +166,33 @@ class Command(BaseCommand):
         self.stdout.write('- Each user has their own projects and chats')
         self.stdout.write('- 2FA is enabled for security')
 
-    def create_matt_petry(self):
-        """Create Matt Petry user specifically"""
+    def create_matt_petry_if_needed(self):
+        """Create Matt Petry user if it doesn't exist"""
         username = 'mdpetry1'
-        email = 'matt.petry@searchai.io'
-        password = 'Easton712022!!'
-        first_name = 'Matt'
-        last_name = 'Petry'
         
-        # Check if user already exists
+        # Check if Matt Petry already exists
         if User.objects.filter(username=username).exists():
-            self.stdout.write(f"⚠️ User {username} already exists.")
             return
-        
+            
         try:
-            # Create the user
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=password,
-                first_name=first_name,
-                last_name=last_name,
-                is_active=True
+            # Create Matt Petry user
+            user = self.create_user(
+                username='mdpetry1',
+                email='matt.petry@searchai.io',
+                first_name='Matt',
+                last_name='Petry',
+                password='Easton712022!!'
             )
             
-            # Create UserProfile with 2FA enabled
-            if PYOTP_AVAILABLE:
-                totp_secret = pyotp.random_base32()
-                is_2fa_enabled = True
-            else:
-                totp_secret = secrets.token_urlsafe(16)
-                is_2fa_enabled = False
-            
-            UserProfile.objects.create(
-                user=user,
-                totp_secret=totp_secret,
-                is_2fa_enabled=is_2fa_enabled
-            )
-            
-            self.stdout.write(f"✅ Matt Petry user created successfully!")
-            self.stdout.write(f"   Username: {username}")
-            self.stdout.write(f"   Password: {password}")
-            self.stdout.write(f"   2FA Code: 628800")
-            
+            if user:
+                self.stdout.write('\n' + '=' * 50)
+                self.stdout.write(self.style.SUCCESS('🎉 MATT PETRY USER CREATED'))
+                self.stdout.write('=' * 50)
+                self.stdout.write('Username: mdpetry1')
+                self.stdout.write('Email: matt.petry@searchai.io')
+                self.stdout.write('Password: Easton712022!!')
+                self.stdout.write('2FA Code: 628800')
+                self.stdout.write('=' * 50)
+                
         except Exception as e:
             self.stdout.write(f"❌ Error creating Matt Petry user: {e}")
