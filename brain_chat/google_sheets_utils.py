@@ -332,3 +332,100 @@ def get_spreadsheet_url(spreadsheet_id: str) -> str:
     """
     return f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit"
 
+def get_oauth_authorization_url():
+    """
+    Get the OAuth authorization URL for Google Sheets
+    
+    Returns:
+        Authorization URL and state for OAuth flow
+    """
+    # OAuth configuration for Google Sheets
+    oauth_config = {
+        'client_id': '76683077489-63nd38kqoibjrap7jp1bhvcs9risjsso.apps.googleusercontent.com',
+        'client_secret': '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',
+        'redirect_uri': 'https://hollyhotbox.com/google-sheets/callback/',
+        'scope': 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+        'auth_uri': 'https://accounts.google.com/o/oauth2/v2/auth',
+        'token_uri': 'https://oauth2.googleapis.com/token'
+    }
+    
+    # Create authorization URL
+    auth_params = {
+        'client_id': oauth_config['client_id'],
+        'redirect_uri': oauth_config['redirect_uri'],
+        'scope': oauth_config['scope'],
+        'response_type': 'code',
+        'access_type': 'offline',
+        'prompt': 'consent',
+        'state': 'holly_sheets_auth'
+    }
+    
+    # Build URL
+    auth_url = f"{oauth_config['auth_uri']}?" + "&".join([f"{k}={v}" for k, v in auth_params.items()])
+    
+    return auth_url, 'holly_sheets_auth'
+
+def exchange_code_for_token(code: str, state: str = None):
+    """
+    Exchange authorization code for access token
+    
+    Args:
+        code: Authorization code from OAuth callback
+        state: State parameter from OAuth flow
+    
+    Returns:
+        Credentials object with access token
+    """
+    import requests
+    
+    oauth_config = {
+        'client_id': '76683077489-63nd38kqoibjrap7jp1bhvcs9risjsso.apps.googleusercontent.com',
+        'client_secret': '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',
+        'redirect_uri': 'https://hollyhotbox.com/google-sheets/callback/',
+        'token_uri': 'https://oauth2.googleapis.com/token'
+    }
+    
+    try:
+        # Exchange code for token
+        token_data = {
+            'client_id': oauth_config['client_id'],
+            'client_secret': oauth_config['client_secret'],
+            'code': code,
+            'grant_type': 'authorization_code',
+            'redirect_uri': oauth_config['redirect_uri']
+        }
+        
+        response = requests.post(oauth_config['token_uri'], data=token_data)
+        token_response = response.json()
+        
+        if 'error' in token_response:
+            logger.error(f"❌ Token exchange failed: {token_response['error']}")
+            return None, None
+        
+        # Create credentials object
+        credentials = Credentials(
+            token=token_response.get('access_token'),
+            refresh_token=token_response.get('refresh_token'),
+            token_uri=oauth_config['token_uri'],
+            client_id=oauth_config['client_id'],
+            client_secret=oauth_config['client_secret'],
+            scopes=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+        )
+        
+        # Prepare token data for storage
+        stored_token_data = {
+            'access_token': token_response.get('access_token'),
+            'refresh_token': token_response.get('refresh_token'),
+            'token_uri': oauth_config['token_uri'],
+            'client_id': oauth_config['client_id'],
+            'client_secret': oauth_config['client_secret'],
+            'scopes': ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+        }
+        
+        logger.info("✅ Successfully exchanged code for OAuth token")
+        return credentials, stored_token_data
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to exchange code for token: {e}")
+        return None, None
+

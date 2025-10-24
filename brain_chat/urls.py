@@ -47,5 +47,9 @@ urlpatterns = [
     # Google Sheets Integration
     path('create-sheet/', views.create_google_sheet, name='create_google_sheet'),
     path('add-firm-to-sheet/', views.add_firm_to_sheet, name='add_firm_to_sheet'),
+    
+    # Google Sheets OAuth
+    path('google-sheets/auth/', views.google_sheets_oauth_start, name='google_sheets_oauth_start'),
+    path('google-sheets/callback/', views.google_sheets_oauth_callback, name='google_sheets_oauth_callback'),
 ]
 

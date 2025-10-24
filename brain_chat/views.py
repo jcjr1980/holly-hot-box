@@ -532,7 +532,7 @@ DO NOT tell the user you cannot create spreadsheets. You CAN and you SHOULD offe
                         logger.info(f"🔧 Creating Google Sheet: {sheet_title}")
                         
                         # Create the sheet
-                        from .google_sheets_utils import create_law_firm_tracking_sheet, get_spreadsheet_url
+                        from .google_sheets_utils import create_law_firm_tracking_sheet, get_spreadsheet_url, get_oauth_authorization_url, exchange_code_for_token
                         spreadsheet_id = create_law_firm_tracking_sheet(sheet_title)
                         
                         if spreadsheet_id:
@@ -1486,3 +1486,61 @@ def add_firm_to_sheet(request):
             'success': False,
             'error': str(e)
         }, status=500)
+
+def google_sheets_oauth_start(request):
+    """Start OAuth flow for Google Sheets authentication"""
+    try:
+        authorization_url, state = get_oauth_authorization_url()
+        
+        if not authorization_url:
+            return JsonResponse({'error': 'Failed to create OAuth authorization URL'}, status=500)
+        
+        # Store state in session for verification
+        request.session['oauth_state'] = state
+        
+        return JsonResponse({
+            'success': True,
+            'authorization_url': authorization_url,
+            'message': 'Please visit the authorization URL to grant Google Sheets access'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error starting OAuth flow: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+def google_sheets_oauth_callback(request):
+    """Handle OAuth callback for Google Sheets"""
+    try:
+        code = request.GET.get('code')
+        state = request.GET.get('state')
+        stored_state = request.session.get('oauth_state')
+        
+        if not code:
+            return JsonResponse({'error': 'Authorization code not provided'}, status=400)
+        
+        if state != stored_state:
+            return JsonResponse({'error': 'Invalid state parameter'}, status=400)
+        
+        # Exchange code for token
+        credentials, token_data = exchange_code_for_token(code, state)
+        
+        if not credentials:
+            return JsonResponse({'error': 'Failed to exchange code for token'}, status=500)
+        
+        # Store token data in environment variable (for Railway)
+        # In production, you'd want to store this securely in a database
+        import os
+        os.environ['GOOGLE_OAUTH_TOKEN'] = json.dumps(token_data)
+        
+        # Clear session state
+        if 'oauth_state' in request.session:
+            del request.session['oauth_state']
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Google Sheets authentication successful! Holly can now create spreadsheets.'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in OAuth callback: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
