@@ -455,7 +455,7 @@
                 <h2>📋 Summary (Quick Notes for LLMs)</h2>
                 <button class="edit-btn" onclick="toggleEdit('summary')">✏️ Edit</button>
             </div>
-            <p id="summary-display" style="font-style: italic; color: #a8dadc;">{{ project.summary|default:"No summary yet. This will help LLMs understand your project context quickly." }}</p>
+            <div id="summary-display" style="font-style: italic; color: #a8dadc;">{{ project.summary|safe|default:"No summary yet. This will help LLMs understand your project context quickly." }}</div>
             <div id="summary-edit" style="display: none;">
                 <div id="summary-editor-container" style="border: 1px solid #415a77; border-radius: 6px; background: #0d1b2a; min-height: 200px;"></div>
                 <textarea id="summary-input" style="display: none;">{{ project.summary }}</textarea>
@@ -688,7 +688,11 @@
             if (field === 'summary') {
                 // Destroy existing editor if it exists
                 if (quillEditor) {
-                    quillEditor = null;
+                    try {
+                        quillEditor = null;
+                    } catch (e) {
+                        console.log('Clearing existing editor');
+                    }
                 }
                 
                 setTimeout(function() {
@@ -696,11 +700,16 @@
                     const textarea = document.getElementById('summary-input');
                     
                     if (container && textarea) {
-                        // Clear the container first
+                        // COMPLETELY CLEAR the container
                         container.innerHTML = '';
                         
+                        // Create a fresh div for Quill
+                        const editorDiv = document.createElement('div');
+                        editorDiv.id = 'quill-editor-' + Date.now();
+                        container.appendChild(editorDiv);
+                        
                         // Create Quill editor
-                        quillEditor = new Quill(container, {
+                        quillEditor = new Quill('#' + editorDiv.id, {
                             theme: 'snow',
                             modules: {
                                 toolbar: [
@@ -719,7 +728,7 @@
                             quillEditor.root.innerHTML = textarea.value;
                         }
                     }
-                }, 50);
+                }, 100);
             }
         }
         
