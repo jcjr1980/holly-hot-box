@@ -489,13 +489,36 @@
                 return;
             }
             
-            // TODO: Create chat with selected strategy
-            alert(`Starting chat with ${selectedStrategy} strategy!`);
-            // window.location.href = `/chat/?strategy=${selectedStrategy}`;
+            // Create chat with selected strategy
+            fetch('/chat/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    'title': `New Chat - ${selectedStrategy.charAt(0).toUpperCase() + selectedStrategy.slice(1)}`,
+                    'is_quickie': false,
+                    'mode': selectedStrategy
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Redirect to chat interface
+                    window.location.href = `/chat/${data.chat_id}/`;
+                } else {
+                    alert('Error creating chat: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error creating chat');
+            });
         }
         
         function goBack() {
-            window.location.href = '/';
+            window.location.href = '/home/';
         }
         
         function openSearch() {
