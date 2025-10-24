@@ -8,6 +8,7 @@ urlpatterns = [
     path('', views.coming_soon_view, name='coming_soon'),  # Homepage is now Coming Soon
     path('home/', views.home, name='home'),  # Actual app home for logged in users
     path('new-chat/', views.new_chat, name='new_chat'),
+    path('quickie/', views.quickie_chat, name='quickie_chat'),
     path('project/create/', views.create_project_view, name='create_project'),
     path('chat/', views.chat_home, name='chat_home'),
     path('login/', views.login_view, name='login'),

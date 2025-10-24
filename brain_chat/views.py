@@ -1626,3 +1626,21 @@ def google_sheets_oauth_callback(request):
     except Exception as e:
         logger.error(f"Error in OAuth callback: {e}")
         return JsonResponse({'error': str(e)}, status=500)
+
+
+def quickie_chat(request):
+    """Quick chat interface for instant AI conversations"""
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    # Get user's recent quick chats
+    recent_chats = ChatSession.objects.filter(
+        user=request.user,
+        is_quickie=True
+    ).order_by('-updated_at')[:5]
+    
+    context = {
+        'recent_chats': recent_chats,
+    }
+    
+    return render(request, 'brain_chat/quickie_chat.html', context)
