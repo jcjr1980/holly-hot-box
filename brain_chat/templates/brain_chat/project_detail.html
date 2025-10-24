@@ -7,6 +7,58 @@
     <!-- CKEditor 5 WYSIWYG Editor with Table Support -->
     <script src="https://cdn.ckeditor.com/ckeditor5/40.1.0/classic/ckeditor.js"></script>
     <style>
+        /* CKEditor 5 Dark Theme Styling */
+        .ck-editor__editable {
+            background-color: #0d1b2a !important;
+            color: #e0e1dd !important;
+            border: 1px solid #415a77 !important;
+        }
+        
+        .ck-editor__editable:focus {
+            border-color: #667eea !important;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
+        }
+        
+        .ck-toolbar {
+            background-color: #1b263b !important;
+            border: 1px solid #415a77 !important;
+        }
+        
+        .ck-button {
+            color: #e0e1dd !important;
+        }
+        
+        .ck-button:hover {
+            background-color: #415a77 !important;
+        }
+        
+        .ck-button.ck-on {
+            background-color: #667eea !important;
+            color: white !important;
+        }
+        
+        .ck-dropdown__panel {
+            background-color: #1b263b !important;
+            border: 1px solid #415a77 !important;
+        }
+        
+        .ck-list__item {
+            color: #e0e1dd !important;
+        }
+        
+        .ck-list__item:hover {
+            background-color: #415a77 !important;
+        }
+        
+        .ck-table {
+            border-color: #415a77 !important;
+        }
+        
+        .ck-table td {
+            border-color: #415a77 !important;
+        }
+    </style>
+    <style>
         * {
             margin: 0;
             padding: 0;
@@ -770,8 +822,8 @@
         function saveSummary() {
             let newSummary;
             
-            if (tinyMCEInstance) {
-                newSummary = tinyMCEInstance.getContent();
+            if (ckEditorInstance) {
+                newSummary = ckEditorInstance.getData();
             } else {
                 newSummary = document.getElementById('summary-input').value;
             }

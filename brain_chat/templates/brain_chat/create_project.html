@@ -7,6 +7,58 @@
     <!-- CKEditor 5 WYSIWYG Editor with Table Support -->
     <script src="https://cdn.ckeditor.com/ckeditor5/40.1.0/classic/ckeditor.js"></script>
     <style>
+        /* CKEditor 5 Dark Theme Styling */
+        .ck-editor__editable {
+            background-color: #0d1b2a !important;
+            color: #e0e1dd !important;
+            border: 1px solid #415a77 !important;
+        }
+        
+        .ck-editor__editable:focus {
+            border-color: #667eea !important;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
+        }
+        
+        .ck-toolbar {
+            background-color: #1b263b !important;
+            border: 1px solid #415a77 !important;
+        }
+        
+        .ck-button {
+            color: #e0e1dd !important;
+        }
+        
+        .ck-button:hover {
+            background-color: #415a77 !important;
+        }
+        
+        .ck-button.ck-on {
+            background-color: #667eea !important;
+            color: white !important;
+        }
+        
+        .ck-dropdown__panel {
+            background-color: #1b263b !important;
+            border: 1px solid #415a77 !important;
+        }
+        
+        .ck-list__item {
+            color: #e0e1dd !important;
+        }
+        
+        .ck-list__item:hover {
+            background-color: #415a77 !important;
+        }
+        
+        .ck-table {
+            border-color: #415a77 !important;
+        }
+        
+        .ck-table td {
+            border-color: #415a77 !important;
+        }
+    </style>
+    <style>
         * {
             margin: 0;
             padding: 0;
@@ -527,46 +579,48 @@
     <script>
         let uploadedFiles = [];
         
-       // Initialize TinyMCE Rich Text Editor for Summary Field
+       // Initialize CKEditor 5 Rich Text Editor for Summary Field
        document.addEventListener('DOMContentLoaded', function() {
            // Wait a bit to ensure the DOM is fully loaded
            setTimeout(function() {
                const summaryTextarea = document.getElementById('project-summary');
                if (summaryTextarea) {
-                   // Initialize TinyMCE
-                   tinymce.init({
-                       selector: '#project-summary',
-                       height: 300,
-                       menubar: false,
-                       plugins: [
-                           'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                           'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                           'insertdatetime', 'media', 'table', 'help', 'wordcount'
-                       ],
-                       toolbar: 'undo redo | blocks | ' +
-                           'bold italic backcolor | alignleft aligncenter ' +
-                           'alignright alignjustify | bullist numlist outdent indent | ' +
-                           'removeformat | table | help',
-                       content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; font-size: 14px; background: #0d1b2a; color: #e0e1dd; }',
-                       skin: 'oxide-dark',
-                       content_css: 'dark',
-                       table_default_attributes: {
-                           border: '1',
-                           cellpadding: '8',
-                           cellspacing: '0'
-                       },
-                       table_default_styles: {
-                           'border-collapse': 'collapse',
-                           'width': '100%',
-                           'margin': '10px 0'
-                       },
-                       table_class_list: [
-                           {title: 'None', value: ''},
-                           {title: 'Table', value: 'table'},
-                           {title: 'Striped Table', value: 'table table-striped'},
-                           {title: 'Bordered Table', value: 'table table-bordered'}
-                       ]
-                   });
+                   // Initialize CKEditor 5
+                   ClassicEditor
+                       .create(summaryTextarea, {
+                           toolbar: {
+                               items: [
+                                   'undo', 'redo', '|',
+                                   'heading', '|',
+                                   'bold', 'italic', 'underline', '|',
+                                   'bulletedList', 'numberedList', '|',
+                                   'outdent', 'indent', '|',
+                                   'insertTable', '|',
+                                   'link', 'blockQuote', '|',
+                                   'removeFormat'
+                               ]
+                           },
+                           table: {
+                               contentToolbar: [
+                                   'tableColumn', 'tableRow', 'mergeTableCells',
+                                   'tableProperties', 'tableCellProperties'
+                               ]
+                           },
+                           heading: {
+                               options: [
+                                   { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+                                   { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+                                   { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+                                   { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+                               ]
+                           }
+                       })
+                       .then(editor => {
+                           console.log('CKEditor 5 initialized successfully');
+                       })
+                       .catch(error => {
+                           console.error('Error initializing CKEditor 5:', error);
+                       });
                }
            }, 100);
        });
