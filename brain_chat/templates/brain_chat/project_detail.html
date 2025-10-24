@@ -457,8 +457,8 @@
             </div>
             <p id="summary-display" style="font-style: italic; color: #a8dadc;">{{ project.summary|default:"No summary yet. This will help LLMs understand your project context quickly." }}</p>
             <div id="summary-edit" style="display: none;">
+                <div id="summary-editor-container" style="border: 1px solid #415a77; border-radius: 6px; background: #0d1b2a; min-height: 200px;"></div>
                 <textarea id="summary-input" style="display: none;">{{ project.summary }}</textarea>
-                <div id="quill-editor" style="min-height: 200px; border: 1px solid #415a77; border-radius: 6px; background: #0d1b2a;"></div>
                 <div style="margin-top: 10px; display: flex; gap: 10px;">
                     <button class="save-btn" onclick="saveSummary()">💾 Save</button>
                     <button class="cancel-btn" onclick="cancelEdit('summary')">❌ Cancel</button>
@@ -685,14 +685,22 @@
             document.getElementById(field + '-edit').style.display = 'block';
             
             // Initialize Quill editor for summary field
-            if (field === 'summary' && !quillEditor) {
+            if (field === 'summary') {
+                // Destroy existing editor if it exists
+                if (quillEditor) {
+                    quillEditor = null;
+                }
+                
                 setTimeout(function() {
-                    const quillContainer = document.getElementById('quill-editor');
-                    const summaryTextarea = document.getElementById('summary-input');
+                    const container = document.getElementById('summary-editor-container');
+                    const textarea = document.getElementById('summary-input');
                     
-                    if (quillContainer && summaryTextarea) {
-                        // Create Quill editor on the div container
-                        quillEditor = new Quill('#quill-editor', {
+                    if (container && textarea) {
+                        // Clear the container first
+                        container.innerHTML = '';
+                        
+                        // Create Quill editor
+                        quillEditor = new Quill(container, {
                             theme: 'snow',
                             modules: {
                                 toolbar: [
@@ -706,18 +714,12 @@
                             placeholder: '📋 Rich text summary with bullet points, line breaks, and formatting...'
                         });
                         
-                        // Style the Quill editor to match the dark theme
-                        const editorContainer = quillEditor.container.parentNode;
-                        editorContainer.style.border = '1px solid #415a77';
-                        editorContainer.style.borderRadius = '6px';
-                        editorContainer.style.backgroundColor = '#0d1b2a';
-                        
-                        // Set initial content from textarea
-                        if (summaryTextarea.value) {
-                            quillEditor.root.innerHTML = summaryTextarea.value;
+                        // Set initial content
+                        if (textarea.value) {
+                            quillEditor.root.innerHTML = textarea.value;
                         }
                     }
-                }, 100);
+                }, 50);
             }
         }
         
@@ -725,7 +727,7 @@
             document.getElementById(field + '-display').style.display = 'block';
             document.getElementById(field + '-edit').style.display = 'none';
             
-            // Clean up Quill editor if it exists
+            // Clean up Quill editor
             if (field === 'summary' && quillEditor) {
                 quillEditor = null;
             }
@@ -760,11 +762,8 @@
         function saveSummary() {
             let newSummary;
             
-            // Get content from Quill editor if it exists, otherwise from textarea
             if (quillEditor) {
                 newSummary = quillEditor.root.innerHTML;
-                // Also update the hidden textarea
-                document.getElementById('summary-input').value = newSummary;
             } else {
                 newSummary = document.getElementById('summary-input').value;
             }
@@ -782,10 +781,6 @@
                 if (data.status === 'success') {
                     document.getElementById('summary-display').innerHTML = newSummary || 'No summary yet. This will help LLMs understand your project context quickly.';
                     cancelEdit('summary');
-                    // Clean up Quill editor
-                    if (quillEditor) {
-                        quillEditor = null;
-                    }
                 } else {
                     alert('❌ Error saving summary');
                 }
