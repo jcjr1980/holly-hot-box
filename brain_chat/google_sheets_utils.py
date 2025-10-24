@@ -301,21 +301,21 @@ def add_law_firm_to_sheet(spreadsheet_id: str, firm_data: Dict[str, Any]) -> boo
     Returns:
         True if successful, False otherwise
     """
-    # Convert firm data to row format
+    # Convert firm data to row format using the correct field names from Holly's JSON
     row = [
-        firm_data.get('name', ''),
-        firm_data.get('attorneys', ''),
-        firm_data.get('specialties', ''),
-        firm_data.get('website', ''),
-        firm_data.get('phone', ''),
-        firm_data.get('email', ''),
-        firm_data.get('fee_structure', ''),
-        firm_data.get('consultation_notes', ''),
-        firm_data.get('case_assessment', ''),
-        firm_data.get('pros', ''),
-        firm_data.get('cons', ''),
-        firm_data.get('follow_up_actions', ''),
-        firm_data.get('next_steps', '')
+        firm_data.get('Firm Name', ''),
+        firm_data.get('Lead Attorney', ''),
+        firm_data.get('Specialties', ''),
+        firm_data.get('Website', ''),
+        firm_data.get('Phone', ''),
+        firm_data.get('Email Address', ''),
+        firm_data.get('Contingency Fee Structure', ''),
+        firm_data.get('Initial Consultation Notes', ''),
+        firm_data.get('Case Assessment (Initial)', ''),
+        firm_data.get('Pros', ''),
+        firm_data.get('Cons', ''),
+        firm_data.get('Follow-up Actions', ''),
+        firm_data.get('Next Steps/Follow-up Actions', '')
     ]
     
     return sheets_manager.append_data(spreadsheet_id, 'Law Firms!A:M', [row])
