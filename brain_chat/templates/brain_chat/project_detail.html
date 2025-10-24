@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Holly Hot Box - {{ project.name }}</title>
-    <!-- TinyMCE WYSIWYG Editor with Table Support -->
-    <script src="https://cdn.tiny.cloud/1/7vwn560zeu024xdj1oknt1zm8483x4ajrsjhqdhtfx68srsg/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <!-- CKEditor 5 WYSIWYG Editor with Table Support -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/40.1.0/classic/ckeditor.js"></script>
     <style>
         * {
             margin: 0;
@@ -676,55 +676,55 @@
             });
         }
         
-        let tinyMCEInstance = null;
+        let ckEditorInstance = null;
         
         function toggleEdit(field) {
             document.getElementById(field + '-display').style.display = 'none';
             document.getElementById(field + '-edit').style.display = 'block';
             
-            // Initialize TinyMCE editor for summary field
+            // Initialize CKEditor 5 for summary field
             if (field === 'summary') {
                 setTimeout(function() {
                     const textarea = document.getElementById('summary-input');
                     
-                    if (textarea && !tinyMCEInstance) {
-                        // Initialize TinyMCE
-                        tinymce.init({
-                            selector: '#summary-input',
-                            height: 300,
-                            menubar: false,
-                            plugins: [
-                                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                                'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                                'insertdatetime', 'media', 'table', 'help', 'wordcount'
-                            ],
-                            toolbar: 'undo redo | blocks | ' +
-                                'bold italic backcolor | alignleft aligncenter ' +
-                                'alignright alignjustify | bullist numlist outdent indent | ' +
-                                'removeformat | table | help',
-                            content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; font-size: 14px; background: #0d1b2a; color: #e0e1dd; }',
-                            skin: 'oxide-dark',
-                            content_css: 'dark',
-                            table_default_attributes: {
-                                border: '1',
-                                cellpadding: '8',
-                                cellspacing: '0'
-                            },
-                            table_default_styles: {
-                                'border-collapse': 'collapse',
-                                'width': '100%',
-                                'margin': '10px 0'
-                            },
-                            table_class_list: [
-                                {title: 'None', value: ''},
-                                {title: 'Table', value: 'table'},
-                                {title: 'Striped Table', value: 'table table-striped'},
-                                {title: 'Bordered Table', value: 'table table-bordered'}
-                            ],
-                            setup: function (editor) {
-                                tinyMCEInstance = editor;
-                            }
-                        });
+                    if (textarea && !ckEditorInstance) {
+                        // Initialize CKEditor 5
+                        ClassicEditor
+                            .create(textarea, {
+                                toolbar: {
+                                    items: [
+                                        'undo', 'redo', '|',
+                                        'heading', '|',
+                                        'bold', 'italic', 'underline', '|',
+                                        'bulletedList', 'numberedList', '|',
+                                        'outdent', 'indent', '|',
+                                        'insertTable', '|',
+                                        'link', 'blockQuote', '|',
+                                        'removeFormat'
+                                    ]
+                                },
+                                table: {
+                                    contentToolbar: [
+                                        'tableColumn', 'tableRow', 'mergeTableCells',
+                                        'tableProperties', 'tableCellProperties'
+                                    ]
+                                },
+                                heading: {
+                                    options: [
+                                        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+                                        { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+                                        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+                                        { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+                                    ]
+                                }
+                            })
+                            .then(editor => {
+                                ckEditorInstance = editor;
+                                console.log('CKEditor 5 initialized successfully');
+                            })
+                            .catch(error => {
+                                console.error('Error initializing CKEditor 5:', error);
+                            });
                     }
                 }, 100);
             }
@@ -734,10 +734,10 @@
             document.getElementById(field + '-display').style.display = 'block';
             document.getElementById(field + '-edit').style.display = 'none';
             
-            // Clean up TinyMCE editor
-            if (field === 'summary' && tinyMCEInstance) {
-                tinymce.remove('#summary-input');
-                tinyMCEInstance = null;
+            // Clean up CKEditor 5 editor
+            if (field === 'summary' && ckEditorInstance) {
+                ckEditorInstance.destroy();
+                ckEditorInstance = null;
             }
         }
         
