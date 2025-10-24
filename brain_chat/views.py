@@ -531,6 +531,10 @@ DO NOT tell the user you cannot create spreadsheets. You CAN and you SHOULD offe
                         
                         logger.info(f"🔧 Creating Google Sheet: {sheet_title}")
                         
+                        # Debug: Check OAuth token in action detection
+                        oauth_token = os.getenv('GOOGLE_OAUTH_TOKEN')
+                        logger.info(f"🔍 Action detection - OAuth token available: {bool(oauth_token)}")
+                        
                         # Create the sheet
                         from .google_sheets_utils import create_law_firm_tracking_sheet, get_spreadsheet_url, get_oauth_authorization_url, exchange_code_for_token
                         spreadsheet_id = create_law_firm_tracking_sheet(sheet_title)
@@ -1416,6 +1420,12 @@ def create_google_sheet(request):
             data = json.loads(request.body)
             sheet_title = data.get('title', 'Law Firm Tracking - Johnny Collins vs CellPay')
             
+            # Debug: Check if OAuth token is available
+            oauth_token = os.getenv('GOOGLE_OAUTH_TOKEN')
+            logger.info(f"🔍 OAuth token available: {bool(oauth_token)}")
+            if oauth_token:
+                logger.info(f"🔍 OAuth token preview: {oauth_token[:50]}...")
+            
             # Create the spreadsheet
             spreadsheet_id = create_law_firm_tracking_sheet(sheet_title)
             
@@ -1431,7 +1441,11 @@ def create_google_sheet(request):
             else:
                 return JsonResponse({
                     'success': False,
-                    'error': 'Failed to create spreadsheet'
+                    'error': 'Failed to create spreadsheet',
+                    'debug': {
+                        'oauth_token_available': bool(oauth_token),
+                        'oauth_token_preview': oauth_token[:50] + '...' if oauth_token else None
+                    }
                 }, status=500)
         
         else:
@@ -1441,6 +1455,8 @@ def create_google_sheet(request):
             
     except Exception as e:
         logger.error(f"Error creating Google Sheet: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         return JsonResponse({
             'success': False,
             'error': str(e)
