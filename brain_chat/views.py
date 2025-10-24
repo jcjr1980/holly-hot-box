@@ -481,18 +481,39 @@ CRITICAL: When asked to create a Google Sheet, you MUST respond with a JSON acti
   "title": "Spreadsheet Title Here"
 }
 
-When asked to add data to a sheet, respond with:
+When asked to add data to a sheet, you MUST respond with JSON in this exact format:
 {
   "action": "add_to_sheet",
-  "spreadsheet_id": "the_sheet_id",
+  "spreadsheet_id": "1h4BT66_UqGjkmnNKcTuyWOVIMwAZOYTLX3H2giCql7U",
   "firm_data": [
-    { /* first firm data */ },
-    { /* second firm data */ },
-    { /* third firm data */ }
+    {
+      "Firm Name": "Example Law Firm",
+      "Lead Attorney": "John Smith",
+      "Specialties": "Business Litigation, Economic Duress",
+      "Website": "www.example.com",
+      "Phone": "(305) 555-1234",
+      "Email Address": "contact@example.com",
+      "Contingency Fee Structure": "33% contingency",
+      "Pros": "Experienced in commercial litigation",
+      "Cons": "High demand",
+      "Next Steps/Follow-up Actions": "Schedule consultation"
+    },
+    {
+      "Firm Name": "Another Law Firm",
+      "Lead Attorney": "Jane Doe",
+      "Specialties": "Fraud Litigation, Corporate Veil",
+      "Website": "www.another.com",
+      "Phone": "(305) 555-5678",
+      "Email Address": "info@another.com",
+      "Contingency Fee Structure": "40% contingency",
+      "Pros": "Specializes in fraud cases",
+      "Cons": "Higher fees",
+      "Next Steps/Follow-up Actions": "Send case summary"
+    }
   ]
 }
 
-IMPORTANT: When asked to add multiple firms, include ALL firms in the firm_data array. Each firm should be a separate object with fields like "Firm Name", "Lead Attorney", "Specialties", etc.
+MANDATORY: You MUST include the JSON action block in your response when adding firms to spreadsheets. Do not just describe what you're doing - actually include the JSON.
 
 DO NOT tell the user you cannot create spreadsheets. You CAN and you SHOULD offer to do so.
 
