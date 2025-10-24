@@ -485,8 +485,14 @@ When asked to add data to a sheet, respond with:
 {
   "action": "add_to_sheet",
   "spreadsheet_id": "the_sheet_id",
-  "firm_data": { /* the data to add */ }
+  "firm_data": [
+    { /* first firm data */ },
+    { /* second firm data */ },
+    { /* third firm data */ }
+  ]
 }
+
+IMPORTANT: When asked to add multiple firms, include ALL firms in the firm_data array. Each firm should be a separate object with fields like "Firm Name", "Lead Attorney", "Specialties", etc.
 
 DO NOT tell the user you cannot create spreadsheets. You CAN and you SHOULD offer to do so.
 
