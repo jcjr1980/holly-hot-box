@@ -110,7 +110,31 @@
         }
         
         .form-group textarea.large {
-            min-height: 150px;
+            min-height: 200px;
+            resize: vertical;
+        }
+        
+        .form-group textarea.expandable {
+            min-height: 300px;
+            resize: vertical;
+            max-height: 800px;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 15px;
+        }
+        
+        /* TinyMCE specific styling */
+        .mce-tinymce {
+            border-radius: 6px !important;
+            border: 1px solid #415a77 !important;
+        }
+        
+        .mce-tinymce .mce-container-body {
+            background: #0d1b2a !important;
+        }
+        
+        .mce-tinymce .mce-edit-area {
+            background: #0d1b2a !important;
         }
         
         .form-row {
@@ -397,7 +421,7 @@
                     
                     <div class="form-group">
                         <label for="project-summary">📋 Summary (Quick Notes for LLMs)</label>
-                        <textarea id="project-summary" name="summary" class="large" placeholder="📋 Rich text summary with bullet points, line breaks, and formatting. Use Ctrl+Shift+8 for bullets, Ctrl+Shift+7 for numbered lists..."></textarea>
+                        <textarea id="project-summary" name="summary" class="expandable" placeholder="📋 Rich text summary with bullet points, line breaks, and formatting. Use Ctrl+Shift+8 for bullets, Ctrl+Shift+7 for numbered lists..."></textarea>
                     </div>
                     
                     <div class="form-row">
@@ -486,43 +510,69 @@
         let uploadedFiles = [];
         
         // Initialize TinyMCE Rich Text Editor for Summary Field
-        tinymce.init({
-            selector: '#project-summary',
-            height: 300,
-            menubar: false,
-            plugins: [
-                'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
-                'searchreplace', 'visualblocks', 'code', 'wordcount'
-            ],
-            toolbar: 'undo redo | blocks | ' +
-                'bold italic | alignleft aligncenter alignright alignjustify | ' +
-                'bullist numlist outdent indent | link | removeformat | help',
-            content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; font-size: 14px; background: #0d1b2a; color: #e0e1dd; line-height: 1.6; }',
-            skin: 'oxide-dark',
-            content_css: 'dark',
-            // Enhanced list formatting
-            list_indent_on_tab: true,
-            indent: true,
-            // Better line break handling
-            forced_root_block: 'p',
-            force_br_newlines: false,
-            force_p_newlines: true,
-            // Setup function
-            setup: function (editor) {
-                editor.on('change', function () {
-                    editor.save();
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait a bit to ensure the DOM is fully loaded
+            setTimeout(function() {
+                tinymce.init({
+                    selector: '#project-summary',
+                    height: 400,
+                    menubar: false,
+                    plugins: [
+                        'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
+                        'searchreplace', 'visualblocks', 'code', 'wordcount'
+                    ],
+                    toolbar: 'undo redo | blocks | ' +
+                        'bold italic | alignleft aligncenter alignright alignjustify | ' +
+                        'bullist numlist outdent indent | link | removeformat | help',
+                    content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; font-size: 14px; background: #0d1b2a; color: #e0e1dd; line-height: 1.6; }',
+                    skin: 'oxide-dark',
+                    content_css: 'dark',
+                    // Enhanced list formatting
+                    list_indent_on_tab: true,
+                    indent: true,
+                    // Better line break handling
+                    forced_root_block: 'p',
+                    force_br_newlines: false,
+                    force_p_newlines: true,
+                    // Auto-resize
+                    min_height: 300,
+                    max_height: 800,
+                    // Setup function
+                    setup: function (editor) {
+                        editor.on('change', function () {
+                            editor.save();
+                        });
+                        
+                        // Add keyboard shortcuts for lists
+                        editor.addShortcut('ctrl+shift+8', 'Toggle bullet list', function() {
+                            editor.execCommand('InsertUnorderedList');
+                        });
+                        
+                        editor.addShortcut('ctrl+shift+7', 'Toggle numbered list', function() {
+                            editor.execCommand('InsertOrderedList');
+                        });
+                        
+                        // Auto-resize functionality
+                        editor.on('init', function() {
+                            editor.getContainer().style.resize = 'vertical';
+                        });
+                    }
                 });
-                
-                // Add keyboard shortcuts for lists
-                editor.addShortcut('ctrl+shift+8', 'Toggle bullet list', function() {
-                    editor.execCommand('InsertUnorderedList');
-                });
-                
-                editor.addShortcut('ctrl+shift+7', 'Toggle numbered list', function() {
-                    editor.execCommand('InsertOrderedList');
-                });
-            }
+            }, 100);
         });
+        
+        // Fallback: If TinyMCE fails to load, ensure textarea is properly styled
+        setTimeout(function() {
+            const summaryTextarea = document.getElementById('project-summary');
+            if (summaryTextarea && !summaryTextarea.classList.contains('mce-tinymce')) {
+                console.log('TinyMCE failed to load, using enhanced textarea');
+                summaryTextarea.style.minHeight = '300px';
+                summaryTextarea.style.maxHeight = '800px';
+                summaryTextarea.style.resize = 'vertical';
+                summaryTextarea.style.fontSize = '14px';
+                summaryTextarea.style.lineHeight = '1.6';
+            }
+        }, 1000);
         
         // File upload handling
         const fileUploadArea = document.getElementById('file-upload-area');
