@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Holly Hot Box - Create Project</title>
-    <!-- CKEditor 5 WYSIWYG Editor with Table Support -->
-    <script src="https://cdn.ckeditor.com/ckeditor5/40.1.0/classic/ckeditor.js"></script>
+    <!-- TinyMCE WYSIWYG Editor with Table Support -->
+    <script src="https://cdn.tiny.cloud/1/7vwn560zeu024xdj1oknt1zm8483x4ajrsjhqdhtfx68srsg/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
     <style>
         * {
             margin: 0;
@@ -527,48 +527,46 @@
     <script>
         let uploadedFiles = [];
         
-       // Initialize CKEditor 5 Rich Text Editor for Summary Field
+       // Initialize TinyMCE Rich Text Editor for Summary Field
        document.addEventListener('DOMContentLoaded', function() {
            // Wait a bit to ensure the DOM is fully loaded
            setTimeout(function() {
                const summaryTextarea = document.getElementById('project-summary');
                if (summaryTextarea) {
-                   // Initialize CKEditor 5
-                   ClassicEditor
-                       .create(summaryTextarea, {
-                           toolbar: {
-                               items: [
-                                   'undo', 'redo', '|',
-                                   'heading', '|',
-                                   'bold', 'italic', 'underline', '|',
-                                   'bulletedList', 'numberedList', '|',
-                                   'outdent', 'indent', '|',
-                                   'insertTable', '|',
-                                   'link', 'blockQuote', '|',
-                                   'removeFormat'
-                               ]
-                           },
-                           table: {
-                               contentToolbar: [
-                                   'tableColumn', 'tableRow', 'mergeTableCells',
-                                   'tableProperties', 'tableCellProperties'
-                               ]
-                           },
-                           heading: {
-                               options: [
-                                   { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
-                                   { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
-                                   { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
-                                   { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
-                               ]
-                           }
-                       })
-                       .then(editor => {
-                           console.log('CKEditor 5 initialized successfully');
-                       })
-                       .catch(error => {
-                           console.error('Error initializing CKEditor 5:', error);
-                       });
+                   // Initialize TinyMCE
+                   tinymce.init({
+                       selector: '#project-summary',
+                       height: 300,
+                       menubar: false,
+                       plugins: [
+                           'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                           'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                           'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                       ],
+                       toolbar: 'undo redo | blocks | ' +
+                           'bold italic backcolor | alignleft aligncenter ' +
+                           'alignright alignjustify | bullist numlist outdent indent | ' +
+                           'removeformat | table | help',
+                       content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; font-size: 14px; background: #0d1b2a; color: #e0e1dd; }',
+                       skin: 'oxide-dark',
+                       content_css: 'dark',
+                       table_default_attributes: {
+                           border: '1',
+                           cellpadding: '8',
+                           cellspacing: '0'
+                       },
+                       table_default_styles: {
+                           'border-collapse': 'collapse',
+                           'width': '100%',
+                           'margin': '10px 0'
+                       },
+                       table_class_list: [
+                           {title: 'None', value: ''},
+                           {title: 'Table', value: 'table'},
+                           {title: 'Striped Table', value: 'table table-striped'},
+                           {title: 'Bordered Table', value: 'table table-bordered'}
+                       ]
+                   });
                }
            }, 100);
        });
