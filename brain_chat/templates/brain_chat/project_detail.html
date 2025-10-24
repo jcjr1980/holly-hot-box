@@ -457,7 +457,8 @@
             </div>
             <p id="summary-display" style="font-style: italic; color: #a8dadc;">{{ project.summary|default:"No summary yet. This will help LLMs understand your project context quickly." }}</p>
             <div id="summary-edit" style="display: none;">
-                <textarea id="summary-input" style="width: 100%; min-height: 150px; padding: 10px; border-radius: 6px; border: 1px solid #415a77; background: #0d1b2a; color: #e0e1dd; font-family: inherit;">{{ project.summary }}</textarea>
+                <textarea id="summary-input" style="display: none;">{{ project.summary }}</textarea>
+                <div id="quill-editor" style="min-height: 200px; border: 1px solid #415a77; border-radius: 6px; background: #0d1b2a;"></div>
                 <div style="margin-top: 10px; display: flex; gap: 10px;">
                     <button class="save-btn" onclick="saveSummary()">💾 Save</button>
                     <button class="cancel-btn" onclick="cancelEdit('summary')">❌ Cancel</button>
@@ -686,13 +687,12 @@
             // Initialize Quill editor for summary field
             if (field === 'summary' && !quillEditor) {
                 setTimeout(function() {
+                    const quillContainer = document.getElementById('quill-editor');
                     const summaryTextarea = document.getElementById('summary-input');
-                    if (summaryTextarea) {
-                        // Hide the original textarea
-                        summaryTextarea.style.display = 'none';
-                        
-                        // Create Quill editor
-                        quillEditor = new Quill('#summary-input', {
+                    
+                    if (quillContainer && summaryTextarea) {
+                        // Create Quill editor on the div container
+                        quillEditor = new Quill('#quill-editor', {
                             theme: 'snow',
                             modules: {
                                 toolbar: [
@@ -703,17 +703,16 @@
                                     ['clean']
                                 ]
                             },
-                            placeholder: '📋 Rich text summary with bullet points, line breaks, and formatting...',
-                            bounds: '#summary-input'
+                            placeholder: '📋 Rich text summary with bullet points, line breaks, and formatting...'
                         });
                         
                         // Style the Quill editor to match the dark theme
-                        const quillContainer = quillEditor.container.parentNode;
-                        quillContainer.style.border = '1px solid #415a77';
-                        quillContainer.style.borderRadius = '6px';
-                        quillContainer.style.backgroundColor = '#0d1b2a';
+                        const editorContainer = quillEditor.container.parentNode;
+                        editorContainer.style.border = '1px solid #415a77';
+                        editorContainer.style.borderRadius = '6px';
+                        editorContainer.style.backgroundColor = '#0d1b2a';
                         
-                        // Set initial content
+                        // Set initial content from textarea
                         if (summaryTextarea.value) {
                             quillEditor.root.innerHTML = summaryTextarea.value;
                         }
@@ -764,6 +763,8 @@
             // Get content from Quill editor if it exists, otherwise from textarea
             if (quillEditor) {
                 newSummary = quillEditor.root.innerHTML;
+                // Also update the hidden textarea
+                document.getElementById('summary-input').value = newSummary;
             } else {
                 newSummary = document.getElementById('summary-input').value;
             }
