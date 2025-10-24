@@ -29,9 +29,6 @@ class Command(BaseCommand):
         parser.add_argument('--interactive', action='store_true', help='Interactive mode')
 
     def handle(self, *args, **options):
-        # Create Matt Petry user by default
-        self.create_matt_petry()
-        
         if options['interactive']:
             self.interactive_mode()
         else:
