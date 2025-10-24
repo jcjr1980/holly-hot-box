@@ -19,7 +19,7 @@ from .llm_orchestrator import LLMOrchestrator
 from .query_conductor import QueryConductor
 from .summarization_service import FileSummarizer
 from .twilio_utils import TwilioSMS
-from .google_sheets_utils import sheets_manager, create_law_firm_tracking_sheet, add_law_firm_to_sheet, get_spreadsheet_url
+from .google_sheets_utils import sheets_manager, create_law_firm_tracking_sheet, add_law_firm_to_sheet, get_spreadsheet_url, get_oauth_authorization_url, exchange_code_for_token
 
 logger = logging.getLogger(__name__)
 
