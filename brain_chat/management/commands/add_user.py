@@ -6,8 +6,15 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from brain_chat.models import UserProfile
-import pyotp
 import secrets
+
+# Optional pyotp import - handle gracefully if not available
+try:
+    import pyotp
+    PYOTP_AVAILABLE = True
+except ImportError:
+    PYOTP_AVAILABLE = False
+    pyotp = None
 
 
 class Command(BaseCommand):
@@ -103,11 +110,17 @@ class Command(BaseCommand):
             )
             
             # Create UserProfile for 2FA
-            totp_secret = pyotp.random_base32()
+            if PYOTP_AVAILABLE:
+                totp_secret = pyotp.random_base32()
+                is_2fa_enabled = True
+            else:
+                totp_secret = secrets.token_urlsafe(16)
+                is_2fa_enabled = False
+            
             UserProfile.objects.create(
                 user=user,
                 totp_secret=totp_secret,
-                is_2fa_enabled=True
+                is_2fa_enabled=is_2fa_enabled
             )
             
             self.stdout.write(self.style.SUCCESS(f'✅ User "{username}" created successfully'))

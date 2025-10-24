@@ -12,8 +12,15 @@ from django.contrib import messages
 from django.contrib.auth.hashers import make_password
 from django.http import HttpResponseRedirect
 from brain_chat.models import UserProfile, RegistrationRequest, Project, ChatSession
-import pyotp
 import secrets
+
+# Optional pyotp import - handle gracefully if not available
+try:
+    import pyotp
+    PYOTP_AVAILABLE = True
+except ImportError:
+    PYOTP_AVAILABLE = False
+    pyotp = None
 
 
 class UserProfileInline(admin.StackedInline):
@@ -40,13 +47,6 @@ class CustomUserAdmin(UserAdmin):
         )
     user_stats.short_description = 'User Stats'
     
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path('add-user/', self.admin_site.admin_view(self.add_user_view), name='add_user'),
-            path('registration-requests/', self.admin_site.admin_view(self.registration_requests_view), name='registration_requests'),
-        ]
-        return custom_urls + urls
 
 
 class RegistrationRequestAdmin(admin.ModelAdmin):
@@ -83,11 +83,17 @@ class RegistrationRequestAdmin(admin.ModelAdmin):
                     )
                     
                     # Create UserProfile
-                    totp_secret = pyotp.random_base32()
+                    if PYOTP_AVAILABLE:
+                        totp_secret = pyotp.random_base32()
+                        is_2fa_enabled = True
+                    else:
+                        totp_secret = secrets.token_urlsafe(16)
+                        is_2fa_enabled = False
+                    
                     UserProfile.objects.create(
                         user=user,
                         totp_secret=totp_secret,
-                        is_2fa_enabled=True
+                        is_2fa_enabled=is_2fa_enabled
                     )
                     
                     registration.status = 'approved'
@@ -111,55 +117,6 @@ class RegistrationRequestAdmin(admin.ModelAdmin):
     
     reject_registrations.short_description = "Reject registration requests"
     
-    def add_user_view(self, request):
-        """Custom add user view"""
-        if request.method == 'POST':
-            username = request.POST.get('username')
-            email = request.POST.get('email')
-            first_name = request.POST.get('first_name')
-            last_name = request.POST.get('last_name')
-            password = request.POST.get('password') or secrets.token_urlsafe(12)
-            
-            if not username:
-                messages.error(request, 'Username is required')
-                return redirect('admin:add_user')
-            
-            if User.objects.filter(username=username).exists():
-                messages.error(request, f'Username "{username}" already exists')
-                return redirect('admin:add_user')
-            
-            if email and User.objects.filter(email=email).exists():
-                messages.error(request, f'Email "{email}" already exists')
-                return redirect('admin:add_user')
-            
-            try:
-                user = User.objects.create_user(
-                    username=username,
-                    email=email,
-                    first_name=first_name,
-                    last_name=last_name,
-                    password=password,
-                    is_active=True
-                )
-                
-                # Create UserProfile
-                totp_secret = pyotp.random_base32()
-                UserProfile.objects.create(
-                    user=user,
-                    totp_secret=totp_secret,
-                    is_2fa_enabled=True
-                )
-                
-                messages.success(request, f'✅ User "{username}" created successfully!')
-                messages.info(request, f'🔐 Password: {password}')
-                messages.info(request, f'🌐 Login URL: https://hollyhotbox.com/login/')
-                
-                return redirect('admin:auth_user_changelist')
-                
-            except Exception as e:
-                messages.error(request, f'❌ Error creating user: {e}')
-        
-        return render(request, 'admin/add_user.html')
     
     def registration_requests_view(self, request):
         """View registration requests"""

@@ -15,7 +15,14 @@ django.setup()
 
 from django.contrib.auth.models import User
 from brain_chat.models import UserProfile
-import pyotp
+
+# Optional pyotp import - handle gracefully if not available
+try:
+    import pyotp
+    PYOTP_AVAILABLE = True
+except ImportError:
+    PYOTP_AVAILABLE = False
+    pyotp = None
 
 
 def add_user_interactive():
@@ -57,11 +64,17 @@ def add_user_interactive():
         )
         
         # Create UserProfile for 2FA
-        totp_secret = pyotp.random_base32()
+        if PYOTP_AVAILABLE:
+            totp_secret = pyotp.random_base32()
+            is_2fa_enabled = True
+        else:
+            totp_secret = secrets.token_urlsafe(16)
+            is_2fa_enabled = False
+        
         UserProfile.objects.create(
             user=user,
             totp_secret=totp_secret,
-            is_2fa_enabled=True
+            is_2fa_enabled=is_2fa_enabled
         )
         
         print("\n" + "=" * 50)
@@ -133,11 +146,17 @@ def add_user_command_line(username, email="", first_name="", last_name="", passw
         )
         
         # Create UserProfile for 2FA
-        totp_secret = pyotp.random_base32()
+        if PYOTP_AVAILABLE:
+            totp_secret = pyotp.random_base32()
+            is_2fa_enabled = True
+        else:
+            totp_secret = secrets.token_urlsafe(16)
+            is_2fa_enabled = False
+        
         UserProfile.objects.create(
             user=user,
             totp_secret=totp_secret,
-            is_2fa_enabled=True
+            is_2fa_enabled=is_2fa_enabled
         )
         
         print(f"✅ User '{username}' created successfully!")

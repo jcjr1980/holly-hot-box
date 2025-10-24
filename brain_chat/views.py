@@ -10,10 +10,17 @@ from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
-import pyotp
 import os
 import requests
 import logging
+
+# Optional pyotp import - handle gracefully if not available
+try:
+    import pyotp
+    PYOTP_AVAILABLE = True
+except ImportError:
+    PYOTP_AVAILABLE = False
+    pyotp = None
 from .models import Project, ChatSession, ChatMessage, LLMResponse, DiaryNote, UserProfile, ProjectFile, RegistrationRequest
 from .llm_orchestrator import LLMOrchestrator
 from .query_conductor import QueryConductor
