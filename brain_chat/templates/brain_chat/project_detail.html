@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Holly Hot Box - {{ project.name }}</title>
-    <!-- Simple Rich Text Editor -->
-    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+        <!-- Simple Rich Text Editor with Table Support -->
+        <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+        <!-- Quill Better Table Module -->
+        <script src="https://cdn.jsdelivr.net/npm/quill-better-table@1.2.8/dist/quill-better-table.min.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/quill-better-table@1.2.8/dist/quill-better-table.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -708,7 +711,7 @@
                         editorDiv.id = 'quill-editor-' + Date.now();
                         container.appendChild(editorDiv);
                         
-                        // Create Quill editor
+                        // Create Quill editor with table support
                         quillEditor = new Quill('#' + editorDiv.id, {
                             theme: 'snow',
                             modules: {
@@ -717,11 +720,31 @@
                                     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                                     [{ 'indent': '-1'}, { 'indent': '+1' }],
                                     ['link'],
+                                    ['insertTable'],
                                     ['clean']
-                                ]
+                                ],
+                                table: true
                             },
-                            placeholder: '📋 Rich text summary with bullet points, line breaks, and formatting...'
+                            placeholder: '📋 Rich text summary with bullet points, line breaks, tables, and formatting...'
                         });
+                        
+                        // Initialize Better Table module
+                        if (window.QuillBetterTable) {
+                            const betterTable = new window.QuillBetterTable(quillEditor, {
+                                operationMenu: {
+                                    items: {
+                                        unmergeCells: {
+                                            text: 'Another unmerge cells name'
+                                        }
+                                    },
+                                    color: {
+                                        colors: ['green', 'red', 'yellow', 'blue', 'white'],
+                                        text: 'Background Colors:'
+                                    }
+                                }
+                            });
+                            quillEditor.getModule('better-table');
+                        }
                         
                         // Set initial content
                         if (textarea.value) {
