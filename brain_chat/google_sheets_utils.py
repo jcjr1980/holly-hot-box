@@ -1,19 +1,17 @@
 """
 Google Sheets integration for Holly Hot Box
-Handles reading, writing, and creating spreadsheets
+Handles reading, writing, and creating spreadsheets using existing OAuth tokens
 """
 
 import os
 import json
 from typing import List, Dict, Any, Optional
-from google.oauth2.service_account import Credentials
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import logging
 
 logger = logging.getLogger(__name__)
-
-# Force restart to pick up new environment variables
 
 class GoogleSheetsManager:
     def __init__(self):
@@ -22,43 +20,33 @@ class GoogleSheetsManager:
         self._initialize_service()
     
     def _initialize_service(self):
-        """Initialize the Google Sheets service with service account credentials"""
+        """Initialize the Google Sheets service using existing OAuth tokens"""
         try:
-            # Try to get credentials from environment variable first
-            credentials_json = os.getenv('GOOGLE_SHEETS_CREDENTIALS')
+            # Try to get OAuth token from environment variable (Railway)
+            oauth_token = os.getenv('GOOGLE_OAUTH_TOKEN')
             
-            if credentials_json:
-                # Parse JSON from environment variable
-                import json
-                credentials_info = json.loads(credentials_json)
-                logger.info("✅ Using Google Sheets credentials from environment variable")
+            if oauth_token:
+                # Parse the OAuth token
+                token_data = json.loads(oauth_token)
+                
+                # Create credentials from the token
+                credentials = Credentials(
+                    token=token_data.get('access_token'),
+                    refresh_token=token_data.get('refresh_token'),
+                    token_uri=token_data.get('token_uri', 'https://oauth2.googleapis.com/token'),
+                    client_id=token_data.get('client_id'),
+                    client_secret=token_data.get('client_secret'),
+                    scopes=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+                )
+                
+                logger.info("✅ Using existing OAuth token for Google Sheets")
             else:
-                # Fallback to file
-                credentials_path = os.path.join(os.path.dirname(__file__), 'customer-data-339404-fbc81482b160.json')
-                
-                if not os.path.exists(credentials_path):
-                    logger.error(f"Service account credentials not found in environment variable or file: {credentials_path}")
-                    return
-                
-                with open(credentials_path, 'r') as f:
-                    credentials_info = json.load(f)
-                logger.info("✅ Using Google Sheets credentials from file")
-            
-            # Define the scopes needed
-            scopes = [
-                'https://www.googleapis.com/auth/spreadsheets',
-                'https://www.googleapis.com/auth/drive'
-            ]
-            
-            # Load credentials
-            credentials = Credentials.from_service_account_info(
-                credentials_info, 
-                scopes=scopes
-            )
+                logger.warning("⚠️ No OAuth token found. Google Sheets functionality will be limited.")
+                return
             
             # Build the service
             self.service = build('sheets', 'v4', credentials=credentials)
-            logger.info("✅ Google Sheets service initialized successfully")
+            logger.info("✅ Google Sheets service initialized successfully with existing OAuth")
             
         except Exception as e:
             logger.error(f"❌ Failed to initialize Google Sheets service: {e}")
@@ -343,3 +331,4 @@ def get_spreadsheet_url(spreadsheet_id: str) -> str:
         URL to access the spreadsheet
     """
     return f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit"
+
