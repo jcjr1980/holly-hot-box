@@ -1644,3 +1644,44 @@ def quickie_chat(request):
     }
     
     return render(request, 'brain_chat/quickie_chat.html', context)
+
+
+def create_chat(request):
+    """Create a new chat session"""
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Authentication required'}, status=401)
+    
+    if request.method == 'POST':
+        try:
+            import json
+            data = json.loads(request.body)
+            
+            # Get chat parameters
+            title = data.get('title', 'New Chat')
+            is_quickie = data.get('is_quickie', False)
+            mode = data.get('mode', 'gemini')
+            
+            # Create new chat session
+            chat_session = ChatSession.objects.create(
+                user=request.user,
+                title=title,
+                is_quickie=is_quickie,
+                metadata={'mode': mode}
+            )
+            
+            logger.info(f"✅ Created new chat session: {chat_session.id} - {title}")
+            
+            return JsonResponse({
+                'status': 'success',
+                'chat_id': chat_session.id,
+                'message': 'Chat created successfully'
+            })
+            
+        except Exception as e:
+            logger.error(f"Error creating chat: {e}")
+            return JsonResponse({
+                'status': 'error',
+                'error': str(e)
+            }, status=500)
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
