@@ -481,6 +481,8 @@ CRITICAL: When asked to create a Google Sheet, you MUST respond with a JSON acti
   "title": "Spreadsheet Title Here"
 }
 
+CRITICAL: When asked to add firms to an EXISTING spreadsheet, you MUST use "add_to_sheet" action, NOT "create_sheet". 
+
 When asked to add data to a sheet, you MUST respond with JSON in this exact format:
 {
   "action": "add_to_sheet",
